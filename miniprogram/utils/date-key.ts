@@ -66,6 +66,25 @@ export function getTodayDateKey(): DateKey {
   return dateKeyFromTimestampUtc8(Date.now())
 }
 
+/** 按公历日平移日期键，用于取次日或补位日；任一输入无效时返回 null。 */
+export function addDaysToDateKey(dateKey: string, days: number): DateKey | null {
+  const parts = parseDateKey(dateKey)
+
+  if (!parts.ok) {
+    return null
+  }
+
+  const shifted = new Date(
+    Date.UTC(parts.value.year, parts.value.month - 1, parts.value.day + days),
+  )
+
+  return formatDateKey({
+    year: shifted.getUTCFullYear(),
+    month: shifted.getUTCMonth() + 1,
+    day: shifted.getUTCDate(),
+  })
+}
+
 /**
  * 切换到目标年月并保留同一日号；目标月没有该日号时取该月最后一日（方案 3.3）。
  * 边界：selectedDateKey 无效时取该月 1 日，不猜测日期。
