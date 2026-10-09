@@ -1,6 +1,11 @@
-import { describe, expect, it } from 'vitest'
+import { afterEach, describe, expect, it, vi } from 'vitest'
 
-import { parseDateKey } from '../miniprogram/utils/date-key'
+import {
+  countDaysBetween,
+  dateKeyFromTimestampUtc8,
+  getTodayDateKey,
+  parseDateKey,
+} from '../miniprogram/utils/date-key'
 
 describe('parseDateKey', () => {
   it('解析合法日期键', () => {
@@ -31,5 +36,49 @@ describe('parseDateKey', () => {
       ok: false,
       code: 'INVALID_DATE',
     })
+  })
+})
+
+describe('dateKeyFromTimestampUtc8', () => {
+  afterEach(() => {
+    vi.unstubAllEnvs()
+    vi.useRealTimers()
+  })
+
+  it('按 UTC+8 归属民用日，跨过北京时间午夜才换日', () => {
+    // 2026-10-08T15:59:59Z = 北京时间 23:59:59；16:00:00Z = 次日 00:00:00
+    expect(dateKeyFromTimestampUtc8(Date.UTC(2026, 9, 8, 15, 59, 59))).toBe('2026-10-08')
+    expect(dateKeyFromTimestampUtc8(Date.UTC(2026, 9, 8, 16, 0, 0))).toBe('2026-10-09')
+  })
+
+  it.each(['Asia/Shanghai', 'UTC', 'America/Los_Angeles'])('不受宿主时区 %s 影响', (timezone) => {
+    vi.stubEnv('TZ', timezone)
+
+    expect(dateKeyFromTimestampUtc8(Date.UTC(2026, 0, 1, 0, 0, 0))).toBe('2026-01-01')
+    expect(dateKeyFromTimestampUtc8(Date.UTC(2025, 11, 31, 16, 30, 0))).toBe('2026-01-01')
+  })
+
+  it('以设备当前时刻生成今天', () => {
+    vi.useFakeTimers()
+    vi.setSystemTime(new Date('2026-10-08T16:00:00Z'))
+
+    expect(getTodayDateKey()).toBe('2026-10-09')
+  })
+})
+
+describe('countDaysBetween', () => {
+  it.each([
+    ['2026-10-08', '2026-10-08', 0],
+    ['2026-10-08', '2026-10-23', 15],
+    ['2026-12-31', '2027-01-01', 1],
+    ['2026-02-28', '2026-03-01', 1],
+    ['2024-02-28', '2024-03-01', 2],
+  ])('%s 到 %s 相差 %i 天', (start, end, expected) => {
+    expect(countDaysBetween(start, end)).toBe(expected)
+  })
+
+  it('任一日期无效时返回 null，不给出猜测值', () => {
+    expect(countDaysBetween('2026-10-08', '2026-10-32')).toBeNull()
+    expect(countDaysBetween('', '2026-10-08')).toBeNull()
   })
 })
