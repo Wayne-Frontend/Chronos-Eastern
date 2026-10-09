@@ -22,7 +22,7 @@ declare module 'lunar-javascript' {
     getDayInChinese(): string
     getYearInGanZhi(): string
     getYearInGanZhiByLiChun(): string
-    getMonthInGanZhiExact(): string
+    getMonthInGanZhi(): string
     getDayInGanZhiExact2(): string
     getCurrentJieQi(): JieQi | null
     getNextJieQi(wholeDay?: boolean): JieQi | null

@@ -2,6 +2,7 @@ import { afterEach, describe, expect, it, vi } from 'vitest'
 
 import { getLunarDateFacts } from '../miniprogram/adapters/lunar-adapter'
 import { parseDateKey } from '../miniprogram/utils/date-key'
+import { getGregorianWeekday } from '../miniprogram/utils/util'
 import { CALENDAR_AUTHORITY_FIXTURES } from './fixtures/calendar-authority'
 
 function getFacts(dateKey: string) {
@@ -38,6 +39,32 @@ describe('getLunarDateFacts', () => {
       yearLunarNewYear: '癸卯',
       yearLiChun: '甲辰',
     })
+  })
+
+  it('交节当天整日切换年、月干支（按日口径）', () => {
+    const liChunDay = getFacts('2026-02-04')
+    const afterLiChun = getFacts('2026-02-05')
+
+    expect(liChunDay.solarTerm?.name).toBe('立春')
+    expect(liChunDay.ganzhi.yearLunarNewYear).toBe('乙巳')
+    expect(liChunDay.ganzhi.yearLiChun).toBe('丙午')
+    expect(liChunDay.ganzhi.yearLiChun).toBe(afterLiChun.ganzhi.yearLiChun)
+    // 建寅：立春日起月支为寅；丙年正月月干为庚（五虎遁，见《协纪辨方书》卷一）。
+    expect(liChunDay.ganzhi.monthJieQi).toBe('庚寅')
+    expect(liChunDay.ganzhi.monthJieQi).toBe(afterLiChun.ganzhi.monthJieQi)
+    expect(getFacts('2026-02-03').ganzhi.monthJieQi).toBe('己丑')
+
+    const jingZheDay = getFacts('2026-03-05')
+
+    expect(jingZheDay.solarTerm?.name).toBe('惊蛰')
+    expect(jingZheDay.ganzhi.monthJieQi).toBe('辛卯')
+    expect(jingZheDay.ganzhi.monthJieQi).toBe(getFacts('2026-03-06').ganzhi.monthJieQi)
+  })
+
+  it.each(CALENDAR_AUTHORITY_FIXTURES)('星期与公历推算一致 $dateKey', ({ dateKey }) => {
+    const { year, month, day, weekday } = getFacts(dateKey).solar
+
+    expect(weekday).toBe(getGregorianWeekday(year, month, day))
   })
 
   it('返回节气名称、北京时间时刻及下一节气', () => {

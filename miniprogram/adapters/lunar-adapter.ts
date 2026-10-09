@@ -62,7 +62,7 @@ export function getLunarDateFacts(
       ganzhi: {
         yearLunarNewYear: lunar.getYearInGanZhi(),
         yearLiChun: lunar.getYearInGanZhiByLiChun(),
-        monthJieQi: lunar.getMonthInGanZhiExact(),
+        monthJieQi: lunar.getMonthInGanZhi(),
         dayCivil: lunar.getDayInGanZhiExact2(),
       },
       solarTerm: normalizeSolarTerm(lunar.getCurrentJieQi()),
