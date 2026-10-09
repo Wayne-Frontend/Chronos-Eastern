@@ -3,7 +3,12 @@ export type RuleStatus =
 
 export type RuleEffect = 'include' | 'exclude'
 
-export type RuleOperator = 'in'
+/**
+ * `in`：事实值在 value 列表内即命中。
+ * `month-indexed`：value 必须是 12 项，按节令月支从寅月（正月）起顺数取值，与事实值相等即命中；
+ * 供卷五、卷六「正月起某，顺／逆行十二辰」的月神条款使用。表长不是 12 时按缺输入处理。
+ */
+export type RuleOperator = 'in' | 'month-indexed'
 
 export interface RuleCondition {
   /** 事实字段路径，形如 `ganzhi.monthJieQi.branch`；规则必须声明读取哪个口径。 */
@@ -31,12 +36,20 @@ export interface RuleDefinition {
   limitations: readonly string[]
 }
 
+/**
+ * 规则包对原始条目的覆盖程度。
+ * 与 RuleStatus 正交：status 说明包内单条规则是否过校勘，本字段说明整包是否把条目收全。
+ * 只有 complete 才允许对应事项标记为 supported。
+ */
+export type RulePackCompleteness = 'complete' | 'partial'
+
 export interface RulePack {
   id: string
   version: string
   eventType: string
   traditionId: string
   status: RuleStatus
+  completeness: RulePackCompleteness
   conflictGroup: string
   /** 本版本已收录的规则范围说明，页面必须向用户展示。 */
   coverage: string

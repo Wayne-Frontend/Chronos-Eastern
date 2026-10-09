@@ -1,11 +1,26 @@
 import type { DateInfo } from '../types/calendar'
-import type { RuleDefinition, RulePack } from '../types/rule'
-import { getJianChu, splitGanzhi, type GanzhiParts } from '../utils/ganzhi'
+import type { RuleCondition, RuleDefinition, RulePack } from '../types/rule'
+import { splitGanzhi, type GanzhiParts } from '../utils/ganzhi'
+import {
+  getJianChu,
+  getSeason,
+  getBranchElement,
+  getStemElement,
+  resolveMonthIndexed,
+  type Element,
+  type Season,
+} from './rule-facts'
 
 export interface DateFacts {
   dateKey: string
   /** 建除十二神；月支或日支无法解析时为 null。 */
   jianChu: string | null
+  /** 节令月所属季节；供卷五季节性条款读取，月支无法解析时为 null。 */
+  season: Season | null
+  /** 日干五行；供「春丙丁」这类成对天干的条款读取，日干无法解析时为 null。 */
+  stemElement: Element | null
+  /** 日支五行；供「干支俱绝」型条款（如四废）与日干五行合用，日支无法解析时为 null。 */
+  branchElement: Element | null
   ganzhi: {
     yearLunarNewYear: GanzhiParts | null
     yearLiChun: GanzhiParts | null
@@ -40,6 +55,9 @@ export function buildDateFacts(info: DateInfo): DateFacts {
   return {
     dateKey: info.dateKey,
     jianChu: monthParts && dayParts ? getJianChu(monthParts.branch, dayParts.branch) : null,
+    season: monthParts ? getSeason(monthParts.branch) : null,
+    stemElement: dayParts ? getStemElement(dayParts.stem) : null,
+    branchElement: dayParts ? getBranchElement(dayParts.branch) : null,
     ganzhi: {
       yearLunarNewYear: splitGanzhi(info.ganzhi.yearLunarNewYear),
       yearLiChun: splitGanzhi(info.ganzhi.yearLiChun),
@@ -64,16 +82,43 @@ export function evaluateRule(rule: RuleDefinition, facts: DateFacts): RuleEvalua
   for (const condition of rule.when.all) {
     const value = readFact(facts, condition.fact)
 
-    if (value === null || condition.operator !== 'in') {
+    if (value === null) {
       return 'unknown'
     }
 
-    if (!condition.value.includes(value)) {
+    const matched = matchCondition(condition, value, facts)
+
+    if (matched === null) {
+      return 'unknown'
+    }
+
+    if (!matched) {
       return 'not_matched'
     }
   }
 
   return 'matched'
+}
+
+/** 返回 null 表示缺输入或算子未实现，一律按未知处理，不得当作未命中。 */
+function matchCondition(condition: RuleCondition, value: string, facts: DateFacts): boolean | null {
+  switch (condition.operator) {
+    case 'in':
+      return condition.value.includes(value)
+    case 'month-indexed': {
+      const monthBranch = facts.ganzhi.monthJieQi?.branch ?? null
+
+      if (monthBranch === null) {
+        return null
+      }
+
+      const target = resolveMonthIndexed(condition.value, monthBranch)
+
+      return target === null ? null : target === value
+    }
+    default:
+      return null
+  }
 }
 
 /**
