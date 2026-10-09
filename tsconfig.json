@@ -4,6 +4,10 @@
     "noImplicitAny": true,
     "module": "CommonJS",
     "moduleResolution": "Node",
+    "baseUrl": ".",
+    "paths": {
+      "lunar-javascript": ["typings/lunar-javascript/index.d.ts"]
+    },
     "ignoreDeprecations": "6.0",
     "target": "ES2020",
     "allowJs": true,
