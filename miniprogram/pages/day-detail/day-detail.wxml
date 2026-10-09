@@ -27,7 +27,7 @@
       <text class="detail-row__label">下一个节气</text>
       <text class="detail-row__value">{{view.nextSolarTermText}}</text>
     </view>
-    <text class="detail-caption">年、月干支在交节当天整日按新值计算（按日口径）。</text>
+    <text class="detail-caption">年、月干支在交节当天整日按新值计算。</text>
   </view>
 
   <view wx:if="{{view.status === 'ok'}}" class="detail-facts section-card">
@@ -42,7 +42,7 @@
   <view wx:if="{{!view.ruleSection.hasContext}}" class="detail-block section-card">
     <empty-state
       title="本日暂无已完成校勘的传统规则"
-      description="宜忌只来自带来源并通过测试的规则包，不以第三方历法库结果替代。"
+      description="宜忌只来自有明确来源的传统规则，不用无来源的通用宜忌替代。"
     ></empty-state>
   </view>
 
@@ -65,8 +65,8 @@
         </view>
         <text class="detail-rule__explanation">{{item.explanation}}</text>
       </view>
-      <text class="detail-rule__identity">规则 {{item.id}} · {{item.statusText}}</text>
-      <text class="detail-rule__meta">原文定位：{{item.locator}}</text>
+      <text wx:if="{{item.statusText}}" class="detail-rule__status">{{item.statusText}}</text>
+      <text class="detail-rule__meta">原文出处：{{item.locator}}</text>
       <text wx:if="{{item.sourceText}}" class="detail-rule__meta">来源：{{item.sourceText}}</text>
       <text
         wx:for="{{item.limitations}}"

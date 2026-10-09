@@ -261,11 +261,9 @@ function toRuleDisplayItem(rule: RuleExplanationItem, isUnknown: boolean): RuleD
     id: rule.id,
     badgeText: isUnknown ? '待' : rule.effect === 'include' ? '宜' : '忌',
     effectClass: isUnknown ? 'unknown' : rule.effect,
-    statusText: isUnknown
-      ? '资料不足，未判定'
-      : rule.status === 'verified'
-        ? '已验证'
-        : rule.status,
+    // 整包已过 verified 门禁，页面上只可能出现已验证规则，故不再对它们标注内部状态词；
+    // 只有「资料不足」这一句对用户有意义。规则 id 属内部标识，不上屏。
+    statusText: isUnknown ? '资料不足，本版本未据此判定' : '',
     explanation: rule.explanation,
     locator: rule.locator,
     sourceText: rule.sources.map((source) => `${source.title}（${source.publisher}）`).join('；'),
