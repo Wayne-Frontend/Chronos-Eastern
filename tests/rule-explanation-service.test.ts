@@ -4,7 +4,7 @@ import { getDateRuleExplanation } from '../miniprogram/services/rule-explanation
 
 describe('getDateRuleExplanation', () => {
   it('返回命中规则的完整解释、出处与规则包覆盖范围', () => {
-    const result = getDateRuleExplanation('2026-10-02', 'travel')
+    const result = getDateRuleExplanation('2026-10-03', 'travel')
 
     expect(result.ok).toBe(true)
 
@@ -13,23 +13,23 @@ describe('getDateRuleExplanation', () => {
     }
 
     expect(result.value).toMatchObject({
-      dateKey: '2026-10-02',
+      dateKey: '2026-10-03',
       eventType: 'travel',
       eventName: '出行',
       status: 'pass',
       rulePack: {
         id: 'xjbf-travel',
-        version: '1.15.0',
+        version: '1.16.0',
       },
     })
     expect(result.value.rulePack.completeness).toBe('partial')
     expect(result.value.rulePack.coverage).toContain('宜项 16 条中收录 15 条')
     expect(result.value.matchedRules).toHaveLength(2)
     expect(result.value.matchedRules[0]).toMatchObject({
-      id: 'xjbf-travel-0001',
+      id: 'xjbf-travel-0008',
       effect: 'include',
       status: 'verified',
-      explanation: '建日为月建当日，出行条目列为宜。',
+      explanation: '吉期与建除之除日同位，常居月建前一辰，出行条目列为宜。',
     })
     expect(result.value.unknownRules).toEqual([])
     expect(result.value.matchedRules[0].locator).toContain('卷十一')

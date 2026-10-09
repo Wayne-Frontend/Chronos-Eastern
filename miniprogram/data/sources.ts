@@ -48,6 +48,13 @@ export const SOURCES: readonly SourceEntry[] = [
     kind: 'government-document',
   },
   {
+    id: 'src-xjbf-vol3-scan',
+    title: '钦定协纪辨方书·卷三（影印本，义例一：岁神，含岁刑）',
+    publisher: 'Wikimedia Commons · CADAL 浙江大学图书馆藏本',
+    url: 'https://commons.wikimedia.org/wiki/File:CADAL06056504_欽定協紀辨方書·卷三.djvu',
+    kind: 'classic-scan',
+  },
+  {
     id: 'src-xjbf-vol4-scan',
     title: '钦定协纪辨方书·卷四（影印本，义例二：建除十二神、建除同位异名、月厌）',
     publisher: 'Wikimedia Commons · CADAL 浙江大学图书馆藏本',

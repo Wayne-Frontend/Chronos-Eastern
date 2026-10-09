@@ -147,15 +147,25 @@ describe('evaluateRule', () => {
 describe('出行规则包（第一批）', () => {
   // 日期与建除均按卷四规则（建在月建、顺行十二辰）由日支与月支推出。
   it.each([
-    ['2026-10-02', '建日兼王日', 'pass', ['xjbf-travel-0001', 'xjbf-travel-0026']],
+    [
+      '2026-10-02',
+      '建日兼王日（酉月己酉）遇月刑（酉月自刑，月刑亦在酉）',
+      'unresolved',
+      ['xjbf-travel-0001', 'xjbf-travel-0026', 'xjbf-travel-0031'],
+    ],
     [
       '2026-05-05',
       '开日兼月恩兼四相，日支卯又为灾煞',
       'unresolved',
       ['xjbf-travel-0002', 'xjbf-travel-0013', 'xjbf-travel-0023', 'xjbf-travel-0017'],
     ],
-    ['2026-06-03', '平日兼四相', 'unresolved', ['xjbf-travel-0023', 'xjbf-travel-0003']],
-    ['2026-10-12', '收日', 'excluded', ['xjbf-travel-0004']],
+    [
+      '2026-06-03',
+      '平日兼四相遇月刑',
+      'unresolved',
+      ['xjbf-travel-0023', 'xjbf-travel-0003', 'xjbf-travel-0031'],
+    ],
+    ['2026-10-12', '收日兼月刑', 'excluded', ['xjbf-travel-0004', 'xjbf-travel-0031']],
     [
       '2026-09-07',
       '闭日（酉月甲申）遇天马',
@@ -490,7 +500,7 @@ describe('来源精度', () => {
     }
   })
 
-  it('九条卷六月神逐月等于各自起例的循环顺推结果', () => {
+  it('十条卷六月神逐月等于各自起例的循环顺推结果', () => {
     // 卷六各条起例都是「正月起某」+ 位组（四孟／四仲／四季／六阳辰／十二辰），展开即若干月一循环。
     // 卷六《劫煞》：「李鼎祚曰正月起亥，逆行四孟。」四孟＝寅申巳亥，逆推即 亥申巳寅 循环。
     // 卷六《天吏》：「历例曰天吏者正月起酉，逆行四仲。」四仲＝子午卯酉，逆推即 酉午卯子 循环。
@@ -513,6 +523,13 @@ describe('来源精度', () => {
       },
       { id: 'xjbf-travel-0025', cycle: ['申', '巳', '寅', '亥'], label: '驿马' },
       { id: 'xjbf-travel-0030', cycle: ['午', '申', '戌', '子', '寅', '辰'], label: '天马' },
+      {
+        // 卷六《月刑》只说「与岁刑同」，起例取自卷三《岁刑》曾门经，
+        // 辰午酉亥四个月为自刑、与月建同支。
+        id: 'xjbf-travel-0031',
+        cycle: ['巳', '子', '辰', '申', '午', '丑', '寅', '酉', '未', '亥', '卯', '戌'],
+        label: '月刑',
+      },
     ]
 
     for (const { id, cycle, label } of cases) {
@@ -707,6 +724,7 @@ describe('来源精度', () => {
 
   it('每条规则的 locator 都指向其 sourceIds 中的卷次，不留悬空引用', () => {
     const volumePrefix: Record<string, string> = {
+      'src-xjbf-vol3-scan': '卷三',
       'src-xjbf-vol4-scan': '卷四',
       'src-xjbf-vol5-scan': '卷五',
       'src-xjbf-vol6-scan': '卷六',
@@ -722,6 +740,7 @@ describe('来源精度', () => {
 
   it('locator 点名的篇名必须被同卷来源标题覆盖，只对到卷次不算数', () => {
     const volumeOfSource: Record<string, string> = {
+      'src-xjbf-vol3-scan': '卷三',
       'src-xjbf-vol4-scan': '卷四',
       'src-xjbf-vol5-scan': '卷五',
       'src-xjbf-vol6-scan': '卷六',

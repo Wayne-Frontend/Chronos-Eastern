@@ -47,12 +47,12 @@ describe('findDates 输入校验', () => {
   })
 
   it('limited 事项允许查询', async () => {
-    const result = await query('2026-10-01', '2026-10-03')
+    const result = await query('2026-10-03', '2026-10-04')
 
     expect(result.ok).toBe(true)
     expect(result.ok && result.value.results.map((item) => item.dateKey)).toEqual([
-      '2026-10-02',
       '2026-10-03',
+      '2026-10-04',
     ])
   })
 
@@ -98,7 +98,7 @@ describe('findDates 输入校验', () => {
 
 describe('findDates 筛选结果', () => {
   it('按日期升序返回通过的日子，并给出规则说明', async () => {
-    const result = await query('2026-10-01', '2026-10-03')
+    const result = await query('2026-10-03', '2026-10-04')
 
     expect(result.ok).toBe(true)
 
@@ -107,15 +107,15 @@ describe('findDates 筛选结果', () => {
     }
 
     expect(result.value.status).toBe('complete')
-    expect(result.value.results.map((item) => item.dateKey)).toEqual(['2026-10-02', '2026-10-03'])
+    expect(result.value.results.map((item) => item.dateKey)).toEqual(['2026-10-03', '2026-10-04'])
     expect(result.value.results[0]).toMatchObject({
-      weekdayText: '星期五',
-      lunarText: '农历八月廿二',
+      weekdayText: '星期六',
+      lunarText: '农历八月廿三',
       tagText: '',
       matchedCount: 2,
     })
-    expect(result.value.results[0].ruleTexts[0]).toContain('建日')
-    expect(result.value.results[1].ruleTexts[0]).toContain('吉期')
+    expect(result.value.results[0].ruleTexts[0]).toContain('吉期')
+    expect(result.value.results[1].ruleTexts[0]).toContain('驿马')
   })
 
   it('结果严格按日期升序，重复查询结果一致', async () => {
@@ -177,8 +177,8 @@ describe('findDates 筛选结果', () => {
   })
 
   it('无冲突时冲突日期为空数组，不制造空占位', async () => {
-    // 10-02 为建日、10-03 为除日兼月德，两日均只命中宜项。
-    const result = await query('2026-10-02', '2026-10-03')
+    // 10-03 为除日兼月德、10-04 为驿马，两日均只命中宜项。
+    const result = await query('2026-10-03', '2026-10-04')
 
     expect(result.ok && result.value.conflictDates).toEqual([])
     expect(result.ok && result.value.summary.conflictDays).toBe(0)
@@ -202,7 +202,7 @@ describe('findDates 筛选结果', () => {
 
     expect(result.ok && result.value.rulePack).toMatchObject({
       id: 'xjbf-travel',
-      version: '1.15.0',
+      version: '1.16.0',
       completeness: 'partial',
     })
     expect(result.ok && result.value.rulePack.coverage.length).toBeGreaterThan(0)
