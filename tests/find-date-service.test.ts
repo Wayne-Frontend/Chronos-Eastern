@@ -10,7 +10,7 @@ vi.mock('../miniprogram/services/calendar-service', async (importOriginal) => {
 
   return {
     ...actual,
-    getDateInfo: (dateKey: string) =>
+    getDateInfo: vi.fn((dateKey: string) =>
       dateKey === FAILING_DATE
         ? {
             ok: false as const,
@@ -20,6 +20,7 @@ vi.mock('../miniprogram/services/calendar-service', async (importOriginal) => {
             context: { dateKey },
           }
         : actual.getDateInfo(dateKey),
+    ),
   }
 })
 
@@ -184,5 +185,22 @@ describe('findDates 筛选结果', () => {
     expect(result.ok).toBe(true)
     expect(progress[progress.length - 1]).toBe(90)
     expect(progress.length).toBeGreaterThan(1)
+  })
+
+  it('历法换算也按批执行，首次上报进度前不预计算完整 90 天', async () => {
+    const callCountsAtProgress: number[] = []
+
+    vi.mocked(calendarService.getDateInfo).mockClear()
+
+    await findDates(
+      { eventType: 'travel', startDate: '2027-01-01', endDate: '2027-03-31' },
+      {
+        onProgress: () => {
+          callCountsAtProgress.push(vi.mocked(calendarService.getDateInfo).mock.calls.length)
+        },
+      },
+    )
+
+    expect(callCountsAtProgress[0]).toBeLessThanOrEqual(13)
   })
 })

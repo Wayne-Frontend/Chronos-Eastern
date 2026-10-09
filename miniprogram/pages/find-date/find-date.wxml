@@ -102,6 +102,7 @@
 
   <view wx:if="{{view.coverageText}}" class="coverage-card">
     <text class="coverage-title">规则依据与覆盖范围</text>
+    <text class="coverage-warning">以下结果仅代表本版本已收录条款，未收录规则不参与判断。</text>
     <text class="coverage-text">{{view.coverageText}}</text>
   </view>
 

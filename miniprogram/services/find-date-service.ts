@@ -125,12 +125,20 @@ export async function findDates(
 
   const infos: (DateInfo | null)[] = []
 
-  // 多取一天：末日的次日是判断除夕等节日的输入。
-  for (let offset = 0; offset <= checkedDays; offset++) {
-    const dateKey = addDaysToDateKey(query.startDate, offset)
-    const info = dateKey ? getDateInfo(dateKey) : null
+  // 按需缓存日期，避免每批重复换算；通过日期多取下一日，用于判断除夕等节日。
+  const getInfoAtOffset = (offset: number): DateInfo | null => {
+    const cached = infos[offset]
 
-    infos.push(info && info.ok ? info.value : null)
+    if (cached !== undefined) {
+      return cached
+    }
+
+    const dateKey = addDaysToDateKey(query.startDate, offset)
+    const result = dateKey ? getDateInfo(dateKey) : null
+    const value = result && result.ok ? result.value : null
+
+    infos[offset] = value
+    return value
   }
 
   const results: FindDateResultItem[] = []
@@ -145,7 +153,7 @@ export async function findDates(
   }
 
   for (let index = 0; index < checkedDays; index++) {
-    const info = infos[index]
+    const info = getInfoAtOffset(index)
 
     if (!info) {
       summary.errorDays += 1
@@ -155,7 +163,9 @@ export async function findDates(
       switch (evaluation.status) {
         case 'pass':
           summary.passedDays += 1
-          results.push(buildResultItem(pack, info, infos[index + 1], evaluation.matchedRuleIds))
+          results.push(
+            buildResultItem(pack, info, getInfoAtOffset(index + 1), evaluation.matchedRuleIds),
+          )
           break
         case 'excluded':
           summary.excludedDays += 1

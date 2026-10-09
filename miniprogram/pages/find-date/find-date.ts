@@ -79,14 +79,16 @@ Component({
         ...patch,
       })
     },
-    onSelectEvent(event: { detail: { id: string } }) {
+    onSelectEvent(event: WechatMiniprogram.TouchEvent) {
       const view = this.data.view
 
       if (view.status === 'running') {
         return
       }
 
-      const option = EVENT_TYPES.find((entry) => entry.id === String(event.detail.id))
+      const option = EVENT_TYPES.find(
+        (entry) => entry.id === String(event.currentTarget.dataset.id),
+      )
 
       if (!option) {
         return
@@ -200,9 +202,16 @@ Component({
             : '',
       })
     },
-    onOpenDetail(event: { detail: { dateKey: string } }) {
+    onOpenDetail(event: WechatMiniprogram.TouchEvent) {
+      const dateKey = String(event.currentTarget.dataset.dateKey ?? '')
+      const eventType = this.data.view.selectedEventId
+
+      if (dateKey === '' || eventType === '') {
+        return
+      }
+
       wx.navigateTo({
-        url: `/pages/day-detail/day-detail?date=${String(event.detail.dateKey)}&from=find-date`,
+        url: `/pages/day-detail/day-detail?date=${dateKey}&eventType=${eventType}&from=find-date`,
       })
     },
     refreshFavoriteMarks() {
@@ -272,7 +281,7 @@ function toCard(item: FindDateOutcome['results'][number], favoriteKeys: Set<stri
     lunarText: item.lunarText,
     tagText: item.tagText,
     ruleTexts: [...item.ruleTexts],
-    moreText: more > 0 ? `另有 ${more} 条依据，进入详情查看全部` : '',
+    moreText: more > 0 ? `另有 ${more} 条依据，查看全部 ›` : '查看全部依据 ›',
     isFavorite: favoriteKeys.has(item.dateKey),
   }
 }
