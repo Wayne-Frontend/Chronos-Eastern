@@ -56,7 +56,7 @@ page {
   padding-top: 4rpx;
   color: var(--color-ink-muted);
   font-family: 'Songti SC', STSong, serif;
-  font-size: 24rpx;
+  font-size: 26rpx;
   letter-spacing: 5rpx;
 }
 
@@ -72,7 +72,7 @@ page {
   padding: 10rpx 18rpx;
   margin-bottom: 32rpx;
   color: var(--color-info-text);
-  font-size: 22rpx;
+  font-size: 24rpx;
   line-height: 1.4;
   background: var(--color-info-bg);
   border-radius: 999rpx;
@@ -81,6 +81,11 @@ page {
 .date-hero {
   padding-bottom: 40rpx;
   border-bottom: 1rpx solid var(--color-border);
+  transition: opacity 160ms ease-out;
+}
+
+.date-hero--pressed {
+  opacity: 0.82;
 }
 
 .date-meta {
@@ -175,7 +180,7 @@ page {
 .solar-term-description,
 .rule-description {
   color: var(--color-ink-muted);
-  font-size: 24rpx;
+  font-size: 26rpx;
   line-height: 1.55;
 }
 
@@ -198,10 +203,15 @@ page {
 }
 
 .text-action {
+  display: flex;
+  min-width: 144rpx;
+  min-height: 88rpx;
+  align-items: center;
+  justify-content: flex-end;
   padding: 10rpx 0 10rpx 16rpx;
   margin: 0;
   color: var(--color-ink-muted);
-  font-size: 24rpx;
+  font-size: 26rpx;
   line-height: 1.4;
   background: transparent;
 }
@@ -249,19 +259,23 @@ page {
 }
 
 .action-row {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
+  display: flex;
   gap: 24rpx;
   margin-top: 40rpx;
 }
 
 .home-action {
-  width: 100%;
+  flex: 1 1 0;
+  min-width: 0;
+  width: auto;
+  padding-right: 16rpx;
+  padding-left: 16rpx;
   margin: 0;
+  white-space: nowrap;
 }
 
 .action-arrow {
-  margin-left: 18rpx;
+  margin-left: 12rpx;
   font-family: serif;
   font-size: 44rpx;
   font-weight: 300;
@@ -275,7 +289,7 @@ page {
   justify-content: center;
   margin-top: 38rpx;
   color: var(--color-ink-muted);
-  font-size: 22rpx;
+  font-size: 24rpx;
 }
 
 .disclaimer-line {
@@ -300,5 +314,15 @@ page {
 
   .date-unit {
     font-size: 64rpx;
+  }
+
+  .action-row {
+    gap: 16rpx;
+  }
+
+  .home-action {
+    padding-right: 10rpx;
+    padding-left: 10rpx;
+    font-size: 28rpx;
   }
 }

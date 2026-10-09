@@ -18,7 +18,13 @@
       <text>界面预览 · 历法与规则数据尚未接入</text>
     </view>
 
-    <view class="date-hero" bindtap="openDetail" aria-role="button" aria-label="查看日期详情">
+    <view
+      class="date-hero"
+      bindtap="openDetail"
+      hover-class="date-hero--pressed"
+      aria-role="button"
+      aria-label="查看日期详情"
+    >
       <view class="date-meta">
         <text class="date-year">{{preview.yearText}}</text>
         <view class="date-divider"></view>

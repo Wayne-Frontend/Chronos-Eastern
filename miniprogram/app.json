@@ -12,7 +12,7 @@
     "navigationStyle": "custom"
   },
   "tabBar": {
-    "color": "#8D857C",
+    "color": "#756C63",
     "selectedColor": "#B44335",
     "backgroundColor": "#FFFDF8",
     "borderStyle": "white",
@@ -36,7 +36,6 @@
     "skyline": {
       "defaultDisplayBlock": true,
       "defaultContentBox": true,
-      "tagNameStyleIsolation": "legacy",
       "disableABTest": true,
       "sdkVersionBegin": "3.0.0",
       "sdkVersionEnd": "15.255.255"
