@@ -700,4 +700,41 @@ describe('来源精度', () => {
       }
     }
   })
+
+  it('locator 点名的篇名必须被同卷来源标题覆盖，只对到卷次不算数', () => {
+    const volumeOfSource: Record<string, string> = {
+      'src-xjbf-vol4-scan': '卷四',
+      'src-xjbf-vol5-scan': '卷五',
+      'src-xjbf-vol6-scan': '卷六',
+      'src-xjbf-vol11-scan': '卷十一',
+    }
+
+    for (const rule of TRAVEL_RULE_PACK.rules) {
+      // 只取「卷N《篇名》」这种带卷次的引用；「引《考原》」等别书名与同卷续引「及《…》」不在此列。
+      for (const match of rule.locator.matchAll(/卷(四|五|六|十一)《([^》]+)》/g)) {
+        const volumeText = match[1]
+        const section = match[2]
+
+        if (volumeText === undefined || section === undefined) {
+          throw new Error(`无法解析 locator 的卷次或篇名：${rule.id}`)
+        }
+
+        const volume = `卷${volumeText}`
+        const source = rule.sourceIds
+          .map((sourceId) => SOURCES.find((entry) => entry.id === sourceId))
+          .find((entry) => entry !== undefined && volumeOfSource[entry.id] === volume)
+
+        if (!source) {
+          throw new Error(`${rule.id} 引 ${volume}《${section}》，却没有挂 ${volume} 的来源`)
+        }
+
+        // 标题要么点名这一篇，要么用「等」声明只举其例。否则详情页上
+        // 「来源：卷四（义例二：建除十二神）」与「定位：卷四《月厌》」会被读成对不上。
+        expect(
+          source.title.includes(section) || source.title.includes('等'),
+          `${rule.id}：${volume}《${section}》未被来源标题「${source.title}」覆盖`,
+        ).toBe(true)
+      }
+    }
+  })
 })
