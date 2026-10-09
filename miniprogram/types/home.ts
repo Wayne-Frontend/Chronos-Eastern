@@ -34,6 +34,8 @@ export interface HomeViewModel {
   festivalText: string
   noticeText: string
   ruleRows: HomeRuleRow[]
-  /** 规则包版本与命中条数；规则不可用时为空串。 */
+  /** 命中的已校勘规则条数；无命中或规则不可用时为空串。不含规则包 id@version 这类术语。 */
   ruleCountText: string
+  /** 规则包只收部分条款时的覆盖范围说明；覆盖完整或规则不可用时为空串。 */
+  ruleCoverageText: string
 }

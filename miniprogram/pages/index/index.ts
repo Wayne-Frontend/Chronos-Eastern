@@ -1,4 +1,5 @@
 import { canQueryEventType, EVENT_TYPES } from '../../data/event-types'
+import { PARTIAL_COVERAGE_NOTICE } from '../../data/rules/manifest'
 import {
   getDateInfo,
   SUPPORTED_YEAR_MAX,
@@ -110,6 +111,7 @@ function buildSuccessViewModel(info: DateInfo): HomeViewModel {
     noticeText: '',
     ruleRows: ruleSection.rows,
     ruleCountText: ruleSection.countText,
+    ruleCoverageText: ruleSection.coverageText,
   }
 }
 
@@ -119,13 +121,18 @@ function buildSuccessViewModel(info: DateInfo): HomeViewModel {
  * 边界：本版本只按「第一个可查询事项」出摘要——目前即出行。宜忌并见时先出一行「不作结论」，
  * 再把双方依据列为佐证，避免用户只看「宜」那行就当成结论。
  */
-function buildRuleSection(dateKey: string): { rows: HomeRuleRow[]; countText: string } {
+function buildRuleSection(dateKey: string): {
+  rows: HomeRuleRow[]
+  countText: string
+  coverageText: string
+} {
   const eventType = EVENT_TYPES.find(canQueryEventType)
 
   if (!eventType) {
     return {
       rows: [unavailableRow()],
       countText: '',
+      coverageText: '',
     }
   }
 
@@ -135,6 +142,7 @@ function buildRuleSection(dateKey: string): { rows: HomeRuleRow[]; countText: st
     return {
       rows: [unavailableRow()],
       countText: '',
+      coverageText: '',
     }
   }
 
@@ -169,7 +177,13 @@ function buildRuleSection(dateKey: string): { rows: HomeRuleRow[]; countText: st
 
   return {
     rows,
-    countText: `${value.eventName} · 规则包 ${value.rulePack.id}@${value.rulePack.version} · 本日命中 ${value.matchedRules.length} 条`,
+    // 不给用户看规则包 id@version 这类术语；版本与来源在日期详情页的覆盖范围块里给。
+    countText:
+      value.matchedRules.length > 0
+        ? `${value.eventName} · 已校勘规则 ${value.matchedRules.length} 条`
+        : '',
+    // 事项为 partial 时首页也必须说明覆盖不全，不能只靠详情页兜底。
+    coverageText: value.rulePack.completeness === 'partial' ? PARTIAL_COVERAGE_NOTICE : '',
   }
 }
 
@@ -242,5 +256,6 @@ function buildFailureViewModel(dateKey: string, code: CalendarServiceErrorCode):
       : CALENDAR_UNAVAILABLE_HINT,
     ruleRows: [unavailableRow()],
     ruleCountText: '',
+    ruleCoverageText: '',
   }
 }

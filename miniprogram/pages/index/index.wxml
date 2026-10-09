@@ -95,6 +95,7 @@
       </view>
 
       <text wx:if="{{view.ruleCountText}}" class="rule-count">{{view.ruleCountText}}</text>
+      <text wx:if="{{view.ruleCoverageText}}" class="rule-coverage">{{view.ruleCoverageText}}</text>
     </view>
 
     <view class="action-row">

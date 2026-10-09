@@ -234,7 +234,8 @@ function buildRuleSection(dateKey: string, eventType: string): RuleSectionViewMo
       ...value.unknownRules.map((rule) => toRuleDisplayItem(rule, true)),
     ],
     coverageText: value.rulePack.coverage,
-    versionText: `${value.rulePack.id}@${value.rulePack.version}`,
+    // 只给版本号；规则包 id（xjbf-travel）是内部标识，对用户没有意义。
+    versionText: value.rulePack.version,
     noticeText: '',
     partialNoticeText: value.rulePack.completeness === 'partial' ? PARTIAL_COVERAGE_NOTICE : '',
   }

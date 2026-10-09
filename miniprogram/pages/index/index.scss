@@ -310,6 +310,15 @@ page {
   line-height: 1.5;
 }
 
+/* 覆盖范围提示：与详情页规则区、找日子结果区同一条文案，这里只做小字呈现。 */
+.rule-coverage {
+  display: block;
+  margin-top: 8rpx;
+  color: var(--color-info-text);
+  font-size: 22rpx;
+  line-height: 1.6;
+}
+
 .rule-title {
   margin-bottom: 6rpx;
   font-size: 28rpx;

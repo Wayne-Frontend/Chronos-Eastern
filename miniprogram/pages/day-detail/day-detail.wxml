@@ -82,7 +82,7 @@
       <text class="detail-rules__coverage-title">覆盖范围</text>
       <text>当前仅按已收录条款判断，未收录规则不参与结论。</text>
       <text>{{view.ruleSection.coverageText}}</text>
-      <text class="detail-rules__version">规则包 {{view.ruleSection.versionText}}</text>
+      <text class="detail-rules__version">规则依据版本 {{view.ruleSection.versionText}}</text>
     </view>
   </view>
 

@@ -239,7 +239,7 @@ Component({
         partialNoticeText: value.rulePack.completeness === 'partial' ? PARTIAL_COVERAGE_NOTICE : '',
         conditionText: `${option?.displayName ?? ''} · ${this.data.view.startDate} 至 ${
           this.data.view.endDate
-        } · 规则包 ${value.rulePack.id}@${value.rulePack.version}`,
+        } · 规则依据版本 ${value.rulePack.version}`,
         disclaimerText: option?.disclaimer ?? '',
         // 语气跟提示本身的语义走：计算失败才是 error，查无结果是正常结论。
         // 之前这里不设值，语气会残留自用户点按顺序，同一句话时红时灰。
