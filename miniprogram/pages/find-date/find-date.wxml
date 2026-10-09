@@ -1,0 +1,15 @@
+<navigation-bar title="找日子" back="{{false}}" color="#24211E" background="#F7F3EA"></navigation-bar>
+
+<view class="page-shell page-content find-date-page">
+  <view class="page-intro">
+    <text class="page-intro__eyebrow">有据可循</text>
+    <text class="page-intro__title">找日子</text>
+    <text class="page-intro__description">只查询有明确来源、经过校勘并通过测试的规则</text>
+  </view>
+  <view class="section-card">
+    <empty-state
+      title="规则尚在校勘"
+      description="首个事项完成“来源—规则—测试—解释”闭环后才会开放查询。"
+    ></empty-state>
+  </view>
+</view>

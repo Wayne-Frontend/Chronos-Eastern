@@ -1,0 +1,8 @@
+<view class="empty-state" aria-role="status">
+  <view class="empty-state__icon" aria-hidden="true">
+    <view class="empty-state__calendar-top"></view>
+    <view class="empty-state__calendar-dot"></view>
+  </view>
+  <text class="empty-state__title">{{title}}</text>
+  <text class="empty-state__description">{{description}}</text>
+</view>

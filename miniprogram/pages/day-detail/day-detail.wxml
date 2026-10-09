@@ -1,0 +1,14 @@
+<navigation-bar title="日期详情" color="#24211E" background="#F7F3EA"></navigation-bar>
+
+<view class="page-shell page-content detail-page">
+  <view class="detail-date section-card">
+    <text class="detail-date__label">当前日期</text>
+    <text class="detail-date__value">{{dateKey || '日期参数无效'}}</text>
+  </view>
+  <view class="section-card">
+    <empty-state
+      title="详情数据待接入"
+      description="历法适配器通过边界验证后，这里将展示农历、干支口径、节气与规则来源。"
+    ></empty-state>
+  </view>
+</view>

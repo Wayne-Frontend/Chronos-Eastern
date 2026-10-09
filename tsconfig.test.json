@@ -1,0 +1,11 @@
+{
+  "extends": "./tsconfig.json",
+  "compilerOptions": {
+    "module": "ESNext",
+    "moduleResolution": "Bundler",
+    "lib": ["ES2020", "DOM"],
+    "noEmit": true
+  },
+  "include": ["./tests/**/*.ts", "./miniprogram/types/**/*.ts", "./miniprogram/utils/**/*.ts"],
+  "exclude": ["node_modules", "typings"]
+}

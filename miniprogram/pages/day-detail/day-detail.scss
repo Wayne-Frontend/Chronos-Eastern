@@ -1,0 +1,22 @@
+.detail-page {
+  padding-top: 40rpx;
+}
+
+.detail-date {
+  display: flex;
+  flex-direction: column;
+  padding: 32rpx;
+  margin-bottom: 24rpx;
+}
+
+.detail-date__label {
+  margin-bottom: 12rpx;
+  color: var(--color-ink-muted);
+  font-size: 24rpx;
+}
+
+.detail-date__value {
+  font-family: 'Songti SC', STSong, serif;
+  font-size: 42rpx;
+  font-weight: 600;
+}

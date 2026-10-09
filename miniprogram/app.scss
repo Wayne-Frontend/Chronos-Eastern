@@ -1,0 +1,118 @@
+page {
+  --color-paper: #f7f3ea;
+  --color-surface: #fffdf8;
+  --color-ink: #24211e;
+  --color-ink-secondary: #625b53;
+  --color-ink-muted: #8d857c;
+  --color-cinnabar: #b44335;
+  --color-cinnabar-deep: #8e3027;
+  --color-cinnabar-soft: #f4e4df;
+  --color-gold: #c8a96b;
+  --color-border: #ded7cb;
+  --color-info-bg: #e9eff1;
+  --color-info-text: #45606a;
+  --color-error: #a33a32;
+  --font-size-caption: 24rpx;
+  --font-size-body: 28rpx;
+  --font-size-card-title: 32rpx;
+  --font-size-page-title: 40rpx;
+  --font-size-date-hero: 72rpx;
+  --space-1: 8rpx;
+  --space-2: 16rpx;
+  --space-3: 24rpx;
+  --space-4: 32rpx;
+  --space-6: 48rpx;
+  --radius-card: 24rpx;
+  --radius-button: 20rpx;
+  --calendar-cell-min-size: 80rpx;
+  --calendar-selected-size: 64rpx;
+  --shadow-card: 0 8rpx 24rpx rgb(36 33 30 / 6%);
+
+  min-height: 100%;
+  color: var(--color-ink);
+  font-family: -apple-system, BlinkMacSystemFont, 'PingFang SC', 'Microsoft YaHei', sans-serif;
+  background: var(--color-paper);
+}
+
+button {
+  box-sizing: border-box;
+  font: inherit;
+}
+
+button::after {
+  border: 0;
+}
+
+.page-shell {
+  min-height: 100vh;
+  box-sizing: border-box;
+  background: var(--color-paper);
+}
+
+.page-content {
+  padding: 32rpx;
+}
+
+.section-card {
+  box-sizing: border-box;
+  background: var(--color-surface);
+  border: 1rpx solid var(--color-border);
+  border-radius: var(--radius-card);
+}
+
+.page-intro {
+  display: flex;
+  flex-direction: column;
+  margin-bottom: 40rpx;
+}
+
+.page-intro__eyebrow {
+  margin-bottom: var(--space-2);
+  color: var(--color-cinnabar);
+  font-size: var(--font-size-caption);
+  letter-spacing: var(--space-1);
+}
+
+.page-intro__title {
+  margin-bottom: 12rpx;
+  font-family: 'Songti SC', STSong, serif;
+  font-size: 52rpx;
+  font-weight: 600;
+}
+
+.page-intro__description {
+  color: var(--color-ink-secondary);
+  font-size: 26rpx;
+  line-height: 1.55;
+}
+
+.primary-button,
+.secondary-button {
+  display: flex;
+  min-height: 88rpx;
+  align-items: center;
+  justify-content: center;
+  border-radius: var(--radius-button);
+  font-size: 30rpx;
+  font-weight: 500;
+  line-height: 1.4;
+  transition:
+    transform 160ms ease-out,
+    opacity 160ms ease-out;
+}
+
+.primary-button {
+  color: #fff;
+  background: var(--color-cinnabar);
+}
+
+.secondary-button {
+  color: var(--color-cinnabar-deep);
+  background: transparent;
+  border: 1rpx solid var(--color-cinnabar);
+}
+
+.button-pressed {
+  opacity: 0.88;
+  transform: scale(0.98);
+}

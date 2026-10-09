@@ -1,0 +1,15 @@
+<navigation-bar title="日历" back="{{false}}" color="#24211E" background="#F7F3EA"></navigation-bar>
+
+<view class="page-shell page-content calendar-page">
+  <view class="page-intro">
+    <text class="page-intro__eyebrow">岁序有时</text>
+    <text class="page-intro__title">月历</text>
+    <text class="page-intro__description">逐日历法信息将在日期服务验证完成后接入</text>
+  </view>
+  <view class="section-card">
+    <empty-state
+      title="月历能力建设中"
+      description="下一阶段将接入 42 格月历、节气节日标签与日期详情跳转。"
+    ></empty-state>
+  </view>
+</view>

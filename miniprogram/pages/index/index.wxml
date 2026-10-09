@@ -1,0 +1,93 @@
+<navigation-bar title="" back="{{false}}" color="#24211E" background="#F7F3EA"></navigation-bar>
+
+<scroll-view class="page-shell home-scroll" scroll-y type="list">
+  <view class="home-page">
+    <view class="brand-row">
+      <view class="brand-lockup">
+        <text class="brand-name">岁月良辰</text>
+        <text class="brand-seal">良辰</text>
+      </view>
+      <view class="brand-tagline">
+        <text>以日常之时</text>
+        <text>见生活之美</text>
+        <view class="tagline-line"></view>
+      </view>
+    </view>
+
+    <view class="fixture-notice" aria-role="note">
+      <text>界面预览 · 历法与规则数据尚未接入</text>
+    </view>
+
+    <view class="date-hero" bindtap="openDetail" aria-role="button" aria-label="查看日期详情">
+      <view class="date-meta">
+        <text class="date-year">{{preview.yearText}}</text>
+        <view class="date-divider"></view>
+        <text class="date-weekday">{{preview.weekdayText}}</text>
+      </view>
+      <view class="date-display">
+        <text class="date-number date-number--accent">{{preview.monthText}}</text>
+        <text class="date-unit">月</text>
+        <text class="date-number date-number--accent">{{preview.dayText}}</text>
+        <text class="date-unit">日</text>
+      </view>
+      <text class="date-secondary">{{preview.calendarPlaceholder}}</text>
+    </view>
+
+    <view class="solar-term-block">
+      <text class="solar-term-name">节气</text>
+      <view class="solar-term-divider"></view>
+      <view class="solar-term-copy">
+        <text class="solar-term-title">{{preview.solarTermTitle}}</text>
+        <text class="solar-term-description">{{preview.solarTermDescription}}</text>
+      </view>
+    </view>
+
+    <view class="rule-section">
+      <view class="section-heading">
+        <text class="section-title">今日传统规则参考</text>
+        <button class="text-action" bindtap="openDetail" hover-class="text-action--pressed">
+          查看说明 ›
+        </button>
+      </view>
+
+      <view class="rule-row">
+        <view class="rule-badge rule-badge--include">宜</view>
+        <view class="rule-copy">
+          <text class="rule-title">规则校勘中</text>
+          <text class="rule-description">{{preview.rulePlaceholder}}</text>
+        </view>
+      </view>
+
+      <view class="rule-row rule-row--last">
+        <view class="rule-badge rule-badge--exclude">忌</view>
+        <view class="rule-copy">
+          <text class="rule-title">暂不提供结论</text>
+          <text class="rule-description">仅展示有明确来源且验证通过的规则</text>
+        </view>
+      </view>
+    </view>
+
+    <view class="action-row">
+      <button
+        class="primary-button home-action"
+        bindtap="openFindDate"
+        hover-class="button-pressed"
+      >
+        找日子 <text class="action-arrow">›</text>
+      </button>
+      <button
+        class="secondary-button home-action"
+        bindtap="openCalendar"
+        hover-class="button-pressed"
+      >
+        看日历 <text class="action-arrow">›</text>
+      </button>
+    </view>
+
+    <view class="disclaimer-row">
+      <view class="disclaimer-line"></view>
+      <text>传统文化参考，请结合实际安排</text>
+      <view class="disclaimer-line"></view>
+    </view>
+  </view>
+</scroll-view>
