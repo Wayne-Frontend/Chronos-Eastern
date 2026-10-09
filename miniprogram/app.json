@@ -14,20 +14,26 @@
   "tabBar": {
     "color": "#756C63",
     "selectedColor": "#B44335",
-    "backgroundColor": "#FFFDF8",
+    "backgroundColor": "#FFFCF7",
     "borderStyle": "white",
     "list": [
       {
         "pagePath": "pages/index/index",
-        "text": "首页"
+        "text": "首页",
+        "iconPath": "assets/tabbar/home.png",
+        "selectedIconPath": "assets/tabbar/home-active.png"
       },
       {
         "pagePath": "pages/calendar/calendar",
-        "text": "日历"
+        "text": "日历",
+        "iconPath": "assets/tabbar/calendar.png",
+        "selectedIconPath": "assets/tabbar/calendar-active.png"
       },
       {
         "pagePath": "pages/find-date/find-date",
-        "text": "找日子"
+        "text": "找日子",
+        "iconPath": "assets/tabbar/find-date.png",
+        "selectedIconPath": "assets/tabbar/find-date-active.png"
       }
     ]
   },
