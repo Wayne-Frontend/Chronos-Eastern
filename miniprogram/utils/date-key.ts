@@ -41,23 +41,40 @@ export function parseDateKey(
   }
 }
 
+/** 把公历年月日格式化为日期键，不参与任何时区换算。 */
+export function formatDateKey(parts: CivilDateParts): DateKey {
+  return `${parts.year.toString().padStart(4, '0')}-${parts.month
+    .toString()
+    .padStart(2, '0')}-${parts.day.toString().padStart(2, '0')}` as DateKey
+}
+
 /**
  * 把绝对时刻换算成 UTC+8 民用日期键。
  * 原因："今天"必须先按 UTC+8 取年月日，不能读取宿主的本地时区；这里只用 UTC 取值，不受宿主时区影响。
  */
 export function dateKeyFromTimestampUtc8(timestamp: number): DateKey {
   const utc8 = new Date(timestamp + UTC8_OFFSET_MS)
-  const year = utc8.getUTCFullYear()
-  const month = utc8.getUTCMonth() + 1
-  const day = utc8.getUTCDate()
 
-  return `${year.toString().padStart(4, '0')}-${month
-    .toString()
-    .padStart(2, '0')}-${day.toString().padStart(2, '0')}` as DateKey
+  return formatDateKey({
+    year: utc8.getUTCFullYear(),
+    month: utc8.getUTCMonth() + 1,
+    day: utc8.getUTCDate(),
+  })
 }
 
 export function getTodayDateKey(): DateKey {
   return dateKeyFromTimestampUtc8(Date.now())
+}
+
+/**
+ * 切换到目标年月并保留同一日号；目标月没有该日号时取该月最后一日（方案 3.3）。
+ * 边界：selectedDateKey 无效时取该月 1 日，不猜测日期。
+ */
+export function shiftDateKeyToMonth(selectedDateKey: string, year: number, month: number): DateKey {
+  const parsed = parseDateKey(selectedDateKey)
+  const day = parsed.ok ? parsed.value.day : 1
+
+  return formatDateKey({ year, month, day: Math.min(day, getGregorianMonthDays(year, month)) })
 }
 
 /**

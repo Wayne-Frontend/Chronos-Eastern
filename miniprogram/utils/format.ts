@@ -11,6 +11,9 @@ export interface SolarTermSummary {
   description: string
 }
 
+/** 周一起始的星期表头，与月历 42 格布局一致（方案 2.2）。 */
+export const WEEKDAY_LABELS = ['一', '二', '三', '四', '五', '六', '日']
+
 const WEEKDAY_NAMES = ['星期日', '星期一', '星期二', '星期三', '星期四', '星期五', '星期六']
 const SOLAR_TERM_INSTANT_PATTERN = /^\d{4}-\d{2}-\d{2}T(\d{2}:\d{2})/
 

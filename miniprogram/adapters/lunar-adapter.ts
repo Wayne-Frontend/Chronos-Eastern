@@ -7,6 +7,7 @@ import type {
   SolarTermInfo,
 } from '../types/calendar'
 import type { AppFailure, AppResult } from '../types/result'
+import { formatDateKey } from '../utils/date-key'
 import { getGregorianMonthDays } from '../utils/util'
 
 export type LunarAdapterErrorCode = 'CALENDAR_COMPUTE_FAILED'
@@ -122,12 +123,6 @@ function hasCompleteFields(result: LunarAdapterDateFacts): boolean {
     result.lunar.dayName.length > 0 &&
     Object.values(result.ganzhi).every((value) => value.length > 0)
   )
-}
-
-function formatDateKey(input: CivilDateParts): DateKey {
-  return `${input.year.toString().padStart(4, '0')}-${input.month
-    .toString()
-    .padStart(2, '0')}-${input.day.toString().padStart(2, '0')}` as DateKey
 }
 
 function calendarComputeFailed(input: CivilDateParts): LunarAdapterFailure {

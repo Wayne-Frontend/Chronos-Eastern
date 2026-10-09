@@ -5,6 +5,7 @@ import {
   dateKeyFromTimestampUtc8,
   getTodayDateKey,
   parseDateKey,
+  shiftDateKeyToMonth,
 } from '../miniprogram/utils/date-key'
 
 describe('parseDateKey', () => {
@@ -63,6 +64,23 @@ describe('dateKeyFromTimestampUtc8', () => {
     vi.setSystemTime(new Date('2026-10-08T16:00:00Z'))
 
     expect(getTodayDateKey()).toBe('2026-10-09')
+  })
+})
+
+describe('shiftDateKeyToMonth', () => {
+  it.each([
+    ['2026-10-09', 2026, 11, '2026-11-09'],
+    ['2026-12-31', 2027, 1, '2027-01-31'],
+    ['2026-01-31', 2026, 2, '2026-02-28'],
+    ['2024-01-31', 2024, 2, '2024-02-29'],
+    ['2026-03-31', 2026, 4, '2026-04-30'],
+  ])('%s 切到 %i-%i → %s', (selectedDateKey, year, month, expected) => {
+    expect(shiftDateKeyToMonth(selectedDateKey, year, month)).toBe(expected)
+  })
+
+  it('无效选中日时退回该月 1 日', () => {
+    expect(shiftDateKeyToMonth('', 2026, 11)).toBe('2026-11-01')
+    expect(shiftDateKeyToMonth('2026-02-30', 2026, 11)).toBe('2026-11-01')
   })
 })
 

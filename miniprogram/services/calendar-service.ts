@@ -1,7 +1,8 @@
 import { getLunarDateFacts } from '../adapters/lunar-adapter'
-import type { DateInfo } from '../types/calendar'
+import type { DateInfo, DateKey } from '../types/calendar'
 import type { AppFailure, AppResult } from '../types/result'
-import { parseDateKey } from '../utils/date-key'
+import { formatDateKey, parseDateKey } from '../utils/date-key'
+import { getGregorianWeekday } from '../utils/util'
 
 export type CalendarServiceErrorCode =
   'INVALID_DATE' | 'CALENDAR_OUT_OF_RANGE' | 'CALENDAR_COMPUTE_FAILED'
@@ -10,6 +11,18 @@ type CalendarServiceFailure = AppFailure<CalendarServiceErrorCode, { dateKey: st
 
 export const SUPPORTED_YEAR_MIN = 1901
 export const SUPPORTED_YEAR_MAX = 2100
+
+export interface MonthGridCell {
+  dateKey: DateKey
+  day: number
+  /** 格内单一标签：节气 > 农历初一（月名）> 农历日名。 */
+  labelText: string
+  labelKind: 'solar-term' | 'lunar-month' | 'lunar-day' | 'none'
+  isCurrentMonth: boolean
+  isToday: boolean
+}
+
+const GRID_CELL_COUNT = 42
 
 /**
  * 按 UTC+8 民用日组装统一日期信息。
@@ -56,6 +69,68 @@ export function getDateInfo(
       },
     },
   }
+}
+
+/**
+ * 生成月历 42 格渲染模型：周一起始，首尾由相邻月份补位。
+ * 原因：页面只接收渲染字段，不接触历法库对象；计算是同步的，因此不存在旧月份结果覆盖新月份的竞态。
+ * 边界：补位日超出支持年份时仍显示日号，但不给标签。
+ */
+export function getMonthGrid(
+  year: number,
+  month: number,
+  todayKey: string,
+): AppResult<MonthGridCell[], CalendarServiceErrorCode, { dateKey: string }> {
+  if (!Number.isInteger(month) || month < 1 || month > 12) {
+    return getDateInfoFailure('INVALID_DATE', '月份参数无效', `${year}-${month}`)
+  }
+
+  if (!Number.isInteger(year) || year < SUPPORTED_YEAR_MIN || year > SUPPORTED_YEAR_MAX) {
+    return getDateInfoFailure(
+      'CALENDAR_OUT_OF_RANGE',
+      `月份超出本版本支持范围（${SUPPORTED_YEAR_MIN}-01 至 ${SUPPORTED_YEAR_MAX}-12）`,
+      `${year}-${month}`,
+    )
+  }
+
+  const offset = (getGregorianWeekday(year, month, 1) + 6) % 7
+  const cells: MonthGridCell[] = []
+
+  for (let index = 0; index < GRID_CELL_COUNT; index++) {
+    const cellDate = new Date(Date.UTC(year, month - 1, 1 - offset + index))
+    const cellYear = cellDate.getUTCFullYear()
+    const cellMonth = cellDate.getUTCMonth() + 1
+    const cellDay = cellDate.getUTCDate()
+    const dateKey = formatDateKey({ year: cellYear, month: cellMonth, day: cellDay })
+    const info = getDateInfo(dateKey)
+    const label = info.ok ? describeCellLabel(info.value) : { text: '', kind: 'none' as const }
+
+    cells.push({
+      dateKey,
+      day: cellDay,
+      labelText: label.text,
+      labelKind: label.kind,
+      isCurrentMonth: cellYear === year && cellMonth === month,
+      isToday: dateKey === todayKey,
+    })
+  }
+
+  return { ok: true, value: cells }
+}
+
+function describeCellLabel(info: DateInfo): {
+  text: string
+  kind: MonthGridCell['labelKind']
+} {
+  if (info.solarTerm) {
+    return { text: info.solarTerm.name, kind: 'solar-term' }
+  }
+
+  if (info.lunar.day === 1) {
+    return { text: info.lunar.monthName, kind: 'lunar-month' }
+  }
+
+  return { text: info.lunar.dayName, kind: 'lunar-day' }
 }
 
 function getDateInfoFailure(
