@@ -76,11 +76,19 @@
   line-height: 1.2;
 }
 
-.cell__label--term {
+.cell__label--solar-term {
   color: #a98542;
 }
 
-.cell__label--month {
+.cell__label--festival {
+  color: var(--color-cinnabar-deep);
+}
+
+.cell__label--commemoration {
+  color: var(--color-ink-secondary);
+}
+
+.cell__label--lunar-month {
   color: var(--color-ink-secondary);
 }
 

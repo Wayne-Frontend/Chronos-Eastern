@@ -18,7 +18,7 @@
         <text class="cell__day">{{item.day}}</text>
       </view>
       <text
-        class="cell__label {{item.labelKind === 'solar-term' ? 'cell__label--term' : ''}} {{item.labelKind === 'lunar-month' ? 'cell__label--month' : ''}}"
+        class="cell__label cell__label--{{item.labelKind}}"
         >{{item.labelText}}</text
       >
       <text wx:if="{{item.isToday}}" class="cell__badge">今</text>

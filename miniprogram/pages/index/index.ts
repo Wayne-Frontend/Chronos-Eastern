@@ -4,9 +4,10 @@ import {
   SUPPORTED_YEAR_MIN,
   type CalendarServiceErrorCode,
 } from '../../services/calendar-service'
+import { matchFestivals } from '../../services/festival-service'
 import type { DateInfo } from '../../types/calendar'
 import type { HomeViewModel } from '../../types/home'
-import { getTodayDateKey, parseDateKey } from '../../utils/date-key'
+import { addDaysToDateKey, getTodayDateKey, parseDateKey } from '../../utils/date-key'
 import {
   formatGanzhiSummary,
   formatLunarText,
@@ -75,6 +76,11 @@ function buildHomeViewModel(): HomeViewModel {
 
 function buildSuccessViewModel(info: DateInfo): HomeViewModel {
   const solarTermText = formatSolarTermSummary(info)
+  const nextDayKey = addDaysToDateKey(info.dateKey, 1)
+  const nextDay = nextDayKey ? getDateInfo(nextDayKey) : null
+  const traditionalFestivals = matchFestivals(info, nextDay?.ok ? nextDay.value : null).filter(
+    (festival) => festival.category === 'traditional',
+  )
 
   return {
     status: 'ok',
@@ -87,6 +93,10 @@ function buildSuccessViewModel(info: DateInfo): HomeViewModel {
     ganzhiItems: formatGanzhiSummary(info.ganzhi),
     solarTermTitle: solarTermText.title,
     solarTermDescription: solarTermText.description,
+    festivalText:
+      traditionalFestivals.length > 0
+        ? traditionalFestivals.map((festival) => festival.name).join('、')
+        : '今日无传统节日',
     noticeText: '',
   }
 }
@@ -109,6 +119,7 @@ function buildFailureViewModel(dateKey: string, code: CalendarServiceErrorCode):
     ganzhiItems: [],
     solarTermTitle: '',
     solarTermDescription: '',
+    festivalText: '',
     noticeText: outOfRange
       ? `设备日期超出本版本支持范围（${SUPPORTED_YEAR_MIN}-01-01 至 ${SUPPORTED_YEAR_MAX}-12-31）`
       : CALENDAR_UNAVAILABLE_HINT,

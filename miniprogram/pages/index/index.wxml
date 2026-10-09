@@ -55,12 +55,20 @@
       </button>
     </view>
 
-    <view class="solar-term-block">
-      <text class="solar-term-name">节气</text>
-      <view class="solar-term-divider"></view>
-      <view class="solar-term-copy">
-        <text class="solar-term-title">{{view.solarTermTitle}}</text>
-        <text class="solar-term-description">{{view.solarTermDescription}}</text>
+    <view class="info-block">
+      <text class="info-block__label">节气</text>
+      <view class="info-block__divider"></view>
+      <view class="info-block__copy">
+        <text class="info-block__title">{{view.solarTermTitle}}</text>
+        <text class="info-block__description">{{view.solarTermDescription}}</text>
+      </view>
+    </view>
+
+    <view wx:if="{{view.festivalText}}" class="info-block">
+      <text class="info-block__label">节日</text>
+      <view class="info-block__divider"></view>
+      <view class="info-block__copy">
+        <text class="info-block__title">{{view.festivalText}}</text>
       </view>
     </view>
 

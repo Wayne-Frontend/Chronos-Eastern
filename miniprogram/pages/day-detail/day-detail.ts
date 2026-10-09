@@ -4,8 +4,10 @@ import {
   SUPPORTED_YEAR_MIN,
   type CalendarServiceErrorCode,
 } from '../../services/calendar-service'
+import { FESTIVAL_CATEGORY_LABELS } from '../../data/festivals'
+import { matchFestivals } from '../../services/festival-service'
 import type { DateInfo } from '../../types/calendar'
-import { getTodayDateKey, parseDateKey } from '../../utils/date-key'
+import { addDaysToDateKey, getTodayDateKey, parseDateKey } from '../../utils/date-key'
 import {
   formatGanzhiWithConventions,
   formatLunarText,
@@ -18,6 +20,12 @@ import { getGregorianWeekday } from '../../utils/util'
 
 type DayDetailStatus = 'ok' | 'invalid' | 'out_of_range' | 'error'
 
+interface FestivalDisplayItem {
+  id: string
+  name: string
+  categoryLabel: string
+}
+
 interface DayDetailViewModel {
   status: DayDetailStatus
   dateLabel: string
@@ -27,6 +35,7 @@ interface DayDetailViewModel {
   ganzhiItems: GanzhiDisplayItem[]
   todaySolarTermText: string
   nextSolarTermText: string
+  festivalItems: FestivalDisplayItem[]
   noticeText: string
 }
 
@@ -41,6 +50,7 @@ Page({
       ganzhiItems: [],
       todaySolarTermText: '',
       nextSolarTermText: '',
+      festivalItems: [],
       noticeText: '',
     } as DayDetailViewModel,
   },
@@ -65,6 +75,9 @@ function buildDayDetailViewModel(input: string): DayDetailViewModel {
 }
 
 function buildSuccessViewModel(info: DateInfo): DayDetailViewModel {
+  const nextDayKey = addDaysToDateKey(info.dateKey, 1)
+  const nextDay = nextDayKey ? getDateInfo(nextDayKey) : null
+
   return {
     status: 'ok',
     dateLabel: '公历',
@@ -72,6 +85,11 @@ function buildSuccessViewModel(info: DateInfo): DayDetailViewModel {
     weekdayText: formatWeekday(info.solar.weekday),
     lunarText: formatLunarText(info.lunar),
     ganzhiItems: formatGanzhiWithConventions(info.ganzhi),
+    festivalItems: matchFestivals(info, nextDay?.ok ? nextDay.value : null).map((festival) => ({
+      id: festival.id,
+      name: festival.name,
+      categoryLabel: FESTIVAL_CATEGORY_LABELS[festival.category],
+    })),
     todaySolarTermText: info.solarTerm
       ? `${info.solarTerm.name} · 交节时刻 ${formatSolarTermTime(info.solarTerm.instant)}`
       : '今日无节气',
@@ -105,6 +123,7 @@ function buildFailureViewModel(input: string, code: CalendarServiceErrorCode): D
     ganzhiItems: [],
     todaySolarTermText: '',
     nextSolarTermText: '',
+    festivalItems: [],
     noticeText: buildFailureNotice(code),
   }
 }

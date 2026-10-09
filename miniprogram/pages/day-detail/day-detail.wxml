@@ -30,11 +30,13 @@
     <text class="detail-caption">年、月干支在交节当天整日按新值计算（按日口径）。</text>
   </view>
 
-  <view class="detail-block section-card">
-    <empty-state
-      title="节日数据整理中"
-      description="传统节日将在来源登记与闰月规则确认后接入。"
-    ></empty-state>
+  <view wx:if="{{view.status === 'ok'}}" class="detail-facts section-card">
+    <text class="detail-facts__title">节日</text>
+    <view wx:for="{{view.festivalItems}}" wx:key="id" class="detail-row">
+      <text class="detail-row__label">{{item.categoryLabel}}</text>
+      <text class="detail-row__value">{{item.name}}</text>
+    </view>
+    <text wx:if="{{view.festivalItems.length === 0}}" class="detail-caption">无已收录节日</text>
   </view>
 
   <view class="detail-block section-card">

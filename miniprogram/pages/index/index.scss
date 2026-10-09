@@ -184,14 +184,14 @@ page {
   line-height: 1.6;
 }
 
-.solar-term-block {
+.info-block {
   display: flex;
   align-items: flex-start;
   padding: 36rpx 0;
   border-bottom: 1rpx solid var(--color-border);
 }
 
-.solar-term-name {
+.info-block__label {
   color: #a98542;
   font-family: 'Songti SC', STSong, serif;
   font-size: 38rpx;
@@ -199,14 +199,14 @@ page {
   letter-spacing: 8rpx;
 }
 
-.solar-term-divider {
+.info-block__divider {
   width: 1rpx;
   height: 58rpx;
   margin: 2rpx 28rpx 0 18rpx;
   background: var(--color-gold);
 }
 
-.solar-term-copy,
+.info-block__copy,
 .rule-copy {
   display: flex;
   min-width: 0;
@@ -214,12 +214,12 @@ page {
   flex-direction: column;
 }
 
-.solar-term-title {
+.info-block__title {
   margin-bottom: 10rpx;
   font-size: 30rpx;
 }
 
-.solar-term-description,
+.info-block__description,
 .rule-description {
   color: var(--color-ink-muted);
   font-size: 26rpx;

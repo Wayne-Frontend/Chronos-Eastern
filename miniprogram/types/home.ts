@@ -14,5 +14,6 @@ export interface HomeViewModel {
   ganzhiItems: GanzhiDisplayItem[]
   solarTermTitle: string
   solarTermDescription: string
+  festivalText: string
   noticeText: string
 }

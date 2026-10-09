@@ -3,6 +3,7 @@ import type { DateInfo, DateKey } from '../types/calendar'
 import type { AppFailure, AppResult } from '../types/result'
 import { formatDateKey, parseDateKey } from '../utils/date-key'
 import { getGregorianWeekday } from '../utils/util'
+import { matchFestivals } from './festival-service'
 
 export type CalendarServiceErrorCode =
   'INVALID_DATE' | 'CALENDAR_OUT_OF_RANGE' | 'CALENDAR_COMPUTE_FAILED'
@@ -15,9 +16,9 @@ export const SUPPORTED_YEAR_MAX = 2100
 export interface MonthGridCell {
   dateKey: DateKey
   day: number
-  /** 格内单一标签：节气 > 农历初一（月名）> 农历日名。 */
+  /** 格内单一标签：节气 > 传统节日 > 纪念日 > 农历初一（月名）> 农历日名。 */
   labelText: string
-  labelKind: 'solar-term' | 'lunar-month' | 'lunar-day' | 'none'
+  labelKind: 'solar-term' | 'festival' | 'commemoration' | 'lunar-month' | 'lunar-day' | 'none'
   isCurrentMonth: boolean
   isToday: boolean
 }
@@ -94,36 +95,63 @@ export function getMonthGrid(
   }
 
   const offset = (getGregorianWeekday(year, month, 1) + 6) % 7
-  const cells: MonthGridCell[] = []
+  const dates: { dateKey: DateKey; day: number; isCurrentMonth: boolean }[] = []
+  const facts: (DateInfo | null)[] = []
 
-  for (let index = 0; index < GRID_CELL_COUNT; index++) {
+  // 多算一天：末格的次日是判断除夕所必需的输入。
+  for (let index = 0; index <= GRID_CELL_COUNT; index++) {
     const cellDate = new Date(Date.UTC(year, month - 1, 1 - offset + index))
     const cellYear = cellDate.getUTCFullYear()
     const cellMonth = cellDate.getUTCMonth() + 1
     const cellDay = cellDate.getUTCDate()
     const dateKey = formatDateKey({ year: cellYear, month: cellMonth, day: cellDay })
     const info = getDateInfo(dateKey)
-    const label = info.ok ? describeCellLabel(info.value) : { text: '', kind: 'none' as const }
 
-    cells.push({
+    dates.push({
       dateKey,
       day: cellDay,
+      isCurrentMonth: cellYear === year && cellMonth === month,
+    })
+    facts.push(info.ok ? info.value : null)
+  }
+
+  const cells: MonthGridCell[] = dates.slice(0, GRID_CELL_COUNT).map((date, index) => {
+    const info = facts[index]
+    const label = info
+      ? describeCellLabel(info, facts[index + 1])
+      : { text: '', kind: 'none' as const }
+
+    return {
+      dateKey: date.dateKey,
+      day: date.day,
       labelText: label.text,
       labelKind: label.kind,
-      isCurrentMonth: cellYear === year && cellMonth === month,
-      isToday: dateKey === todayKey,
-    })
-  }
+      isCurrentMonth: date.isCurrentMonth,
+      isToday: date.dateKey === todayKey,
+    }
+  })
 
   return { ok: true, value: cells }
 }
 
-function describeCellLabel(info: DateInfo): {
+function describeCellLabel(
+  info: DateInfo,
+  nextDayInfo: DateInfo | null,
+): {
   text: string
   kind: MonthGridCell['labelKind']
 } {
   if (info.solarTerm) {
     return { text: info.solarTerm.name, kind: 'solar-term' }
+  }
+
+  const festivals = matchFestivals(info, nextDayInfo)
+
+  if (festivals.length > 0) {
+    return {
+      text: festivals.map((festival) => festival.name).join('·'),
+      kind: festivals[0].category === 'traditional' ? 'festival' : 'commemoration',
+    }
   }
 
   if (info.lunar.day === 1) {

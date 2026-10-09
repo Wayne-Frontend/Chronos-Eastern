@@ -98,7 +98,8 @@ describe('getDateInfo', () => {
         dateKey: '2026-10-01',
         day: 1,
         isCurrentMonth: true,
-        labelText: '廿一',
+        labelText: '国庆节',
+        labelKind: 'commemoration',
       })
       expect(grid[41]).toMatchObject({
         dateKey: '2026-11-08',
@@ -107,13 +108,27 @@ describe('getDateInfo', () => {
       })
     })
 
-    it('标签优先级：节气 > 农历初一（月名）> 农历日名', () => {
+    it('标签优先级：节气 > 传统节日 > 纪念日 > 农历初一（月名）> 农历日名', () => {
       const grid = getGrid(2026, 10)
       const cell = (dateKey: string) => grid.find((item) => item.dateKey === dateKey)
 
       expect(cell('2026-10-08')).toMatchObject({ labelText: '寒露', labelKind: 'solar-term' })
+      expect(cell('2026-10-01')).toMatchObject({ labelText: '国庆节', labelKind: 'commemoration' })
       expect(cell('2026-10-10')).toMatchObject({ labelText: '九月', labelKind: 'lunar-month' })
       expect(cell('2026-10-09')).toMatchObject({ labelText: '廿九', labelKind: 'lunar-day' })
+
+      const midAutumn = getGrid(2026, 9).find((item) => item.dateKey === '2026-09-25')
+
+      expect(midAutumn).toMatchObject({ labelText: '中秋节', labelKind: 'festival' })
+    })
+
+    it('除夕在腊月只有廿九的年份仍正确落格', () => {
+      const grid = getGrid(2026, 2)
+
+      expect(grid.find((item) => item.dateKey === '2026-02-16')).toMatchObject({
+        labelText: '除夕',
+        labelKind: 'festival',
+      })
     })
 
     it('只标记今天一格', () => {
@@ -140,7 +155,8 @@ describe('getDateInfo', () => {
 
       expect(grid[0]).toMatchObject({ dateKey: '2026-11-30', labelText: '廿二' })
       expect(grid.find((item) => item.dateKey === '2027-01-01')).toMatchObject({
-        labelText: '廿四',
+        labelText: '元旦',
+        labelKind: 'commemoration',
         isCurrentMonth: false,
       })
     })
