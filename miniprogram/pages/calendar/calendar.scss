@@ -36,8 +36,10 @@
 
 .month-bar__title {
   display: flex;
-  align-items: baseline;
-  gap: 10rpx;
+  min-width: 300rpx;
+  align-items: center;
+  justify-content: center;
+  gap: 12rpx;
   padding: 12rpx 20rpx;
   border-radius: var(--radius-button);
 }
@@ -46,10 +48,11 @@
   font-family: 'Songti SC', STSong, serif;
   font-size: 40rpx;
   font-weight: 600;
+  white-space: nowrap;
 }
 
 .month-bar__hint {
-  color: var(--color-ink-muted);
+  color: var(--color-ink-faint);
   font-size: 22rpx;
 }
 

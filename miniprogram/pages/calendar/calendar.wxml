@@ -22,7 +22,7 @@
     >
       <view class="month-bar__title" aria-role="button" aria-label="选择年月">
         <text class="month-bar__text">{{view.titleText}}</text>
-        <text class="month-bar__hint">选择 ›</text>
+        <text class="month-bar__hint">切换</text>
       </view>
     </picker>
 

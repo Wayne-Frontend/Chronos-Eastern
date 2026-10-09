@@ -1,11 +1,7 @@
 <navigation-bar title="找日子" back="{{false}}" color="#24211E" background="#F7F3EA"></navigation-bar>
 
 <view class="page-shell page-content find-date-page">
-  <view class="page-intro">
-    <text class="page-intro__eyebrow">有据可循</text>
-    <text class="page-intro__title">找日子</text>
-    <text class="page-intro__description">只列出符合本版本已收录、且标明来源的传统规则的日期</text>
-  </view>
+  <text class="page-hint">只列出符合本版本已收录、且标明来源的传统规则的日期</text>
 
   <view class="section-card block">
     <text class="block__title">选择事项</text>
@@ -63,7 +59,7 @@
       bindtap="onQuery"
       hover-class="button-pressed"
     >
-      查询符合已收录规则的日期
+      查询符合规则的日期
     </button>
     <text wx:if="{{view.progressText}}" class="progress-text">{{view.progressText}}</text>
     <text wx:if="{{view.expiredNotice}}" class="expired-text">{{view.expiredNotice}}</text>
