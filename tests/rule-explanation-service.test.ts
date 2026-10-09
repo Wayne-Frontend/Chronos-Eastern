@@ -19,11 +19,12 @@ describe('getDateRuleExplanation', () => {
       status: 'pass',
       rulePack: {
         id: 'xjbf-travel',
-        version: '1.0.0',
+        version: '1.14.0',
       },
     })
-    expect(result.value.rulePack.coverage).toContain('宜项 16 条中收录 2 条')
-    expect(result.value.matchedRules).toHaveLength(1)
+    expect(result.value.rulePack.completeness).toBe('partial')
+    expect(result.value.rulePack.coverage).toContain('宜项 16 条中收录 14 条')
+    expect(result.value.matchedRules).toHaveLength(2)
     expect(result.value.matchedRules[0]).toMatchObject({
       id: 'xjbf-travel-0001',
       effect: 'include',
@@ -56,6 +57,10 @@ describe('getDateRuleExplanation', () => {
 
   it('拒绝未开放事项和无效日期', () => {
     expect(getDateRuleExplanation('2026-10-02', 'relocation')).toMatchObject({
+      ok: false,
+      code: 'RULE_PACK_MISSING',
+    })
+    expect(getDateRuleExplanation('2026-10-02', 'funeral')).toMatchObject({
       ok: false,
       code: 'RULE_PACK_MISSING',
     })

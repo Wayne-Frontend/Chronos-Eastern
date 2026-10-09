@@ -36,6 +36,24 @@ describe('findDates 输入校验', () => {
       ok: false,
       code: 'RULE_PACK_MISSING',
     })
+    expect(await query('2026-10-01', '2026-10-30', 'moving-in')).toMatchObject({
+      ok: false,
+      code: 'RULE_PACK_MISSING',
+    })
+    expect(await query('2026-10-01', '2026-10-30', 'funeral')).toMatchObject({
+      ok: false,
+      code: 'RULE_PACK_MISSING',
+    })
+  })
+
+  it('limited 事项允许查询', async () => {
+    const result = await query('2026-10-01', '2026-10-03')
+
+    expect(result.ok).toBe(true)
+    expect(result.ok && result.value.results.map((item) => item.dateKey)).toEqual([
+      '2026-10-02',
+      '2026-10-03',
+    ])
   })
 
   it('未知事项禁止查询', async () => {
@@ -89,14 +107,15 @@ describe('findDates 筛选结果', () => {
     }
 
     expect(result.value.status).toBe('complete')
-    expect(result.value.results.map((item) => item.dateKey)).toEqual(['2026-10-02'])
+    expect(result.value.results.map((item) => item.dateKey)).toEqual(['2026-10-02', '2026-10-03'])
     expect(result.value.results[0]).toMatchObject({
       weekdayText: '星期五',
       lunarText: '农历八月廿二',
       tagText: '',
-      matchedCount: 1,
+      matchedCount: 2,
     })
     expect(result.value.results[0].ruleTexts[0]).toContain('建日')
+    expect(result.value.results[1].ruleTexts[0]).toContain('吉期')
   })
 
   it('结果严格按日期升序，重复查询结果一致', async () => {
@@ -139,7 +158,8 @@ describe('findDates 筛选结果', () => {
   })
 
   it('纳入与排除同级命中的日子记入冲突计数、不进入结果', async () => {
-    // 2026-05-07 与 05-19 为巳月巳日：既是建日（宜）又是巳日（忌）
+    // 巳月巳日中，05-07、05-19 既是建日（宜）又是巳日（忌）；
+    // 巳月为四月，月德在庚、月德合在乙，另有两日因月神与忌项同日而冲突。
     const result = await query('2026-05-05', '2026-05-20')
 
     expect(result.ok).toBe(true)
@@ -148,8 +168,20 @@ describe('findDates 筛选结果', () => {
       return
     }
 
-    expect(result.value.summary.conflictDays).toBe(2)
+    expect(result.value.summary.conflictDays).toBe(12)
     expect(result.value.results.map((item) => item.dateKey)).not.toContain('2026-05-07')
+    // 冲突日期必须连同计数一起返回，页面才能逐日说明，而不是让日期凭空消失。
+    expect(result.value.conflictDates).toHaveLength(12)
+    expect(result.value.conflictDates).toContain('2026-05-07')
+    expect([...result.value.conflictDates].sort()).toEqual(result.value.conflictDates)
+  })
+
+  it('无冲突时冲突日期为空数组，不制造空占位', async () => {
+    // 10-02 为建日、10-03 为除日兼月德，两日均只命中宜项。
+    const result = await query('2026-10-02', '2026-10-03')
+
+    expect(result.ok && result.value.conflictDates).toEqual([])
+    expect(result.ok && result.value.summary.conflictDays).toBe(0)
   })
 
   it('任一日期计算失败时整次查询标为 partial，并保留错误计数', async () => {
@@ -165,12 +197,13 @@ describe('findDates 筛选结果', () => {
     expect(result.value.summary.errorDays).toBe(1)
   })
 
-  it('携带规则包版本与覆盖范围，供页面展示', async () => {
+  it('携带规则包版本、覆盖范围与完整性，供页面展示', async () => {
     const result = await query('2026-10-01', '2026-10-03')
 
     expect(result.ok && result.value.rulePack).toMatchObject({
       id: 'xjbf-travel',
-      version: '1.0.0',
+      version: '1.14.0',
+      completeness: 'partial',
     })
     expect(result.ok && result.value.rulePack.coverage.length).toBeGreaterThan(0)
   })

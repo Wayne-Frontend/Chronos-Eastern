@@ -55,6 +55,21 @@ export const SOURCES: readonly SourceEntry[] = [
     kind: 'classic-scan',
   },
   {
+    id: 'src-xjbf-vol5-scan',
+    title: '钦定协纪辨方书·卷五（影印本，义例三：天德、月德、天德合、月德合、天赦等）',
+    publisher: 'Wikimedia Commons · CADAL 浙江大学图书馆藏本',
+    url: 'https://commons.wikimedia.org/wiki/File:CADAL06056506_欽定協紀辨方書·卷五.djvu',
+    kind: 'classic-scan',
+  },
+  {
+    id: 'src-xjbf-vol6-scan',
+    title:
+      '钦定协纪辨方书·卷六（影印本，义例四：驿马、劫煞、灾煞、月煞、月刑、天吏、天贼、往亡等）',
+    publisher: 'Wikimedia Commons · CADAL 浙江大学图书馆藏本',
+    url: 'https://commons.wikimedia.org/wiki/File:CADAL06056507_欽定協紀辨方書·卷六.djvu',
+    kind: 'classic-scan',
+  },
+  {
     id: 'src-xjbf-vol11-scan',
     title: '钦定协纪辨方书·卷十一（影印本，用事：行幸遣使·出行同）',
     publisher: 'Wikimedia Commons · CADAL 浙江大学图书馆藏本',
