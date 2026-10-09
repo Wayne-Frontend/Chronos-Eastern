@@ -1,3 +1,4 @@
+import { canQueryEventType, EVENT_TYPES } from '../../data/event-types'
 import {
   getDateInfo,
   SUPPORTED_YEAR_MAX,
@@ -5,8 +6,13 @@ import {
   type CalendarServiceErrorCode,
 } from '../../services/calendar-service'
 import { matchFestivals } from '../../services/festival-service'
+import {
+  getDateRuleExplanation,
+  type RuleExplanationItem,
+} from '../../services/rule-explanation-service'
+import type { DayStatus } from '../../services/rule-engine'
 import type { DateInfo } from '../../types/calendar'
-import type { HomeViewModel } from '../../types/home'
+import type { HomeRuleRow, HomeViewModel } from '../../types/home'
 import { addDaysToDateKey, getTodayDateKey, parseDateKey } from '../../utils/date-key'
 import {
   formatGanzhiSummary,
@@ -17,6 +23,9 @@ import {
 import { getGregorianWeekday } from '../../utils/util'
 
 const CALENDAR_UNAVAILABLE_HINT = '历法信息暂不可用，请重新计算'
+
+/** 首页规则摘要每行最多列出的条目名个数（方案 2.3：宜忌摘要最多各 4 项）。 */
+const MAX_HOME_RULE_NAMES = 4
 
 Component({
   data: {
@@ -81,6 +90,7 @@ function buildSuccessViewModel(info: DateInfo): HomeViewModel {
   const traditionalFestivals = matchFestivals(info, nextDay?.ok ? nextDay.value : null).filter(
     (festival) => festival.category === 'traditional',
   )
+  const ruleSection = buildRuleSection(info.dateKey)
 
   return {
     status: 'ok',
@@ -98,6 +108,113 @@ function buildSuccessViewModel(info: DateInfo): HomeViewModel {
         ? traditionalFestivals.map((festival) => festival.name).join('、')
         : '今日无传统节日',
     noticeText: '',
+    ruleRows: ruleSection.rows,
+    ruleCountText: ruleSection.countText,
+  }
+}
+
+/**
+ * 首页的「今日传统规则参考」摘要。
+ * 原因：方案 2.3 要求首页显示宜忌摘要，且只来自已验证规则包；摘要行在这里拼好，页面不做判断。
+ * 边界：本版本只按「第一个可查询事项」出摘要——目前即出行。宜忌并见时先出一行「不作结论」，
+ * 再把双方依据列为佐证，避免用户只看「宜」那行就当成结论。
+ */
+function buildRuleSection(dateKey: string): { rows: HomeRuleRow[]; countText: string } {
+  const eventType = EVENT_TYPES.find(canQueryEventType)
+
+  if (!eventType) {
+    return {
+      rows: [unavailableRow()],
+      countText: '',
+    }
+  }
+
+  const result = getDateRuleExplanation(dateKey, eventType.id)
+
+  if (!result.ok) {
+    return {
+      rows: [unavailableRow()],
+      countText: '',
+    }
+  }
+
+  const value = result.value
+  const includes = value.matchedRules.filter((rule) => rule.effect === 'include')
+  const excludes = value.matchedRules.filter((rule) => rule.effect === 'exclude')
+  const rows: HomeRuleRow[] = []
+
+  if (
+    value.status === 'unresolved' ||
+    value.status === 'unknown' ||
+    value.status === 'not_matched'
+  ) {
+    const copy = describeHomeRuleStatus(value.status)
+
+    rows.push({
+      id: 'verdict',
+      badge: '—',
+      badgeClass: 'none',
+      title: copy.title,
+      detail: copy.detail,
+    })
+  }
+
+  if (includes.length > 0) {
+    rows.push(toRuleRow('include', '宜', includes))
+  }
+
+  if (excludes.length > 0) {
+    rows.push(toRuleRow('exclude', '忌', excludes))
+  }
+
+  return {
+    rows,
+    countText: `${value.eventName} · 规则包 ${value.rulePack.id}@${value.rulePack.version} · 本日命中 ${value.matchedRules.length} 条`,
+  }
+}
+
+function unavailableRow(): HomeRuleRow {
+  return {
+    id: 'verdict',
+    badge: '—',
+    badgeClass: 'none',
+    title: '今日传统规则资料整理中',
+    detail: '规则未加载或未通过验证时不展示结论，也不回退到第三方库宜忌。',
+  }
+}
+
+function toRuleRow(
+  id: 'include' | 'exclude',
+  badge: '宜' | '忌',
+  rules: readonly RuleExplanationItem[],
+): HomeRuleRow {
+  const names = rules.slice(0, MAX_HOME_RULE_NAMES).map((rule) => rule.name)
+  const more = rules.length - names.length
+
+  return {
+    id,
+    badge,
+    badgeClass: id,
+    title: names.join(' · '),
+    detail: more > 0 ? `另有 ${more} 条，点「查看说明」看全部依据` : '',
+  }
+}
+
+function describeHomeRuleStatus(status: DayStatus): { title: string; detail: string } {
+  switch (status) {
+    case 'unresolved':
+      return {
+        title: '宜忌并见，本版本不作结论',
+        detail: '原书对宜忌并见且无德神裁决者的常例是两者皆不注，下列双方依据仅供参考。',
+      }
+    case 'unknown':
+      return { title: '资料不足，暂不判断', detail: '部分规则缺少必要事实。' }
+    case 'excluded':
+      return { title: '本日已命中排除规则', detail: '本日不会列入出行查询结果。' }
+    case 'pass':
+      return { title: '本日符合已收录规则', detail: '' }
+    default:
+      return { title: '本日未命中已收录规则', detail: '这不代表现实安排上的不可用。' }
   }
 }
 
@@ -123,5 +240,7 @@ function buildFailureViewModel(dateKey: string, code: CalendarServiceErrorCode):
     noticeText: outOfRange
       ? `设备日期超出本版本支持范围（${SUPPORTED_YEAR_MIN}-01-01 至 ${SUPPORTED_YEAR_MAX}-12-31）`
       : CALENDAR_UNAVAILABLE_HINT,
+    ruleRows: [unavailableRow()],
+    ruleCountText: '',
   }
 }
