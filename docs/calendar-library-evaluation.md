@@ -32,13 +32,13 @@
 
 源码没有显式依赖 Node 核心模块，CommonJS 形态也为小程序 npm 构建提供了兼容线索；但仓库没有对微信小程序作官方兼容承诺。因此必须以微信开发者工具实际构建和真机运行作为唯一准入证据，不能仅凭 Node 测试通过下结论。
 
-本地实验需补充：
+本地实验结果（2026-10-09 更新，数字见第 8 节）：
 
-- [ ] 微信开发者工具可完成“构建 npm”并正常编译。
-- [ ] Skyline 与 WebView 两种渲染路径中，适配器运行结果一致。
-- [ ] 开发者工具、iOS 真机、Android 真机对相同 UTC+8 输入输出一致。
-- [ ] 记录安装前后 `miniprogram_npm`、主包及上传包体积变化；确认未突破项目预算。
-- [ ] 确认构建产物没有动态执行、Node 核心模块或浏览器 DOM 依赖。
+- [x] 微信开发者工具可完成“构建 npm”并正常编译：TS 模板结构（`miniprogramRoot: "miniprogram/"` 与根目录 `package.json` 分离）必须配置 `packNpmManually: true` 与 `packNpmRelationList`，否则报 `NPM packages not found`。
+- [x] Skyline 与 WebView 两种渲染路径中，适配器运行结果一致：基础库 3.17.2 + 「开启 Skyline 渲染调试」，首页与日期详情显示与 WebView 一致。
+- [ ] 开发者工具、iOS 真机、Android 真机对相同 UTC+8 输入输出一致：开发者工具与 iOS 真机通过，Android 真机待补。
+- [x] 记录安装前后 `miniprogram_npm`、主包及上传包体积变化；确认未突破项目预算。
+- [x] 确认构建产物没有动态执行、Node 核心模块或浏览器 DOM 依赖：产物为开发者工具的 CommonJS 包装，无 `eval`、`new Function`、Node 核心模块或 DOM 引用。
 
 ## 3. 权威校验基准
 
@@ -70,24 +70,22 @@
 
 这些方法可从 v1.7.7 源码直接确认：[`Solar` 构造及基础字段](https://github.com/6tail/lunar-javascript/blob/v1.7.7/lunar.js#L200-L223)、[`Solar.getLunar`](https://github.com/6tail/lunar-javascript/blob/v1.7.7/lunar.js#L462-L464)、[`Lunar` 基础字段与中文名](https://github.com/6tail/lunar-javascript/blob/v1.7.7/lunar.js#L889-L964)、[`getJieQi`](https://github.com/6tail/lunar-javascript/blob/v1.7.7/lunar.js#L1272-L1279)。
 
-### 4.2 条件允许：必须先明确口径
+### 4.2 干支口径：2026-10-09 定案，年/月统一按日
 
-库同时提供多套干支字段，不能混成一个 `ganzhi`：
+库同时提供多套干支字段，不能混成一个 `ganzhi`。**V1.0 采用按日口径**：交节当天整日按新值计算，不采用时刻口径。理由：V1.0 没有时刻输入，方案 6.4 已规定“仅有日期而无时刻时，交节边界规则不得参与筛选”，时刻口径字段在 V1.0 没有消费方；且源码中按日的月干本就由按立春日的年干推出，两种按日字段天然配套，混用两套口径会产出任何单一体系下都不存在的组合。
 
-| 项目字段 | 候选 API | 源码口径/项目要求 |
+| 项目字段 | 准入 API | 口径 |
 | --- | --- | --- |
-| `yearLunarNewYear` | `getYearInGanZhi()` | 源码按农历正月初一换年；适合普通农历纪年展示 |
-| `yearLiChunDate` | `getYearInGanZhiByLiChun()` | 源码按立春所在公历日比较，只表示“按日”的口径 |
-| `yearLiChunInstant` | `getYearInGanZhiExact()` | 源码按立春交接时刻比较；调用必须带明确 UTC+8 时刻 |
-| `monthJieQiDate` | `getMonthInGanZhi()` | 源码按节令所在公历日切换 |
-| `monthJieQiInstant` | `getMonthInGanZhiExact()` | 源码按节令时刻切换 |
-| `dayCivil` | `getDayInGanZhi()` | 作为 UTC+8 民用日口径的候选值 |
-| 子初换日口径 | `getDayInGanZhiExact()` | 源码在 23:00–23:59 把日干支推进一天；V1.0 默认不展示，除非产品明确采用 |
-| 不在 23:00 换日 | `getDayInGanZhiExact2()` | 源码不在 23:00 推进；名称本身不解释业务含义，必须由适配器改成项目术语 |
+| `yearLunarNewYear` | `getYearInGanZhi()` | 按农历正月初一换年，用于普通农历展示 |
+| `yearLiChun` | `getYearInGanZhiByLiChun()` | 按立春**所在公历日**换年；源码比较 `toYmd()` |
+| `monthJieQi` | `getMonthInGanZhi()` | 按节令**所在公历日**换月；源码 `_computeMonth` 第一个循环比较 `toYmd()`，月干由 `yearGanIndexByLiChun` 推出 |
+| `dayCivil` | `getDayInGanZhiExact2()` | 民用日午夜换日，不在 23:00 推进；库方法名不解释业务含义，由适配器改成项目术语 |
 
-源码明确区分农历岁首、立春日、立春时刻、节令日、节令时刻和 23:00 换日口径。[年/月/日干支方法](https://github.com/6tail/lunar-javascript/blob/v1.7.7/lunar.js#L915-L941)、[立春与节令比较逻辑](https://github.com/6tail/lunar-javascript/blob/v1.7.7/lunar.js#L666-L729)、[23:00 换日逻辑](https://github.com/6tail/lunar-javascript/blob/v1.7.7/lunar.js#L731-L754)
+未准入的时刻与其他口径 API：`getYearInGanZhiExact()`、`getMonthInGanZhiExact()`、`getDayInGanZhi()`、`getDayInGanZhiExact()`。若未来支持时刻输入或迁移 Tyme，须按同样“口径写进字段名”的原则重新评审。
 
-节气时刻候选 API 为 `getJieQiTable()`、`getNextJieQi()` 和 `getPrevJieQi()`；它们返回库自己的对象，且涉及公开 issue 所指的边界风险，只有在时刻与 UTC+8 归属测试通过后才能加入白名单。[节气表及相邻节气 API](https://github.com/6tail/lunar-javascript/blob/v1.7.7/lunar.js#L1577-L1616)
+源码依据：[年/月/日干支方法](https://github.com/6tail/lunar-javascript/blob/v1.7.7/lunar.js#L915-L941)、[立春与节令比较逻辑](https://github.com/6tail/lunar-javascript/blob/v1.7.7/lunar.js#L666-L729)、[23:00 换日逻辑](https://github.com/6tail/lunar-javascript/blob/v1.7.7/lunar.js#L731-L754)
+
+节气白名单：`getCurrentJieQi()`（仅节气当日返回，源码按年月日比较）与 `getNextJieQi(wholeDay)` 已随适配器准入，`2025-12-21`、`2026-01-02`、`2026-01-05` 三个风险样本通过；秒级精度与连续 10 年 24 节气逐条比对仍是阻断项。`getJieQiTable()`、`getPrevJieQi()` 未准入。[节气表及相邻节气 API](https://github.com/6tail/lunar-javascript/blob/v1.7.7/lunar.js#L1577-L1616)
 
 ### 4.3 明确禁止
 
@@ -150,8 +148,8 @@ v1.7.6 修复过闰月及后续月份干支错误，因此不能只验证闰月�
 | 当前首页日期 | `2026-10-08/09/10` | 八月廿八（寒露、星期四）→ 八月廿九 → 九月初一；[HKO 2026](https://www.hko.gov.hk/tc/gts/time/calendar/text/files/T2026c.txt) |
 | 更多闰月 | 在 1901–2100 内再选至少 5 个不同闰月，各测首日、末日、相邻日 | 逐个对照紫金山/HKO；不能只依赖库自身反向转换 |
 | 公历跨年 | 每个抽样年的 `12-31` 与下一年 `01-01` | 公历年变化不应误触发农历岁首或立春换年 |
-| 立春边界 | 2026 立春交节前 1 秒、交节时刻、后 1 秒 | 精确时刻取紫金山 2026 年日历资料；同时核对三套年干支口径 |
-| 节令换月 | 至少选立春、惊蛰、清明等节令，各测前 1 秒/当时刻/后 1 秒 | `monthJieQiDate` 与 `monthJieQiInstant` 不得混淆 |
+| 立春边界 | ~~2026 立春交节前 1 秒、交节时刻、后 1 秒~~ → 改为按日口径验证 | 已被 4.2 的「统一按日」决策取代：适配器不输出时刻口径干支，改为断言立春当天整日切换（2026-02-04 年柱丙午、月柱庚寅），并验证交节时刻本身与紫金山一致（04:02） |
+| 节令换月 | ~~至少选立春、惊蛰、清明等节令，各测前 1 秒/当时刻/后 1 秒~~ → 改为按日口径验证 | 同上：只保留 `monthJieQi` 按日字段（2026-03-05 惊蛰当天月柱辛卯），时刻口径 API 未准入 |
 | 24 节气日期 | 连续至少 10 年，每年 24 个节气逐条比对 | 中国大陆口径以紫金山年度资料为主，HKO 为交叉源 |
 | 产品范围 | `1901-01-01`、`2100-12-31`；以及范围外相邻日 | 边界内可计算，边界外返回明确错误；[HKO 1901](https://www.hko.gov.hk/tc/gts/time/calendar/pdf/files/1901.pdf)、[HKO 2100](https://www.hko.gov.hk/tc/gts/time/calendar/pdf/files/2100.pdf) |
 | 时区一致性 | 同一绝对时刻分别在 UTC、UTC+8、UTC-8 宿主环境执行 | 业务 `localDate` 和基础历法结果都必须按 UTC+8 一致 |
@@ -162,7 +160,7 @@ v1.7.6 修复过闰月及后续月份干支错误，因此不能只验证闰月�
 - 公农历转换：1901–2100 每年固定抽取 1 月 1 日、2 月末、6 月 30 日、12 月 31 日，并加入所有农历月首。
 - 双向一致性：公历 → 农历 → 公历必须回到原始日期；该性质测试只能发现内部不一致，不能替代权威资料。
 - 闰月：全区间所有闰月首尾和相邻日全量测试。
-- 节气：至少连续 10 年与紫金山年度资料逐条比对；2051、2083、2084 的近午夜风险另行记录。
+- 节气：~~至少连续 10 年与紫金山年度资料逐条比对~~ 已完成（2017—2026，见第 8 节）；2051、2083、2084 的近午夜风险年份仍待单独记录。
 - 干支：春节、立春日与立春时刻、节令换月、23:00 前后分别断言各自口径，禁止用一个期望值覆盖所有字段。
 
 ## 7. Go / No-Go 条件
@@ -198,16 +196,20 @@ v1.7.6 修复过闰月及后续月份干支错误，因此不能只验证闰月�
 | 项目 | 结果 | 证据 |
 | --- | --- | --- |
 | 安装版本与完整性 | 通过 | `package.json` 精确固定 `1.7.7`；`package-lock.json` 已写入完整性；`npm ls lunar-javascript --json` 确认为 `1.7.7`，无运行时子依赖 |
-| 微信开发者工具版本 | 待补充 | 构建日志 |
-| Skyline 编译/运行 | 待补充 | 构建日志、真机记录 |
-| WebView 编译/运行 | 待补充 | 构建日志、真机记录 |
-| 主包体积增量 | 部分完成 | npm 运行入口 `index.js + lunar.js` 原始大小共 `436,728` 字节；微信构建后的真实主包增量待开发者工具统计 |
+| 微信开发者工具版本 | 通过 | Stable 2.02.2608080（win32）；构建 npm 成功，配置见第 2 节 |
+| Skyline 编译/运行 | 通过（开发者工具） | 基础库 3.17.2 + Skyline 渲染调试；首页与日期详情显示与 WebView 一致，控制台无异常 |
+| WebView 编译/运行 | 通过（开发者工具 + iOS 真机） | 首页与日期详情显示农历、三柱干支、节气倒计时，与 Node 端输出一致；Android 真机待补 |
+| 主包体积增量 | 通过 | 原始 `index.js + lunar.js` 共 `436,728` 字节 → 构建后 `miniprogram_npm/lunar-javascript/index.js` 为 `438,382` 字节（+`1,654`，+0.38%）；另有 `index.js.map` `488,256` 字节（源码定位用，不计入体积判断）。页面代码 `52,448` 字节，含产物共约 `479 KB`，远低于 2 MB 主包上限 |
+| 产物依赖扫描 | 通过 | 构建产物无 `eval` / `new Function` / Node 核心模块 / DOM / 网络 API；未做 tree-shaking，库内禁用能力仍在产物中，靠适配器白名单与代码审查约束调用面 |
 | TypeScript 隔离 | 通过 | 项目自有最小 `.d.ts` 只暴露白名单 API；`npm run typecheck` 通过 |
 | UTC+8 跨时区测试 | Node 环境通过 | 同一日期在 `Asia/Shanghai`、`UTC`、`America/Los_Angeles` 三个宿主时区结果一致；开发者工具与真机待验证 |
-| 权威日期夹具 | 初始集通过 | 11 组 HKO 公农历样本覆盖 1901/2100 边界、春节和 7 组闰月；连续 10 年 24 节气仍待补充 |
+| 权威日期夹具 | 初始集通过 | 11 组 HKO 公农历样本覆盖 1901/2100 边界、春节和 7 组闰月 |
+| 二十四节气回归 | 通过（10 年主源 + 4 年交叉源） | 2017—2026 年逐年 24 节气与紫金山天文台《日历资料》（GB/T 33661—2017 编制）逐条比对：`240/240` 日期一致，交节时刻差值 `−30s ~ +31s`（来源只公布到分钟，最大 31 秒为取整效应）；2027—2030 年与香港天文台对照表比对 `96/96` 一致。两源在 2021—2026 重叠年份的 `144` 条日期完全一致。夹具：`tests/fixtures/solar-terms-authority.ts`，测试：`tests/solar-terms.test.ts`（全年逐日扫描，覆盖 5110 个日期） |
+| 代码边界扫描 | 通过 | 只有 `adapters/lunar-adapter.ts` 引用第三方包（他处仅版本号字符串）；调用面全部落在白名单；`getDayYi`/`getDayJi`/`getJiShen`/`getEightChar`/`HolidayUtil`/`getFestivals`/`fromDate`/`toFullString` 在业务路径零命中；`vendor/THIRD_PARTY_NOTICES.md` 保留 MIT 全文 |
+| 干支口径 | 已定案：年/月统一按日 | 见 4.2；`yearLiChun` 用 `getYearInGanZhiByLiChun`、`monthJieQi` 用 `getMonthInGanZhi`，交节日整日切换；`tests/lunar-adapter.test.ts` 覆盖立春（2026-02-04）与惊蛰（2026-03-05）当日边界 |
 | Issue #66/#70 复现 | 日期级路径通过 | `2025-12-21` 为冬至、`2026-01-02` 无当日节气、`2026-01-05` 为小寒；秒级精度和立春临界仍待权威时刻核验 |
-| 自动化结果 | 通过 | 历法适配器定向测试 20 项通过，覆盖第三方异常隔离、双年干支口径、当前首页节气和下一节气 |
-| 最终决定 | 部分 Go | 允许保留依赖和隔离适配器继续验证；页面接入与生产采用仍等待微信构建、真机、包体积和完整节气回归 |
+| 自动化结果 | 通过 | 共 66 项：适配器 32 项（第三方异常隔离、双年干支口径、按日换年换月边界、当日与下一节气、11 组夹具的星期交叉核对）、日历服务 10 项（1901/2100 范围、统一错误码、世纪闰年、闰月、组装结果）、`date-key` 15 项（UTC+8 换日与跨时区一致）、`format` 9 项 |
+| 最终决定 | 部分 Go（仅剩 Android 真机） | 微信构建、包体积、产物扫描、Skyline + WebView 双路径、iOS 真机、10 年 24 节气回归、代码边界扫描均已通过；生产采用前还需 Android 真机复验 |
 
 ## 9. 升级规则
 
