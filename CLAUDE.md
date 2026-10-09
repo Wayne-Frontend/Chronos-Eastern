@@ -43,8 +43,8 @@ pages / components  →  services（calendar-service 已建，其余待建）  �
 - 页面不得直接读写 `wx.setStorage`、不得直接解释规则 JSON、不得自己判断宜忌——只调用稳定的小型 service 函数
 - 页面间只传 `YYYY-MM-DD`（如 `?date=YYYY-MM-DD&from=calendar`），禁止传时间戳
 
-已存在：`pages/`（index、calendar、find-date、day-detail）、`components/`（empty-state、navigation-bar）、`adapters/`、`services/`（calendar-service）、`types/`、`utils/`（date-key、format、util）、`vendor/`。首页与日期详情已接 `calendar-service` 真实数据，仍无规则和节日数据。
-方案 5.3 规划但**尚未创建**：`services/` 的其余模块（festival-service、rule-engine、find-date-service、favorite-service）、`data/festivals`、`data/event-types`、`data/rules/`、`data/sources`。
+已存在：`pages/`（index、calendar、find-date、day-detail）、`components/`（empty-state、navigation-bar、calendar-grid）、`adapters/`、`services/`（calendar-service、festival-service）、`data/`（festivals、sources）、`types/`、`utils/`（date-key、format、util）、`vendor/`。首页、日历、日期详情已接真实历法与节日数据；找日子仍是占位，规则包尚未创建。
+方案 5.3 规划但**尚未创建**：`services/` 的其余模块（rule-engine、find-date-service、favorite-service）、`data/event-types`、`data/rules/`。
 
 `components/navigation-bar/` 是官方模板自带文件（含 styles 覆写与大量原文注释），不要顺手"规范化"它的写法。tab 页用 `Component({ data, methods })` 声明，二级页 `day-detail` 用 `Page({...})`。
 
@@ -53,7 +53,7 @@ pages / components  →  services（calendar-service 已建，其余待建）  �
 - **日期键**：全项目用 `DateKey`（`YYYY-MM-DD` 字符串，见 `types/calendar.ts`）。禁止 `new Date('YYYY-MM-DD')` 作为业务输入——不同环境可能按 UTC 解析；"今天"必须先按 UTC+8 取年月日再构造。时区固定 `Asia/Shanghai`
 - **干支必须带口径**：`GanzhiDateParts` 拆成 `yearLunarNewYear`（正月初一换年）/ `yearLiChun`（立春换年）/ `monthJieQi`（节令换月）/ `dayCivil`（民用日）四个字段，其中年、月两级**统一按"日"切换**（交节当天整日按新值，V1.0 无时刻输入，定案见评估文档 4.2）。不要新增含糊的 `ganzhiYear`，也不要用一个期望值覆盖多个口径
 - **节气**：输出 `{ name, instant(+08:00 的 ISO), localDate }`；只按日期展示时用 `localDate`，规则涉及交节前后必须比较 `instant`
-- **返回值**：service/适配器一律返回 `AppResult`（`types/result.ts`）判别联合，不抛异常。错误码沿用方案 5.9：`INVALID_DATE`、`CALENDAR_OUT_OF_RANGE`、`CALENDAR_COMPUTE_FAILED`、`RULE_PACK_MISSING`、`RULE_CONFLICT`、`STORAGE_READ_FAILED`、`STORAGE_WRITE_FAILED`
+- **返回值**：有失败路径的 service/适配器一律返回 `AppResult`（`types/result.ts`）判别联合，不抛异常；纯查表且无失败路径的模块（如 `matchFestivals`）直接返回结果，不制造不会发生的错误分支。错误码沿用方案 5.9：`INVALID_DATE`、`CALENDAR_OUT_OF_RANGE`、`CALENDAR_COMPUTE_FAILED`、`RULE_PACK_MISSING`、`RULE_CONFLICT`、`STORAGE_READ_FAILED`、`STORAGE_WRITE_FAILED`
 - **支持年份**：1901-01-01 至 2100-12-31，范围判断属于 service 层（适配器只校验单个公历日的合法性）
 - **类型声明**：`typings/lunar-javascript/index.d.ts` 是手写的最小声明，只暴露白名单方法。要用新的库 API，必须同时改这里 + 更新评估文档白名单
 - 改库版本时要同步 `adapterVersion: 'lunar-javascript@1.7.7'`、`typings/`、评估文档，并重跑全部权威夹具
@@ -71,7 +71,7 @@ pages / components  →  services（calendar-service 已建，其余待建）  �
 
 ## 测试
 
-- `vitest`，无配置文件，测试在 `tests/`（node 环境），当前覆盖 `date-key`、`format`、`lunar-adapter`、`calendar-service` 与 `solar-terms`（共 93 项，约 0.6 秒）
+- `vitest`，无配置文件，测试在 `tests/`（node 环境），当前覆盖 `date-key`、`format`、`lunar-adapter`、`calendar-service`、`festival-service` 与 `solar-terms`（共 121 项，约 0.6 秒）
 - 权威样本夹具：`tests/fixtures/calendar-authority.ts`（公农历，HKO）与 `tests/fixtures/solar-terms-authority.ts`（2017–2026 紫金山含交节时刻、2027–2030 HKO），每条样本都带 `source`。新增样本必须能定位到权威来源（紫金山天文台 / GB/T 33661 优先，HKO 为交叉源），**不得用两个同源网络黄历互证，也不得拿库自身输出当期望值**
 - 现有测试已覆盖：闰月首日、春节边界、1901/2100 范围边界、双年干支口径、立春/惊蛰当日按日换年换月、节气名称与时刻、连续 10 年 24 节气逐日扫描（紫金山主源，交节时刻分钟级一致）、跨宿主时区（`TZ` 三值）一致、"今天"按 UTC+8 换日、库星期与公历推算交叉核对、非法日期不外泄库异常、世纪闰年 2100、service 层统一错误码
 - 评估文档第 6 节列出尚未补齐的阻断样本（2051/2083/2084 近午夜风险日、交节时刻秒级精度、历史区间 1901–1948 的官方颁行历表一致性）——扩展夹具时优先从这里取
