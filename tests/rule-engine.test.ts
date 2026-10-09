@@ -186,7 +186,12 @@ describe('出行规则包（第一批）', () => {
     ],
     ['2026-10-03', '吉期兼月德', 'pass', ['xjbf-travel-0008', 'xjbf-travel-0010']],
     ['2026-10-11', '天喜（成日）', 'pass', ['xjbf-travel-0009']],
-    ['2026-10-19', '月德（戌月丙）遇月厌', 'unresolved', ['xjbf-travel-0010', 'xjbf-travel-0029']],
+    [
+      '2026-10-19',
+      '月德（戌月丙）兼天德（戌月丙）遇月厌',
+      'unresolved',
+      ['xjbf-travel-0010', 'xjbf-travel-0032', 'xjbf-travel-0029'],
+    ],
     [
       '2026-11-11',
       '月德合（亥月己）遇月厌',
@@ -280,7 +285,7 @@ describe('出行规则包（第一批）', () => {
     const result = evaluate('2026-05-07')
 
     expect(result.status).toBe('unresolved')
-    expect(result.matchedRuleIds).toEqual(['xjbf-travel-0001'])
+    expect(result.matchedRuleIds).toEqual(['xjbf-travel-0001', 'xjbf-travel-0032'])
     expect(result.excludeRuleIds).toEqual(['xjbf-travel-0007'])
   })
 
@@ -298,7 +303,7 @@ describe('出行规则包（第一批）', () => {
     // 2026-10-09 为戌月丙辰：月德在丙（宜），同日又是月破与往亡（忌）。
     expect(evaluate('2026-10-09')).toMatchObject({
       status: 'unresolved',
-      matchedRuleIds: ['xjbf-travel-0010'],
+      matchedRuleIds: ['xjbf-travel-0010', 'xjbf-travel-0032'],
       excludeRuleIds: ['xjbf-travel-0006', 'xjbf-travel-0021'],
     })
 
@@ -570,6 +575,34 @@ describe('来源精度', () => {
       }
 
       expect(monthGodValue(rule, month), `${branch}月`).toBe('')
+    }
+
+    // 哨兵是空串，而日干永远是真实天干，故这四个月永不命中。
+    for (const stem of HEAVENLY_STEMS) {
+      expect(stem, '天干不应为空串').not.toBe('')
+    }
+  })
+
+  it('天德四仲月不判值日，哨兵值不会误判', () => {
+    const rule = ruleOf('xjbf-travel-0032')
+
+    // 四仲月（卯午酉子月）历例给的是乾坤艮巽四维之卦，不是天干，本包不折算为地支。
+    for (const branch of ['卯', '午', '酉', '子']) {
+      const month = getMonthIndex(branch)
+
+      if (month === null) {
+        throw new Error(`无法解析月支：${branch}`)
+      }
+
+      expect(monthGodValue(rule, month), `${branch}月`).toBe('')
+    }
+
+    // 其余八个月逐月等于卷五历例所载天干。
+    const stemsByMonth = ['丁', '壬', '辛', '甲', '癸', '丙', '乙', '庚']
+    const months = [0, 2, 3, 5, 6, 8, 9, 11]
+
+    for (const [index, month] of months.entries()) {
+      expect(monthGodValue(rule, month), `第 ${month + 1} 月`).toBe(stemsByMonth[index])
     }
 
     // 哨兵是空串，而日干永远是真实天干，故这四个月永不命中。
