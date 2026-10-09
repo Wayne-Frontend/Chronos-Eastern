@@ -66,6 +66,16 @@ export function getTodayDateKey(): DateKey {
   return dateKeyFromTimestampUtc8(Date.now())
 }
 
+/** 当前时刻的 UTC+8 ISO 字符串，形如 `2026-10-09T13:05:00+08:00`，用于本地记录时间戳。 */
+export function nowIsoUtc8(): string {
+  const utc8 = new Date(Date.now() + UTC8_OFFSET_MS)
+  const pad = (value: number) => value.toString().padStart(2, '0')
+
+  return `${utc8.getUTCFullYear()}-${pad(utc8.getUTCMonth() + 1)}-${pad(utc8.getUTCDate())}T${pad(
+    utc8.getUTCHours(),
+  )}:${pad(utc8.getUTCMinutes())}:${pad(utc8.getUTCSeconds())}+08:00`
+}
+
 /** 按公历日平移日期键，用于取次日或补位日；任一输入无效时返回 null。 */
 export function addDaysToDateKey(dateKey: string, days: number): DateKey | null {
   const parts = parseDateKey(dateKey)

@@ -11,7 +11,9 @@
     "./miniprogram/adapters/**/*.ts",
     "./miniprogram/services/**/*.ts",
     "./miniprogram/types/**/*.ts",
-    "./miniprogram/utils/**/*.ts"
+    "./miniprogram/utils/**/*.ts",
+    "./typings/types/wx/**/*.d.ts",
+    "./typings/wx-supplement.d.ts"
   ],
-  "exclude": ["node_modules", "typings"]
+  "exclude": ["node_modules"]
 }
