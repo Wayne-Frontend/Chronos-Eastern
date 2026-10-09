@@ -3,7 +3,7 @@ export interface SourceEntry {
   title: string
   publisher: string
   url: string
-  kind: 'government-document' | 'institution-page'
+  kind: 'government-document' | 'institution-page' | 'classic-scan' | 'transcription'
 }
 
 /**
@@ -46,6 +46,34 @@ export const SOURCES: readonly SourceEntry[] = [
     publisher: '中国政府网 · 国务院公报',
     url: 'https://www.gov.cn/gongbao/2024/issue_11726/202411/content_6989774.html',
     kind: 'government-document',
+  },
+  {
+    id: 'src-xjbf-vol4-scan',
+    title: '钦定协纪辨方书·卷四（影印本，义例二：建除十二神）',
+    publisher: 'Wikimedia Commons · CADAL 浙江大学图书馆藏本',
+    url: 'https://commons.wikimedia.org/wiki/File:CADAL06056505_欽定協紀辨方書·卷四.djvu',
+    kind: 'classic-scan',
+  },
+  {
+    id: 'src-xjbf-vol11-scan',
+    title: '钦定协纪辨方书·卷十一（影印本，用事：行幸遣使·出行同）',
+    publisher: 'Wikimedia Commons · CADAL 浙江大学图书馆藏本',
+    url: 'https://commons.wikimedia.org/wiki/File:CADAL06056511_欽定協紀辨方書·卷十一~卷十二.djvu',
+    kind: 'classic-scan',
+  },
+  {
+    id: 'src-xjbf-vol4-text',
+    title: '钦定协纪辨方书·卷四（维基文库转录，仅用于检索定位）',
+    publisher: '维基文库',
+    url: 'https://zh.wikisource.org/zh-hans/欽定協紀辨方書_(四庫全書本)/卷04',
+    kind: 'transcription',
+  },
+  {
+    id: 'src-xjbf-vol11-text',
+    title: '钦定协纪辨方书·卷十一（维基文库转录，仅用于检索定位）',
+    publisher: '维基文库',
+    url: 'https://zh.wikisource.org/zh-hans/欽定協紀辨方書_(四庫全書本)/卷11',
+    kind: 'transcription',
   },
 ]
 

@@ -1,0 +1,125 @@
+import type { RuleDefinition, RulePack } from '../../types/rule'
+
+const TRADITION = 'xjbf-default'
+const CONFLICT_GROUP = 'travel-day-selection'
+const SOURCE_IDS = ['src-xjbf-vol11-scan', 'src-xjbf-vol4-scan'] as const
+const TITLE_LOCATOR = '卷十一「行幸遣使」（原注：出行同）'
+
+/**
+ * 出行规则包第一批：只收录卷十一出行条目里由建除十二神与日支直接判定的条款。
+ * 原因：其余条款依赖天德、驿马、往亡等神煞，其定义尚在逐条校勘，未完成前不得入库。
+ * 边界：交节日新旧月建除重叠（卷四「每月交节则叠两值日」），本包按日口径取新月值。
+ */
+export const TRAVEL_RULE_PACK: RulePack = {
+  id: 'xjbf-travel',
+  version: '1.0.0',
+  eventType: 'travel',
+  traditionId: TRADITION,
+  status: 'verified',
+  conflictGroup: CONFLICT_GROUP,
+  coverage:
+    '出行条目宜项 16 条中收录 2 条（建日、开日），忌项 16 条中收录 5 条（月破、平日、收日、闭日、巳日）；天德、月德、天赦、驿马、天马、往亡、劫煞、四废等神煞条款尚在校勘，未收录。',
+  rules: [
+    {
+      id: 'xjbf-travel-0001',
+      traditionId: TRADITION,
+      eventType: 'travel',
+      status: 'verified',
+      effect: 'include',
+      conflictGroup: CONFLICT_GROUP,
+      priority: null,
+      when: { all: [{ fact: 'jianChu', operator: 'in', value: ['建'] }] },
+      sourceIds: SOURCE_IDS,
+      locator: `${TITLE_LOCATOR}宜项「建日」；卷四《建除十二神》`,
+      explanation: '建日为月建当日，出行条目列为宜。',
+      limitations: [
+        '卷四《考原》对建除另有通类吉凶之说，与本条不一致；本包以用事条目为准。',
+        '交节日按日口径取新月建除，与原文「叠两值日」并存之说不同。',
+      ],
+    },
+    {
+      id: 'xjbf-travel-0002',
+      traditionId: TRADITION,
+      eventType: 'travel',
+      status: 'verified',
+      effect: 'include',
+      conflictGroup: CONFLICT_GROUP,
+      priority: null,
+      when: { all: [{ fact: 'jianChu', operator: 'in', value: ['开'] }] },
+      sourceIds: SOURCE_IDS,
+      locator: `${TITLE_LOCATOR}宜项「开日」；卷四《建除十二神》`,
+      explanation: '开日为建后第十位，出行条目列为宜。',
+      limitations: ['交节日按日口径取新月建除。'],
+    },
+    {
+      id: 'xjbf-travel-0003',
+      traditionId: TRADITION,
+      eventType: 'travel',
+      status: 'verified',
+      effect: 'exclude',
+      conflictGroup: CONFLICT_GROUP,
+      priority: null,
+      when: { all: [{ fact: 'jianChu', operator: 'in', value: ['平'] }] },
+      sourceIds: SOURCE_IDS,
+      locator: `${TITLE_LOCATOR}忌项「平日」；卷四《建除十二神》`,
+      explanation: '平日为建后第三位，出行条目列为忌。',
+      limitations: ['交节日按日口径取新月建除。'],
+    },
+    {
+      id: 'xjbf-travel-0004',
+      traditionId: TRADITION,
+      eventType: 'travel',
+      status: 'verified',
+      effect: 'exclude',
+      conflictGroup: CONFLICT_GROUP,
+      priority: null,
+      when: { all: [{ fact: 'jianChu', operator: 'in', value: ['收'] }] },
+      sourceIds: SOURCE_IDS,
+      locator: `${TITLE_LOCATOR}忌项「收日」；卷四《建除十二神》`,
+      explanation: '收日为建后第九位，出行条目列为忌。',
+      limitations: ['交节日按日口径取新月建除。'],
+    },
+    {
+      id: 'xjbf-travel-0005',
+      traditionId: TRADITION,
+      eventType: 'travel',
+      status: 'verified',
+      effect: 'exclude',
+      conflictGroup: CONFLICT_GROUP,
+      priority: null,
+      when: { all: [{ fact: 'jianChu', operator: 'in', value: ['闭'] }] },
+      sourceIds: SOURCE_IDS,
+      locator: `${TITLE_LOCATOR}忌项「闭日」；卷四《建除十二神》`,
+      explanation: '闭日为建除十二神末位，出行条目列为忌。',
+      limitations: ['交节日按日口径取新月建除。'],
+    },
+    {
+      id: 'xjbf-travel-0006',
+      traditionId: TRADITION,
+      eventType: 'travel',
+      status: 'verified',
+      effect: 'exclude',
+      conflictGroup: CONFLICT_GROUP,
+      priority: null,
+      when: { all: [{ fact: 'jianChu', operator: 'in', value: ['破'] }] },
+      sourceIds: SOURCE_IDS,
+      locator: `${TITLE_LOCATOR}忌项「月破」；卷四《建除十二神》及「月破者月建所冲之日也」`,
+      explanation: '月破即建除之破日，为月建所冲之日，出行条目列为忌。',
+      limitations: ['交节日按日口径取新月建除。'],
+    },
+    {
+      id: 'xjbf-travel-0007',
+      traditionId: TRADITION,
+      eventType: 'travel',
+      status: 'verified',
+      effect: 'exclude',
+      conflictGroup: CONFLICT_GROUP,
+      priority: null,
+      when: { all: [{ fact: 'ganzhi.dayCivil.branch', operator: 'in', value: ['巳'] }] },
+      sourceIds: SOURCE_IDS,
+      locator: `${TITLE_LOCATOR}忌项「巳日」`,
+      explanation: '出行条目另以日支为巳者为忌，与建除无关，故单独成条。',
+      limitations: ['只按日支判定，不涉时辰。'],
+    },
+  ] satisfies readonly RuleDefinition[],
+}
