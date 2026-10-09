@@ -43,8 +43,8 @@ pages / components  →  services（calendar-service 已建，其余待建）  �
 - 页面不得直接读写 `wx.setStorage`、不得直接解释规则 JSON、不得自己判断宜忌——只调用稳定的小型 service 函数
 - 页面间只传 `YYYY-MM-DD`（如 `?date=YYYY-MM-DD&from=calendar`），禁止传时间戳
 
-已存在：`pages/`（index、calendar、find-date、day-detail）、`components/`（empty-state、navigation-bar、calendar-grid）、`adapters/`、`services/`（calendar-service、festival-service、favorite-service、rule-engine）、`data/`（festivals、sources、rules/ 的 manifest 与 travel.v1）、`types/`（calendar、home、result、rule）、`utils/`（date-key、format、ganzhi、util）、`vendor/`。首页、日历、日期详情已接真实历法、节日与收藏数据；规则引擎与出行规则包第一批已就绪，**找日子页面尚未接入**。
-方案 5.3 规划但**尚未创建**：`services/find-date-service`、`data/event-types`。
+已存在：`pages/`（index、calendar、find-date、day-detail）、`components/`（empty-state、navigation-bar、calendar-grid）、`adapters/`、`services/`（calendar-service、festival-service、favorite-service、rule-engine、find-date-service）、`data/`（festivals、sources、event-types、rules/ 的 manifest 与 travel.v1）、`types/`（calendar、home、result、rule）、`utils/`（date-key、format、ganzhi、util）、`vendor/`。方案 5.3 列出的模块已全部创建，四页均已接入真实数据。
+找日子只对 `status: supported` 事项开放（当前只有出行，规则包 `xjbf-travel@1.0.0`）；其余事项置灰并显示整理说明。结果卡展示依据时**必须同时展示规则包的 `coverage`**，不得让用户以为已收录全部古籍条款。
 
 古籍规则的入库门槛：转录文本（维基文库等）只能用于检索定位，**必须回看影印件核对后才能标 `verified`**；每条规则的 `sourceIds` 指向 `data/sources.ts` 中已实际打开核对过的页面，`locator` 记录卷次与条目。规则包必须写 `coverage`，声明本版本收录了什么、哪些条款尚未收录，页面要向用户展示。
 
@@ -73,7 +73,7 @@ pages / components  →  services（calendar-service 已建，其余待建）  �
 
 ## 测试
 
-- `vitest`，无配置文件，测试在 `tests/`（node 环境），当前覆盖 `date-key`、`format`、`ganzhi`、`lunar-adapter`、`calendar-service`、`festival-service`、`favorite-service`、`rule-engine` 与 `solar-terms`（共 163 项，约 0.8 秒）；测 Storage 相关代码用 `vi.stubGlobal('wx', ...)` 注入假存储
+- `vitest`，无配置文件，测试在 `tests/`（node 环境），当前覆盖 `date-key`、`format`、`ganzhi`、`lunar-adapter`、`calendar-service`、`festival-service`、`favorite-service`、`rule-engine`、`find-date-service` 与 `solar-terms`（共 176 项，约 1 秒）；测 Storage 相关代码用 `vi.stubGlobal('wx', ...)` 注入假存储，测 partial 等异常分支用 `vi.mock` 改造 `calendar-service`
 - 权威样本夹具：`tests/fixtures/calendar-authority.ts`（公农历，HKO）与 `tests/fixtures/solar-terms-authority.ts`（2017–2026 紫金山含交节时刻、2027–2030 HKO），每条样本都带 `source`。新增样本必须能定位到权威来源（紫金山天文台 / GB/T 33661 优先，HKO 为交叉源），**不得用两个同源网络黄历互证，也不得拿库自身输出当期望值**
 - 现有测试已覆盖：闰月首日、春节边界、1901/2100 范围边界、双年干支口径、立春/惊蛰当日按日换年换月、节气名称与时刻、连续 10 年 24 节气逐日扫描（紫金山主源，交节时刻分钟级一致）、跨宿主时区（`TZ` 三值）一致、"今天"按 UTC+8 换日、库星期与公历推算交叉核对、非法日期不外泄库异常、世纪闰年 2100、service 层统一错误码
 - 评估文档第 6 节列出尚未补齐的阻断样本（2051/2083/2084 近午夜风险日、交节时刻秒级精度、历史区间 1901–1948 的官方颁行历表一致性）——扩展夹具时优先从这里取
