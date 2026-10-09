@@ -19,11 +19,11 @@ describe('getDateRuleExplanation', () => {
       status: 'pass',
       rulePack: {
         id: 'xjbf-travel',
-        version: '1.14.1',
+        version: '1.15.0',
       },
     })
     expect(result.value.rulePack.completeness).toBe('partial')
-    expect(result.value.rulePack.coverage).toContain('宜项 16 条中收录 14 条')
+    expect(result.value.rulePack.coverage).toContain('宜项 16 条中收录 15 条')
     expect(result.value.matchedRules).toHaveLength(2)
     expect(result.value.matchedRules[0]).toMatchObject({
       id: 'xjbf-travel-0001',

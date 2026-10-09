@@ -156,7 +156,12 @@ describe('出行规则包（第一批）', () => {
     ],
     ['2026-06-03', '平日兼四相', 'unresolved', ['xjbf-travel-0023', 'xjbf-travel-0003']],
     ['2026-10-12', '收日', 'excluded', ['xjbf-travel-0004']],
-    ['2026-09-07', '闭日', 'excluded', ['xjbf-travel-0005']],
+    [
+      '2026-09-07',
+      '闭日（酉月甲申）遇天马',
+      'unresolved',
+      ['xjbf-travel-0030', 'xjbf-travel-0005'],
+    ],
     [
       '2026-09-26',
       '月破兼灾煞兼月恩兼四相遇月厌',
@@ -204,8 +209,13 @@ describe('出行规则包（第一批）', () => {
       ],
     ],
     ['2026-04-03', '月恩兼四相', 'pass', ['xjbf-travel-0013', 'xjbf-travel-0023']],
-    ['2026-02-13', '时德（寅月午）', 'pass', ['xjbf-travel-0014']],
-    ['2026-03-23', '劫煞兼四相', 'unresolved', ['xjbf-travel-0023', 'xjbf-travel-0015']],
+    ['2026-02-13', '时德（寅月午）兼天马', 'pass', ['xjbf-travel-0014', 'xjbf-travel-0030']],
+    [
+      '2026-03-23',
+      '劫煞兼四相兼天马',
+      'unresolved',
+      ['xjbf-travel-0023', 'xjbf-travel-0030', 'xjbf-travel-0015'],
+    ],
     ['2026-02-04', '天吏（寅月酉）', 'excluded', ['xjbf-travel-0016']],
     ['2026-07-10', '灾煞（未月酉）', 'excluded', ['xjbf-travel-0017']],
     ['2026-06-08', '月煞（午月丑）', 'excluded', ['xjbf-travel-0018']],
@@ -480,9 +490,11 @@ describe('来源精度', () => {
     }
   })
 
-  it('七条卷六月神逐月等于「正月起某、逆行四孟／四仲／四季／十二辰」的顺推结果（驿马为吉神，同样按此表）', () => {
+  it('九条卷六月神逐月等于各自起例的循环顺推结果', () => {
+    // 卷六各条起例都是「正月起某」+ 位组（四孟／四仲／四季／六阳辰／十二辰），展开即若干月一循环。
     // 卷六《劫煞》：「李鼎祚曰正月起亥，逆行四孟。」四孟＝寅申巳亥，逆推即 亥申巳寅 循环。
     // 卷六《天吏》：「历例曰天吏者正月起酉，逆行四仲。」四仲＝子午卯酉，逆推即 酉午卯子 循环。
+    // 卷六《天马》：「李鼎祚曰天马者正月起午，顺行六阳辰。」六阳辰＝子寅辰午申戌，即 午申戌子寅辰 循环。
     const cases = [
       { id: 'xjbf-travel-0015', cycle: ['亥', '申', '巳', '寅'], label: '劫煞' },
       { id: 'xjbf-travel-0016', cycle: ['酉', '午', '卯', '子'], label: '天吏' },
@@ -494,6 +506,13 @@ describe('来源精度', () => {
         cycle: ['丑', '子', '亥', '戌', '酉', '申', '未', '午', '巳', '辰', '卯', '寅'],
         label: '天贼',
       },
+      {
+        id: 'xjbf-travel-0021',
+        cycle: ['寅', '巳', '申', '亥', '卯', '午', '酉', '子', '辰', '未', '戌', '丑'],
+        label: '往亡',
+      },
+      { id: 'xjbf-travel-0025', cycle: ['申', '巳', '寅', '亥'], label: '驿马' },
+      { id: 'xjbf-travel-0030', cycle: ['午', '申', '戌', '子', '寅', '辰'], label: '天马' },
     ]
 
     for (const { id, cycle, label } of cases) {
@@ -501,17 +520,17 @@ describe('来源精度', () => {
 
       for (let month = 0; month < MONTH_COUNT; month++) {
         expect(monthGodValue(rule, month), `${label}第 ${month + 1} 月`).toBe(
-          cycle.length === MONTH_COUNT ? cycle[month] : cycle[month % 4],
+          cycle[month % cycle.length],
         )
       }
     }
   })
 
   it('劫煞与天吏命中同一日、或与宜项同日时都不由程序裁决', () => {
-    // 2026-03-11 为卯月甲申：劫煞在申（忌），同日日干甲又是卯月月德（宜）。
+    // 2026-03-11 为卯月甲申：劫煞与天马同在申，前者忌、后者宜，同日日干甲又是卯月月德。
     expect(evaluate('2026-03-11')).toMatchObject({
       status: 'unresolved',
-      matchedRuleIds: ['xjbf-travel-0010'],
+      matchedRuleIds: ['xjbf-travel-0010', 'xjbf-travel-0030'],
       excludeRuleIds: ['xjbf-travel-0015'],
     })
 
