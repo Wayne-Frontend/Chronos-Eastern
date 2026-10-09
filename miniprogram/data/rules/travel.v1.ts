@@ -210,6 +210,10 @@ const TITLE_LOCATOR = '卷十一「行幸遣使」（原注：出行同）'
  * 1.8.0 变更原因：再增卷六忌项「天贼」（2026-10-09 影印核对卷六）。
  * - 「天贼」＝正月在丑、逆行十二辰（卷六《天贼》历例，影印本第 70 帧；图见第 69 帧）。
  *
+ * 1.17.1 变更原因：规则 limitations 的措辞改为面向用户（2026-10-09）。
+ * - 「本包」→「本版本」；「交节日按日口径取新月建除」→「交节当天整日按新月计算」。
+ *   这些字符串会作为「限制：」直接显示在日期详情页，不应出现内部用语。规则本身未改动。
+ *
  * 1.17.0 变更原因：新增宜项「天德」，出行条目至此 32/32 全部收录（2026-10-09 影印核对卷五）。
  * - 「天德」＝三合之气所成之德：正五九月火局取丙丁与乾，二六十月木局取甲乙与坤，
  *   三七十一月水局取壬癸与巽，四八十二月金局取庚辛与艮（卷五第 10–11 帧历例、第 12 帧考原）。
@@ -255,7 +259,7 @@ const TITLE_LOCATOR = '卷十一「行幸遣使」（原注：出行同）'
  */
 export const TRAVEL_RULE_PACK: RulePack = {
   id: 'xjbf-travel',
-  version: '1.17.0',
+  version: '1.17.1',
   eventType: 'travel',
   traditionId: TRADITION,
   status: 'verified',
@@ -278,8 +282,8 @@ export const TRAVEL_RULE_PACK: RulePack = {
       locator: `${TITLE_LOCATOR}宜项「建日」；卷四《建除十二神》`,
       explanation: '建日为月建当日，出行条目列为宜。',
       limitations: [
-        '卷四《考原》对建除另有通类吉凶之说，与本条不一致；本包以用事条目为准。',
-        '交节日按日口径取新月建除，与原文「叠两值日」并存之说不同。',
+        '卷四《考原》对建除另有通类吉凶之说，与本条不一致；本版本以用事条目为准。',
+        '交节当天整日按新月计算；原文另有新旧两值并存之说，本版本未采用。',
       ],
     },
     {
@@ -295,7 +299,7 @@ export const TRAVEL_RULE_PACK: RulePack = {
       sourceIds: JIANCHU_SOURCE_IDS,
       locator: `${TITLE_LOCATOR}宜项「开日」；卷四《建除十二神》`,
       explanation: '开日为建后第十位，出行条目列为宜。',
-      limitations: ['交节日按日口径取新月建除。'],
+      limitations: ['交节当天整日按新月计算。'],
     },
     {
       id: 'xjbf-travel-0003',
@@ -310,7 +314,7 @@ export const TRAVEL_RULE_PACK: RulePack = {
       sourceIds: JIANCHU_SOURCE_IDS,
       locator: `${TITLE_LOCATOR}忌项「平日」；卷四《建除十二神》`,
       explanation: '平日为建后第三位，出行条目列为忌。',
-      limitations: ['交节日按日口径取新月建除。'],
+      limitations: ['交节当天整日按新月计算。'],
     },
     {
       id: 'xjbf-travel-0004',
@@ -325,7 +329,7 @@ export const TRAVEL_RULE_PACK: RulePack = {
       sourceIds: JIANCHU_SOURCE_IDS,
       locator: `${TITLE_LOCATOR}忌项「收日」；卷四《建除十二神》`,
       explanation: '收日为建后第九位，出行条目列为忌。',
-      limitations: ['交节日按日口径取新月建除。'],
+      limitations: ['交节当天整日按新月计算。'],
     },
     {
       id: 'xjbf-travel-0005',
@@ -340,7 +344,7 @@ export const TRAVEL_RULE_PACK: RulePack = {
       sourceIds: JIANCHU_SOURCE_IDS,
       locator: `${TITLE_LOCATOR}忌项「闭日」；卷四《建除十二神》`,
       explanation: '闭日为建除十二神末位，出行条目列为忌。',
-      limitations: ['交节日按日口径取新月建除。'],
+      limitations: ['交节当天整日按新月计算。'],
     },
     {
       id: 'xjbf-travel-0006',
@@ -355,7 +359,7 @@ export const TRAVEL_RULE_PACK: RulePack = {
       sourceIds: JIANCHU_SOURCE_IDS,
       locator: `${TITLE_LOCATOR}忌项「月破」；卷四《建除十二神》「破」及《建除同位异名》「破〈大耗〉」引《考原》「月破者月建所冲之日也」`,
       explanation: '月破即建除之破日，为月建所冲之日，出行条目列为忌。',
-      limitations: ['交节日按日口径取新月建除。'],
+      limitations: ['交节当天整日按新月计算。'],
     },
     {
       id: 'xjbf-travel-0007',
@@ -385,7 +389,7 @@ export const TRAVEL_RULE_PACK: RulePack = {
       sourceIds: JIANCHU_SOURCE_IDS,
       locator: `${TITLE_LOCATOR}宜项「吉期」；卷四《建除同位异名》「除〈吉期 兵宝〉」「历例曰常居月建前一辰也」`,
       explanation: '吉期与建除之除日同位，常居月建前一辰，出行条目列为宜。',
-      limitations: ['交节日按日口径取新月建除，与原文「叠两值日」并存之说不同。'],
+      limitations: ['交节当天整日按新月计算；原文另有新旧两值并存之说，本版本未采用。'],
     },
     {
       id: 'xjbf-travel-0009',
@@ -401,8 +405,8 @@ export const TRAVEL_RULE_PACK: RulePack = {
       locator: `${TITLE_LOCATOR}宜项「天喜」；卷四《建除同位异名》「成〈天医 天喜〉」及按语「与成日同位」`,
       explanation: '天喜与建除之成日同位，出行条目列为宜。',
       limitations: [
-        '历书另有「春戌夏丑秋辰冬未」的四季天喜说；卷四按语与《选择宗镜》均取与成日同位之说，本包从之。',
-        '交节日按日口径取新月建除。',
+        '历书另有「春戌夏丑秋辰冬未」的四季天喜说；卷四按语与《选择宗镜》均取与成日同位之说，本版本从之。',
+        '交节当天整日按新月计算。',
       ],
     },
     {
@@ -482,7 +486,7 @@ export const TRAVEL_RULE_PACK: RulePack = {
       explanation: '天赦按季节取完整日柱：春戊寅、夏甲午、秋戊申、冬甲子；出行条目列为宜。',
       limitations: [
         '季节按节令月划分（寅卯辰春、巳午未夏、申酉戌秋、亥子丑冬），不按公历季度或农历月。',
-        '卷五另录曹震圭的甲己配合之说；按语引《历神原始》判其不足取，本包从历例。',
+        '卷五另录曹震圭的甲己配合之说；按语引《历神原始》判其不足取，本版本从历例。',
       ],
     },
     {
@@ -605,7 +609,7 @@ export const TRAVEL_RULE_PACK: RulePack = {
       locator: `${TITLE_LOCATOR}忌项「灾煞」；卷六《灾煞》按语「天狱正月起子，顺行四仲……应逆行四仲，而今顺行者，流传之误也。其说是，今从之」`,
       explanation: '灾煞为月三合胎气之位（火胎于子等）；卷六订正旧历「天狱」顺行之误，取逆行。',
       limitations: [
-        '卷六明载旧历作「顺行四仲」属流传之误，本包从编者订正后的逆行，不采用现代黄历常见的顺行说法。',
+        '卷六明载旧历作「顺行四仲」属流传之误，本版本从编者订正后的逆行，不采用现代黄历常见的顺行说法。',
         '卷六另载「天狱」，编者判其即灾煞，不另立一条、不重复计忌。',
       ],
     },
@@ -789,7 +793,7 @@ export const TRAVEL_RULE_PACK: RulePack = {
       locator: `${TITLE_LOCATOR}宜项「天愿」；卷五《天愿》编者订正起例「正月乙亥，二月甲戌，三月乙酉，四月丙申，五月丁未，六月戊午，七月己巳，八月庚辰，九月辛卯，十月壬寅，十一月癸丑，十二月甲子」`,
       explanation: '天愿为月中善神，按月取完整日柱；出行条目列为宜。',
       limitations: [
-        '卷五原引旧历作「正月甲午、二月甲戌……」等，编者核对神煞起例后判定「二十四字中误十三字」，本包采用订正后的序列。',
+        '卷五原引旧历作「正月甲午、二月甲戌……」等，编者核对神煞起例后判定「二十四字中误十三字」，本版本采用订正后的序列。',
         '编者同时批评曹震圭为旧文「曲为之解，展转支离」，故不采用其解说。',
       ],
     },
@@ -815,7 +819,7 @@ export const TRAVEL_RULE_PACK: RulePack = {
       locator: `${TITLE_LOCATOR}宜项「驿马」；卷六《驿马》「李鼎祚曰驿马者正月起申，逆行四孟」`,
       explanation: '驿马为月三合局的驿骑之位（火局在申等），出行条目列为宜。',
       limitations: [
-        '本包取月驿马。卷六另提年支、日支也可取驿马；卷十一的月神语境只用月驿马，不混用年驿马、日驿马。',
+        '本条用的是月驿马。卷六另提年支、日支也可取驿马；本版本只用月驿马，不与年驿马、日驿马混用。',
         '卷六同帧载「天后与驿马同位」，同位异名只录一次，不重复计入。',
       ],
     },
@@ -841,7 +845,7 @@ export const TRAVEL_RULE_PACK: RulePack = {
       locator: `${TITLE_LOCATOR}宜项「王日」；卷五《王官守相民日》历例「王日者春寅夏巳秋申冬亥」旁注「今易为官日」、官日条旁注「今易为王日」，取对调后的定稿`,
       explanation: '王日为四时正王之辰（子午卯酉四正），出行条目列为宜。',
       limitations: [
-        '卷五历例先出旧名「王日者春寅夏巳秋申冬亥」，紧随的编者旁注将其改名为官日、官日改名为王日；本包采用编者对调后的定稿（春卯、夏午、秋酉、冬子），不采用旧名序列。',
+        '卷五历例先出旧名「王日者春寅夏巳秋申冬亥」，紧随的编者旁注将其改名为官日、官日改名为王日；本版本采用编者对调后的定稿（春卯、夏午、秋酉、冬子），不采用旧名序列。',
         '季节按节令月划分（寅卯辰春、巳午未夏、申酉戌秋、亥子丑冬）。',
       ],
     },

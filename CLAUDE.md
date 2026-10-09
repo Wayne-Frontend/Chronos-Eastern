@@ -44,7 +44,7 @@ pages / components  →  services（calendar-service 已建，其余待建）  �
 - 页面间只传 `YYYY-MM-DD`（如 `?date=YYYY-MM-DD&from=calendar`），禁止传时间戳
 
 已存在：`pages/`（index、calendar、find-date、day-detail）、`components/`（empty-state、navigation-bar、calendar-grid）、`adapters/`、`services/`（calendar-service、festival-service、favorite-service、rule-engine、find-date-service）、`data/`（festivals、sources、event-types、rules/ 的 manifest 与 travel.v1）、`types/`（calendar、home、result、rule）、`utils/`（date-key、format、ganzhi、util）、`vendor/`。方案 5.3 列出的模块已全部创建，四页均已接入真实数据。
-事项状态有四个：`supported`（规则完整、来源已定位、测试通过）、`limited`（已有 verified 规则可查询，但条目未收全）、`reviewing`（整理中，不可查询）、`unsupported`（本版本不提供）。**`supported` 与 `limited` 可查询，门禁只在 `data/event-types.ts` 的 `canQueryEventType()` 一处**，页面与服务不得各自比较字面量。当前出行是 `limited`（规则包 `xjbf-travel@1.17.0`，条目已收宜 16/16、忌 16/16；因天德在四仲月以四维记位、无值日可判，整包仍为 `partial`，**不升级为 `supported`**，见审计 §8.11）。
+事项状态有四个：`supported`（规则完整、来源已定位、测试通过）、`limited`（已有 verified 规则可查询，但条目未收全）、`reviewing`（整理中，不可查询）、`unsupported`（本版本不提供）。**`supported` 与 `limited` 可查询，门禁只在 `data/event-types.ts` 的 `canQueryEventType()` 一处**，页面与服务不得各自比较字面量。当前出行是 `limited`（规则包 `xjbf-travel@1.17.1`，条目已收宜 16/16、忌 16/16；因天德在四仲月以四维记位、无值日可判，整包仍为 `partial`，**不升级为 `supported`**，见审计 §8.11）。
 规则包的 `completeness`（`complete`/`partial`）与 `status` 正交：前者说整包是否收全，后者说包内单条规则是否过校勘；事项状态与它必须一一对应（`limited` ⟺ `partial`），有测试守这条不变量。`partial` 时事项入口（chip 标记 + 选中提示）、结果列表上方、详情页规则区**三处都必须显示覆盖范围**，统一用 `data/rules/manifest.ts` 的 `PARTIAL_COVERAGE_NOTICE`，不得让用户以为已收录全部古籍条款；结果卡展示依据时同时展示 `coverage`。
 
 古籍规则的入库门槛：转录文本（维基文库等）只能用于检索定位，**必须回看影印件核对后才能标 `verified`**；每条规则的 `sourceIds` 指向 `data/sources.ts` 中已实际打开核对过的页面，`locator` 记录卷次与条目。规则包必须写 `coverage`，声明本版本收录了什么、哪些条款尚未收录，页面要向用户展示。
