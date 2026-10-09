@@ -60,9 +60,9 @@
 
     <view wx:for="{{view.ruleSection.rules}}" wx:key="id" class="detail-rule">
       <view class="detail-rule__head">
-        <text class="detail-rule__badge detail-rule__badge--{{item.effectClass}}">
+        <view class="detail-rule__badge detail-rule__badge--{{item.effectClass}}">
           {{item.badgeText}}
-        </text>
+        </view>
         <text class="detail-rule__explanation">{{item.explanation}}</text>
       </view>
       <text class="detail-rule__identity">规则 {{item.id}} · {{item.statusText}}</text>

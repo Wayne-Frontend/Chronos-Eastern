@@ -147,14 +147,23 @@
   align-items: flex-start;
 }
 
+/*
+ * 圆标：定宽定高 + 显式 flex 居中，与首页 .rule-badge 同法。
+ * 原先只写 min-width 与上下 padding，盒高由 line-height（1.4×23rpx）决定约 40rpx，
+ * 配 999rpx 圆角就成了 52×40 的椭圆，字看着不在圆心；且 <text> 不是可靠的 flex 容器，
+ * 故节点同时改用 <view>。
+ */
 .detail-rule__badge {
-  flex: 0 0 auto;
-  min-width: 52rpx;
-  padding: 4rpx 10rpx;
+  display: flex;
+  box-sizing: border-box;
+  width: 52rpx;
+  height: 52rpx;
+  flex: 0 0 52rpx;
+  align-items: center;
+  justify-content: center;
   font-size: 23rpx;
-  line-height: 1.4;
-  text-align: center;
-  border-radius: 999rpx;
+  line-height: 1;
+  border-radius: 50%;
 }
 
 .detail-rule__badge--include {
