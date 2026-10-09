@@ -14,8 +14,8 @@
       </view>
     </view>
 
-    <view class="fixture-notice" aria-role="note">
-      <text>界面预览 · 历法与规则数据尚未接入</text>
+    <view wx:if="{{view.noticeText}}" class="home-notice" aria-role="note">
+      <text>{{view.noticeText}}</text>
     </view>
 
     <view
@@ -26,25 +26,41 @@
       aria-label="查看日期详情"
     >
       <view class="date-meta">
-        <text class="date-year">{{preview.yearText}}</text>
+        <text class="date-year">{{view.yearText}}</text>
         <view class="date-divider"></view>
-        <text class="date-weekday">{{preview.weekdayText}}</text>
+        <text class="date-weekday">{{view.weekdayText}}</text>
       </view>
       <view class="date-display">
-        <text class="date-number date-number--accent">{{preview.monthText}}</text>
+        <text class="date-number date-number--accent">{{view.monthText}}</text>
         <text class="date-unit">月</text>
-        <text class="date-number date-number--accent">{{preview.dayText}}</text>
+        <text class="date-number date-number--accent">{{view.dayText}}</text>
         <text class="date-unit">日</text>
       </view>
-      <text class="date-secondary">{{preview.calendarPlaceholder}}</text>
+      <text wx:if="{{view.lunarText}}" class="date-secondary">{{view.lunarText}}</text>
+      <view wx:if="{{view.ganzhiItems.length > 0}}" class="ganzhi-row">
+        <view wx:for="{{view.ganzhiItems}}" wx:key="label" class="ganzhi-chip">
+          <text class="ganzhi-chip__label">{{item.label}}</text>
+          <text class="ganzhi-chip__value">{{item.value}}</text>
+        </view>
+      </view>
+    </view>
+
+    <view wx:if="{{view.status === 'error'}}" class="retry-row">
+      <button
+        class="secondary-button retry-button"
+        bindtap="recalculate"
+        hover-class="button-pressed"
+      >
+        重新计算
+      </button>
     </view>
 
     <view class="solar-term-block">
       <text class="solar-term-name">节气</text>
       <view class="solar-term-divider"></view>
       <view class="solar-term-copy">
-        <text class="solar-term-title">{{preview.solarTermTitle}}</text>
-        <text class="solar-term-description">{{preview.solarTermDescription}}</text>
+        <text class="solar-term-title">{{view.solarTermTitle}}</text>
+        <text class="solar-term-description">{{view.solarTermDescription}}</text>
       </view>
     </view>
 
@@ -60,7 +76,7 @@
         <view class="rule-badge rule-badge--include">宜</view>
         <view class="rule-copy">
           <text class="rule-title">规则校勘中</text>
-          <text class="rule-description">{{preview.rulePlaceholder}}</text>
+          <text class="rule-description">完成来源校勘与测试后再展示具体事项</text>
         </view>
       </view>
 

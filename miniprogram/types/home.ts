@@ -1,13 +1,18 @@
+import type { GanzhiDisplayItem } from '../utils/format'
 import type { DateKey } from './calendar'
 
-export interface HomePreviewFixture {
+export type HomeStatus = 'ok' | 'out_of_range' | 'error'
+
+export interface HomeViewModel {
+  status: HomeStatus
   dateKey: DateKey
   yearText: string
   monthText: string
   dayText: string
   weekdayText: string
-  calendarPlaceholder: string
+  lunarText: string
+  ganzhiItems: GanzhiDisplayItem[]
   solarTermTitle: string
   solarTermDescription: string
-  rulePlaceholder: string
+  noticeText: string
 }

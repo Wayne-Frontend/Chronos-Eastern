@@ -67,15 +67,57 @@ page {
   background: var(--color-ink-muted);
 }
 
-.fixture-notice {
-  display: inline-flex;
-  padding: 10rpx 18rpx;
+.home-notice {
+  display: flex;
+  padding: 16rpx 20rpx;
   margin-bottom: 32rpx;
-  color: var(--color-info-text);
+  color: var(--color-error);
   font-size: 24rpx;
-  line-height: 1.4;
-  background: var(--color-info-bg);
+  line-height: 1.5;
+  background: var(--color-surface);
+  border: 1rpx solid var(--color-error);
+  border-radius: var(--radius-button);
+}
+
+.retry-row {
+  display: flex;
+  margin-top: 28rpx;
+}
+
+.retry-button {
+  width: 100%;
+  margin: 0;
+}
+
+.ganzhi-row {
+  display: flex;
+  gap: 16rpx;
+  margin-top: 28rpx;
+}
+
+.ganzhi-chip {
+  display: flex;
+  min-width: 0;
+  flex: 1;
+  align-items: baseline;
+  justify-content: center;
+  gap: 8rpx;
+  padding: 12rpx;
+  background: var(--color-cinnabar-soft);
+  border: 1rpx solid rgb(180 67 53 / 18%);
   border-radius: 999rpx;
+}
+
+.ganzhi-chip__label {
+  color: var(--color-ink-muted);
+  font-size: 24rpx;
+}
+
+.ganzhi-chip__value {
+  color: var(--color-cinnabar-deep);
+  font-family: 'Songti SC', STSong, serif;
+  font-size: 28rpx;
+  font-weight: 600;
 }
 
 .date-hero {

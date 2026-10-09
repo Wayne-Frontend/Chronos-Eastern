@@ -2,13 +2,55 @@
 
 <view class="page-shell page-content detail-page">
   <view class="detail-date section-card">
-    <text class="detail-date__label">当前日期</text>
-    <text class="detail-date__value">{{dateKey || '日期参数无效'}}</text>
+    <text class="detail-date__label">{{view.dateLabel}}</text>
+    <text class="detail-date__value">{{view.dateKey || '日期参数无效'}}</text>
+    <text wx:if="{{view.weekdayText}}" class="detail-date__meta">
+      {{view.weekdayText}}{{view.lunarText ? ' · ' + view.lunarText : ''}}
+    </text>
   </view>
-  <view class="section-card">
+
+  <view wx:if="{{view.noticeText}}" class="detail-notice" aria-role="note">
+    <text>{{view.noticeText}}</text>
+  </view>
+
+  <view wx:if="{{view.status === 'ok'}}" class="detail-facts section-card">
+    <text class="detail-facts__title">干支与节气</text>
+    <view wx:for="{{view.ganzhiItems}}" wx:key="label" class="detail-row">
+      <text class="detail-row__label">{{item.label}}</text>
+      <text class="detail-row__value">{{item.value}}</text>
+    </view>
+    <view class="detail-row">
+      <text class="detail-row__label">节气</text>
+      <text class="detail-row__value">{{view.todaySolarTermText}}</text>
+    </view>
+    <view wx:if="{{view.nextSolarTermText}}" class="detail-row">
+      <text class="detail-row__label">下一个节气</text>
+      <text class="detail-row__value">{{view.nextSolarTermText}}</text>
+    </view>
+    <text class="detail-caption">年、月干支在交节当天整日按新值计算（按日口径）。</text>
+  </view>
+
+  <view class="detail-block section-card">
     <empty-state
-      title="详情数据待接入"
-      description="历法适配器通过边界验证后，这里将展示农历、干支口径、节气与规则来源。"
+      title="节日数据整理中"
+      description="传统节日将在来源登记与闰月规则确认后接入。"
     ></empty-state>
+  </view>
+
+  <view class="detail-block section-card">
+    <empty-state
+      title="本日暂无已完成校勘的传统规则"
+      description="宜忌只来自带来源并通过测试的规则包，不以第三方历法库结果替代。"
+    ></empty-state>
+  </view>
+
+  <view wx:if="{{view.status !== 'ok'}}" class="detail-action">
+    <button
+      class="secondary-button detail-action__button"
+      bindtap="goToday"
+      hover-class="button-pressed"
+    >
+      返回今天
+    </button>
   </view>
 </view>

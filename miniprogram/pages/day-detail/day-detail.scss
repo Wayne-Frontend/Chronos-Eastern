@@ -20,3 +20,83 @@
   font-size: 42rpx;
   font-weight: 600;
 }
+
+.detail-date__meta {
+  margin-top: 14rpx;
+  color: var(--color-ink-secondary);
+  font-size: 26rpx;
+  line-height: 1.5;
+}
+
+.detail-notice {
+  display: flex;
+  padding: 16rpx 20rpx;
+  margin-bottom: 24rpx;
+  color: var(--color-error);
+  font-size: 24rpx;
+  line-height: 1.5;
+  background: var(--color-surface);
+  border: 1rpx solid var(--color-error);
+  border-radius: var(--radius-button);
+}
+
+.detail-facts {
+  padding: 28rpx 32rpx 24rpx;
+  margin-bottom: 24rpx;
+}
+
+.detail-facts__title {
+  display: block;
+  margin-bottom: 8rpx;
+  font-family: 'Songti SC', STSong, serif;
+  font-size: 34rpx;
+  font-weight: 600;
+}
+
+.detail-row {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 24rpx;
+  padding: 20rpx 0;
+}
+
+.detail-row + .detail-row {
+  border-top: 1rpx solid var(--color-border);
+}
+
+.detail-row__label {
+  flex: 0 0 auto;
+  color: var(--color-ink-secondary);
+  font-size: 26rpx;
+}
+
+.detail-row__value {
+  min-width: 0;
+  color: var(--color-ink);
+  font-size: 28rpx;
+  text-align: right;
+}
+
+.detail-caption {
+  display: block;
+  padding-top: 20rpx;
+  color: var(--color-ink-muted);
+  font-size: 24rpx;
+  line-height: 1.5;
+  border-top: 1rpx solid var(--color-border);
+}
+
+.detail-block {
+  margin-bottom: 24rpx;
+}
+
+.detail-action {
+  display: flex;
+  margin-top: 32rpx;
+}
+
+.detail-action__button {
+  width: 100%;
+  margin: 0;
+}
