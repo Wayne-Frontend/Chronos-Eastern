@@ -4,12 +4,110 @@
   <view class="page-intro">
     <text class="page-intro__eyebrow">有据可循</text>
     <text class="page-intro__title">找日子</text>
-    <text class="page-intro__description">只查询有明确来源、经过校勘并通过测试的规则</text>
+    <text class="page-intro__description">只列出符合本版本已收录、且标明来源的传统规则的日期</text>
   </view>
-  <view class="section-card">
-    <empty-state
-      title="规则尚在校勘"
-      description="首个事项完成“来源—规则—测试—解释”闭环后才会开放查询。"
-    ></empty-state>
+
+  <view class="section-card block">
+    <text class="block__title">选择事项</text>
+    <view class="event-grid">
+      <view
+        wx:for="{{view.eventOptions}}"
+        wx:key="id"
+        class="event-chip {{item.id === view.selectedEventId ? 'event-chip--active' : ''}} {{item.disabled ? 'event-chip--disabled' : ''}}"
+        data-id="{{item.id}}"
+        bindtap="onSelectEvent"
+        aria-role="button"
+        aria-label="{{item.displayName}}{{item.disabled ? '（' + item.statusNote + '）' : ''}}"
+      >
+        <text class="event-chip__name">{{item.displayName}}</text>
+        <text class="event-chip__term">{{item.classicalText}}</text>
+        <text wx:if="{{item.disabled}}" class="event-chip__note">整理中</text>
+      </view>
+    </view>
   </view>
+
+  <view class="section-card block">
+    <text class="block__title">日期范围</text>
+    <view class="range-row">
+      <picker
+        mode="date"
+        value="{{view.startDate}}"
+        start="{{view.pickerStart}}"
+        end="2100-12-31"
+        bindchange="onStartChange"
+      >
+        <view class="range-field" aria-role="button" aria-label="选择开始日期">
+          <text class="range-field__label">开始</text>
+          <text class="range-field__value">{{view.startDate}}</text>
+        </view>
+      </picker>
+      <text class="range-sep">至</text>
+      <picker
+        mode="date"
+        value="{{view.endDate}}"
+        start="{{view.pickerStart}}"
+        end="2100-12-31"
+        bindchange="onEndChange"
+      >
+        <view class="range-field" aria-role="button" aria-label="选择结束日期">
+          <text class="range-field__label">结束</text>
+          <text class="range-field__value">{{view.endDate}}</text>
+        </view>
+      </picker>
+    </view>
+    <text class="range-hint">最早为今天，最长 {{view.maxRangeDays}} 天</text>
+
+    <button
+      class="primary-button query-button"
+      disabled="{{!view.canQuery || view.status === 'running'}}"
+      bindtap="onQuery"
+      hover-class="button-pressed"
+    >
+      查询符合已收录规则的日期
+    </button>
+    <text wx:if="{{view.progressText}}" class="progress-text">{{view.progressText}}</text>
+    <text wx:if="{{view.expiredNotice}}" class="expired-text">{{view.expiredNotice}}</text>
+  </view>
+
+  <view wx:if="{{view.noticeText}}" class="notice-card">
+    <text>{{view.noticeText}}</text>
+  </view>
+
+  <view wx:if="{{view.status === 'ok' || view.status === 'partial'}}" class="section-card block">
+    <text class="condition-text">{{view.conditionText}}</text>
+    <text class="summary-text">{{view.summaryText}}</text>
+  </view>
+
+  <view wx:if="{{view.status === 'ok' && view.results.length > 0}}" class="result-list">
+    <view
+      wx:for="{{view.results}}"
+      wx:key="dateKey"
+      class="section-card result-card"
+      data-date-key="{{item.dateKey}}"
+      bindtap="onOpenDetail"
+      hover-class="result-card--pressed"
+      aria-role="button"
+      aria-label="查看 {{item.dateKey}} 详情"
+    >
+      <view class="result-head">
+        <text class="result-date">{{item.dateText}}</text>
+        <text class="result-weekday">{{item.weekdayText}}</text>
+        <text wx:if="{{item.isFavorite}}" class="result-favorite">★ 已收藏</text>
+      </view>
+      <text class="result-meta">{{item.lunarText}}{{item.tagText ? ' · ' + item.tagText : ''}}</text>
+      <view class="result-rules">
+        <text wx:for="{{item.ruleTexts}}" wx:for-item="rule" wx:key="*this" class="result-rule">
+          · {{rule}}
+        </text>
+      </view>
+      <text wx:if="{{item.moreText}}" class="result-more">{{item.moreText}}</text>
+    </view>
+  </view>
+
+  <view wx:if="{{view.coverageText}}" class="coverage-card">
+    <text class="coverage-title">规则依据与覆盖范围</text>
+    <text class="coverage-text">{{view.coverageText}}</text>
+  </view>
+
+  <text wx:if="{{view.disclaimerText}}" class="disclaimer-text">{{view.disclaimerText}}</text>
 </view>
