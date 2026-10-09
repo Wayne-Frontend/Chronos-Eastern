@@ -62,20 +62,19 @@ Component({
       // 胶囊按钮位置决定自定义导航栏左右安全区。Android 与开发者工具返回的
       // safeArea 顶部值需要显式补入高度；iOS 客户端由系统导航区域自行占位。
       const rect = wx.getMenuButtonBoundingClientRect()
-      wx.getSystemInfo({
-        success: (res) => {
-          const isAndroid = res.platform === 'android'
-          const isDevtools = res.platform === 'devtools'
-          this.setData({
-            ios: !isAndroid,
-            innerPaddingRight: `padding-right: ${res.windowWidth - rect.left}px`,
-            leftWidth: `width: ${res.windowWidth - rect.left}px`,
-            safeAreaTop:
-              isDevtools || isAndroid
-                ? `height: calc(var(--height) + ${res.safeArea.top}px); padding-top: ${res.safeArea.top}px`
-                : ``,
-          })
-        },
+      const { platform } = wx.getDeviceInfo()
+      const { windowWidth, safeArea } = wx.getWindowInfo()
+      const isAndroid = platform === 'android'
+      const isDevtools = platform === 'devtools'
+
+      this.setData({
+        ios: !isAndroid,
+        innerPaddingRight: `padding-right: ${windowWidth - rect.left}px`,
+        leftWidth: `width: ${windowWidth - rect.left}px`,
+        safeAreaTop:
+          isDevtools || isAndroid
+            ? `height: calc(var(--height) + ${safeArea.top}px); padding-top: ${safeArea.top}px`
+            : ``,
       })
     },
   },
