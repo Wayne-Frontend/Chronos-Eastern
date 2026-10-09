@@ -266,6 +266,7 @@ export const TRAVEL_RULE_PACK: RulePack = {
   rules: [
     {
       id: 'xjbf-travel-0001',
+      name: '建日',
       traditionId: TRADITION,
       eventType: 'travel',
       status: 'verified',
@@ -283,6 +284,7 @@ export const TRAVEL_RULE_PACK: RulePack = {
     },
     {
       id: 'xjbf-travel-0002',
+      name: '开日',
       traditionId: TRADITION,
       eventType: 'travel',
       status: 'verified',
@@ -297,6 +299,7 @@ export const TRAVEL_RULE_PACK: RulePack = {
     },
     {
       id: 'xjbf-travel-0003',
+      name: '平日',
       traditionId: TRADITION,
       eventType: 'travel',
       status: 'verified',
@@ -311,6 +314,7 @@ export const TRAVEL_RULE_PACK: RulePack = {
     },
     {
       id: 'xjbf-travel-0004',
+      name: '收日',
       traditionId: TRADITION,
       eventType: 'travel',
       status: 'verified',
@@ -325,6 +329,7 @@ export const TRAVEL_RULE_PACK: RulePack = {
     },
     {
       id: 'xjbf-travel-0005',
+      name: '闭日',
       traditionId: TRADITION,
       eventType: 'travel',
       status: 'verified',
@@ -339,6 +344,7 @@ export const TRAVEL_RULE_PACK: RulePack = {
     },
     {
       id: 'xjbf-travel-0006',
+      name: '月破',
       traditionId: TRADITION,
       eventType: 'travel',
       status: 'verified',
@@ -353,6 +359,7 @@ export const TRAVEL_RULE_PACK: RulePack = {
     },
     {
       id: 'xjbf-travel-0007',
+      name: '巳日',
       traditionId: TRADITION,
       eventType: 'travel',
       status: 'verified',
@@ -367,6 +374,7 @@ export const TRAVEL_RULE_PACK: RulePack = {
     },
     {
       id: 'xjbf-travel-0008',
+      name: '吉期',
       traditionId: TRADITION,
       eventType: 'travel',
       status: 'verified',
@@ -381,6 +389,7 @@ export const TRAVEL_RULE_PACK: RulePack = {
     },
     {
       id: 'xjbf-travel-0009',
+      name: '天喜',
       traditionId: TRADITION,
       eventType: 'travel',
       status: 'verified',
@@ -398,6 +407,7 @@ export const TRAVEL_RULE_PACK: RulePack = {
     },
     {
       id: 'xjbf-travel-0010',
+      name: '月德',
       traditionId: TRADITION,
       eventType: 'travel',
       status: 'verified',
@@ -423,6 +433,7 @@ export const TRAVEL_RULE_PACK: RulePack = {
     },
     {
       id: 'xjbf-travel-0011',
+      name: '月德合',
       traditionId: TRADITION,
       eventType: 'travel',
       status: 'verified',
@@ -445,6 +456,7 @@ export const TRAVEL_RULE_PACK: RulePack = {
     },
     {
       id: 'xjbf-travel-0012',
+      name: '天赦',
       traditionId: TRADITION,
       eventType: 'travel',
       status: 'verified',
@@ -475,6 +487,7 @@ export const TRAVEL_RULE_PACK: RulePack = {
     },
     {
       id: 'xjbf-travel-0013',
+      name: '月恩',
       traditionId: TRADITION,
       eventType: 'travel',
       status: 'verified',
@@ -497,6 +510,7 @@ export const TRAVEL_RULE_PACK: RulePack = {
     },
     {
       id: 'xjbf-travel-0014',
+      name: '时德',
       traditionId: TRADITION,
       eventType: 'travel',
       status: 'verified',
@@ -522,6 +536,7 @@ export const TRAVEL_RULE_PACK: RulePack = {
     },
     {
       id: 'xjbf-travel-0015',
+      name: '劫煞',
       traditionId: TRADITION,
       eventType: 'travel',
       status: 'verified',
@@ -547,6 +562,7 @@ export const TRAVEL_RULE_PACK: RulePack = {
     },
     {
       id: 'xjbf-travel-0016',
+      name: '天吏',
       traditionId: TRADITION,
       eventType: 'travel',
       status: 'verified',
@@ -569,6 +585,7 @@ export const TRAVEL_RULE_PACK: RulePack = {
     },
     {
       id: 'xjbf-travel-0017',
+      name: '灾煞',
       traditionId: TRADITION,
       eventType: 'travel',
       status: 'verified',
@@ -594,6 +611,7 @@ export const TRAVEL_RULE_PACK: RulePack = {
     },
     {
       id: 'xjbf-travel-0018',
+      name: '月煞',
       traditionId: TRADITION,
       eventType: 'travel',
       status: 'verified',
@@ -619,6 +637,7 @@ export const TRAVEL_RULE_PACK: RulePack = {
     },
     {
       id: 'xjbf-travel-0019',
+      name: '大时',
       traditionId: TRADITION,
       eventType: 'travel',
       status: 'verified',
@@ -644,6 +663,7 @@ export const TRAVEL_RULE_PACK: RulePack = {
     },
     {
       id: 'xjbf-travel-0020',
+      name: '天贼',
       traditionId: TRADITION,
       eventType: 'travel',
       status: 'verified',
@@ -666,6 +686,7 @@ export const TRAVEL_RULE_PACK: RulePack = {
     },
     {
       id: 'xjbf-travel-0021',
+      name: '往亡',
       traditionId: TRADITION,
       eventType: 'travel',
       status: 'verified',
@@ -691,6 +712,7 @@ export const TRAVEL_RULE_PACK: RulePack = {
     },
     {
       id: 'xjbf-travel-0022',
+      name: '天德合',
       traditionId: TRADITION,
       eventType: 'travel',
       status: 'verified',
@@ -716,6 +738,7 @@ export const TRAVEL_RULE_PACK: RulePack = {
     },
     {
       id: 'xjbf-travel-0023',
+      name: '四相',
       traditionId: TRADITION,
       eventType: 'travel',
       status: 'verified',
@@ -741,6 +764,7 @@ export const TRAVEL_RULE_PACK: RulePack = {
     },
     {
       id: 'xjbf-travel-0024',
+      name: '天愿',
       traditionId: TRADITION,
       eventType: 'travel',
       status: 'verified',
@@ -771,6 +795,7 @@ export const TRAVEL_RULE_PACK: RulePack = {
     },
     {
       id: 'xjbf-travel-0025',
+      name: '驿马',
       traditionId: TRADITION,
       eventType: 'travel',
       status: 'verified',
@@ -796,6 +821,7 @@ export const TRAVEL_RULE_PACK: RulePack = {
     },
     {
       id: 'xjbf-travel-0026',
+      name: '王日',
       traditionId: TRADITION,
       eventType: 'travel',
       status: 'verified',
@@ -821,6 +847,7 @@ export const TRAVEL_RULE_PACK: RulePack = {
     },
     {
       id: 'xjbf-travel-0027',
+      name: '五墓',
       traditionId: TRADITION,
       eventType: 'travel',
       status: 'verified',
@@ -851,6 +878,7 @@ export const TRAVEL_RULE_PACK: RulePack = {
     },
     {
       id: 'xjbf-travel-0028',
+      name: '四废',
       traditionId: TRADITION,
       eventType: 'travel',
       status: 'verified',
@@ -881,6 +909,7 @@ export const TRAVEL_RULE_PACK: RulePack = {
     },
     {
       id: 'xjbf-travel-0029',
+      name: '月厌',
       traditionId: TRADITION,
       eventType: 'travel',
       status: 'verified',
@@ -906,6 +935,7 @@ export const TRAVEL_RULE_PACK: RulePack = {
     },
     {
       id: 'xjbf-travel-0030',
+      name: '天马',
       traditionId: TRADITION,
       eventType: 'travel',
       status: 'verified',
@@ -932,6 +962,7 @@ export const TRAVEL_RULE_PACK: RulePack = {
     },
     {
       id: 'xjbf-travel-0031',
+      name: '月刑',
       traditionId: TRADITION,
       eventType: 'travel',
       status: 'verified',
@@ -959,6 +990,7 @@ export const TRAVEL_RULE_PACK: RulePack = {
     },
     {
       id: 'xjbf-travel-0032',
+      name: '天德',
       traditionId: TRADITION,
       eventType: 'travel',
       status: 'verified',

@@ -16,6 +16,8 @@ export interface RuleExplanationFailureContext {
 
 export interface RuleExplanationItem {
   id: string
+  /** 原书条目名，供首页等摘要界面直接展示。 */
+  name: string
   effect: RuleEffect
   status: RuleStatus
   explanation: string
@@ -71,6 +73,7 @@ export function getDateRuleExplanation(
   const unknownRuleIds = new Set(evaluation.unknownRuleIds)
   const toExplanation = (rule: (typeof pack.rules)[number]): RuleExplanationItem => ({
     id: rule.id,
+    name: rule.name,
     effect: rule.effect,
     status: rule.status,
     explanation: rule.explanation,

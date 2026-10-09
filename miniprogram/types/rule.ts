@@ -19,6 +19,11 @@ export interface RuleCondition {
 
 export interface RuleDefinition {
   id: string
+  /**
+   * 原书条目名（如「建日」「月德」），供摘要类界面直接展示。
+   * 必须是对应卷十一宜忌条目里的那个名字，且应能在 `locator` 的「宜项「X」／忌项「X」」中找到；有测试守这条。
+   */
+  name: string
   traditionId: string
   eventType: string
   status: RuleStatus

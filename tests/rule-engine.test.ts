@@ -34,6 +34,7 @@ function evaluate(dateKey: string) {
 function syntheticRule(overrides: Partial<RuleDefinition>): RuleDefinition {
   return {
     id: 'test-rule',
+    name: '测试用',
     traditionId: 'test',
     eventType: 'travel',
     status: 'verified',
@@ -806,6 +807,16 @@ describe('来源精度', () => {
           `${rule.id}：${volume}《${section}》未被来源标题「${source.title}」覆盖`,
         ).toBe(true)
       }
+    }
+  })
+
+  it('每条规则都有条目名，且该名字就出现在自己的 locator 里', () => {
+    // name 是摘要界面（首页）直接展示的文本，不能与 locator 各说各话。
+    for (const rule of TRAVEL_RULE_PACK.rules) {
+      expect(rule.name, `${rule.id} 缺少条目名`).not.toBe('')
+      expect(rule.locator, `${rule.id} 的 locator 未点名「${rule.name}」`).toContain(
+        `「${rule.name}」`,
+      )
     }
   })
 })
