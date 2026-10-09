@@ -1,15 +1,75 @@
 <navigation-bar title="日历" back="{{false}}" color="#24211E" background="#F7F3EA"></navigation-bar>
 
 <view class="page-shell page-content calendar-page">
-  <view class="page-intro">
-    <text class="page-intro__eyebrow">岁序有时</text>
-    <text class="page-intro__title">月历</text>
-    <text class="page-intro__description">逐日历法信息将在日期服务验证完成后接入</text>
+  <view class="month-bar">
+    <button
+      class="month-bar__arrow"
+      disabled="{{!view.canGoPrev}}"
+      bindtap="goPrevMonth"
+      hover-class="month-bar__arrow--pressed"
+      aria-label="上个月"
+    >
+      ‹
+    </button>
+
+    <picker
+      mode="date"
+      fields="month"
+      value="{{view.pickerValue}}"
+      start="1901-01"
+      end="2100-12"
+      bindchange="onMonthPicked"
+    >
+      <view class="month-bar__title" aria-role="button" aria-label="选择年月">
+        <text class="month-bar__text">{{view.titleText}}</text>
+        <text class="month-bar__hint">选择 ›</text>
+      </view>
+    </picker>
+
+    <button
+      class="month-bar__arrow"
+      disabled="{{!view.canGoNext}}"
+      bindtap="goNextMonth"
+      hover-class="month-bar__arrow--pressed"
+      aria-label="下个月"
+    >
+      ›
+    </button>
   </view>
-  <view class="section-card">
-    <empty-state
-      title="月历能力建设中"
-      description="下一阶段将接入 42 格月历、节气节日标签与日期详情跳转。"
-    ></empty-state>
+
+  <view wx:if="{{view.status === 'error'}}" class="calendar-notice">
+    <text>{{view.noticeText}}</text>
   </view>
+
+  <view class="section-card calendar-card">
+    <calendar-grid
+      cells="{{view.cells}}"
+      selected-date-key="{{view.selectedDateKey}}"
+      bind:select="onSelectDate"
+    ></calendar-grid>
+  </view>
+
+  <view wx:if="{{view.status === 'error'}}" class="calendar-actions">
+    <button
+      class="secondary-button calendar-actions__button"
+      bindtap="retry"
+      hover-class="button-pressed"
+    >
+      重试
+    </button>
+  </view>
+
+  <view class="calendar-actions">
+    <button
+      class="secondary-button calendar-actions__button"
+      bindtap="backToToday"
+      hover-class="button-pressed"
+    >
+      回到今天
+    </button>
+  </view>
+
+  <text wx:if="{{view.status === 'ok' && view.noticeText}}" class="calendar-hint">
+    {{view.noticeText}}
+  </text>
 </view>

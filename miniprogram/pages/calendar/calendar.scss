@@ -1,3 +1,88 @@
 .calendar-page {
-  padding-top: 56rpx;
+  padding-top: 24rpx;
+}
+
+.month-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 20rpx;
+}
+
+.month-bar__arrow {
+  display: flex;
+  width: 88rpx;
+  height: 88rpx;
+  min-height: 88rpx;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  margin: 0;
+  color: var(--color-ink-secondary);
+  font-family: serif;
+  font-size: 44rpx;
+  font-weight: 300;
+  line-height: 1;
+  background: transparent;
+}
+
+.month-bar__arrow[disabled] {
+  color: var(--color-border);
+}
+
+.month-bar__arrow--pressed {
+  color: var(--color-cinnabar-deep);
+}
+
+.month-bar__title {
+  display: flex;
+  align-items: baseline;
+  gap: 10rpx;
+  padding: 12rpx 20rpx;
+  border-radius: var(--radius-button);
+}
+
+.month-bar__text {
+  font-family: 'Songti SC', STSong, serif;
+  font-size: 40rpx;
+  font-weight: 600;
+}
+
+.month-bar__hint {
+  color: var(--color-ink-muted);
+  font-size: 22rpx;
+}
+
+.calendar-card {
+  overflow: hidden;
+}
+
+.calendar-notice {
+  display: flex;
+  padding: 16rpx 20rpx;
+  margin-bottom: 20rpx;
+  color: var(--color-error);
+  font-size: 24rpx;
+  line-height: 1.5;
+  background: var(--color-surface);
+  border: 1rpx solid var(--color-error);
+  border-radius: var(--radius-button);
+}
+
+.calendar-actions {
+  display: flex;
+  margin-top: 24rpx;
+}
+
+.calendar-actions__button {
+  width: 100%;
+  margin: 0;
+}
+
+.calendar-hint {
+  display: block;
+  margin-top: 20rpx;
+  color: var(--color-ink-muted);
+  font-size: 24rpx;
+  text-align: center;
 }

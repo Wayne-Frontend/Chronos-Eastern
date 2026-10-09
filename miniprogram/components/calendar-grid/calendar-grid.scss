@@ -1,0 +1,94 @@
+.grid {
+  padding: 24rpx 16rpx 28rpx;
+}
+
+.grid__weekdays {
+  display: flex;
+  margin-bottom: 12rpx;
+}
+
+.grid__weekday {
+  flex: 1 1 0;
+  color: var(--color-ink-muted);
+  font-size: 24rpx;
+  text-align: center;
+}
+
+.grid__cells {
+  display: flex;
+  flex-wrap: wrap;
+}
+
+.cell {
+  position: relative;
+  box-sizing: border-box;
+  display: flex;
+  width: 14.2857%;
+  min-height: calc(var(--calendar-cell-min-size) + 32rpx);
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 8rpx 0;
+}
+
+.cell--other {
+  opacity: 0.45;
+}
+
+.cell__day-wrap {
+  display: flex;
+  width: var(--calendar-selected-size);
+  height: var(--calendar-selected-size);
+  align-items: center;
+  justify-content: center;
+  background: transparent;
+  border-radius: 50%;
+}
+
+.cell--pressed .cell__day-wrap {
+  background: var(--color-cinnabar-soft);
+}
+
+.cell--today .cell__day-wrap {
+  box-sizing: border-box;
+  border: 2rpx solid var(--color-cinnabar);
+}
+
+.cell--selected .cell__day-wrap {
+  background: var(--color-cinnabar);
+  border-color: var(--color-cinnabar);
+}
+
+.cell__day {
+  color: var(--color-ink);
+  font-size: 30rpx;
+  line-height: 1;
+}
+
+.cell--selected .cell__day {
+  color: #fff;
+}
+
+.cell__label {
+  margin-top: 6rpx;
+  color: var(--color-ink-muted);
+  font-size: 22rpx;
+  line-height: 1.2;
+}
+
+.cell__label--term {
+  color: #a98542;
+}
+
+.cell__label--month {
+  color: var(--color-ink-secondary);
+}
+
+.cell__badge {
+  position: absolute;
+  top: 4rpx;
+  right: 8rpx;
+  color: var(--color-cinnabar);
+  font-size: 20rpx;
+  line-height: 1;
+}

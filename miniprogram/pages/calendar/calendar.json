@@ -1,6 +1,6 @@
 {
   "usingComponents": {
-    "empty-state": "/components/empty-state/empty-state",
+    "calendar-grid": "/components/calendar-grid/calendar-grid",
     "navigation-bar": "/components/navigation-bar/navigation-bar"
   }
 }

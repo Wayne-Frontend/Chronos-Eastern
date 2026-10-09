@@ -1,0 +1,27 @@
+<view class="grid">
+  <view class="grid__weekdays">
+    <text wx:for="{{weekdayLabels}}" wx:key="*this" class="grid__weekday">{{item}}</text>
+  </view>
+
+  <view class="grid__cells">
+    <view
+      wx:for="{{cells}}"
+      wx:key="dateKey"
+      class="cell {{item.isCurrentMonth ? '' : 'cell--other'}} {{item.isToday ? 'cell--today' : ''}} {{item.dateKey === selectedDateKey ? 'cell--selected' : ''}}"
+      data-date-key="{{item.dateKey}}"
+      bindtap="onCellTap"
+      hover-class="cell--pressed"
+      aria-role="button"
+      aria-label="公历 {{item.day}} 日 {{item.labelText}}"
+    >
+      <view class="cell__day-wrap">
+        <text class="cell__day">{{item.day}}</text>
+      </view>
+      <text
+        class="cell__label {{item.labelKind === 'solar-term' ? 'cell__label--term' : ''}} {{item.labelKind === 'lunar-month' ? 'cell__label--month' : ''}}"
+        >{{item.labelText}}</text
+      >
+      <text wx:if="{{item.isToday}}" class="cell__badge">今</text>
+    </view>
+  </view>
+</view>
