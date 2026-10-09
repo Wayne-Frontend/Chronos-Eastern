@@ -1,38 +1,37 @@
 .grid {
-  padding: 24rpx 16rpx 28rpx;
+  padding: 20rpx 16rpx 24rpx;
+}
+
+.grid__weekdays,
+.grid__row {
+  display: flex;
 }
 
 .grid__weekdays {
-  display: flex;
-  margin-bottom: 12rpx;
+  margin-bottom: 4rpx;
 }
 
 .grid__weekday {
   flex: 1 1 0;
+  padding: 10rpx 0;
   color: var(--color-ink-muted);
   font-size: 24rpx;
+  line-height: 1;
   text-align: center;
 }
 
-.grid__cells {
+.grid__rows {
   display: flex;
-  flex-wrap: wrap;
+  flex-direction: column;
 }
 
 .cell {
-  position: relative;
-  box-sizing: border-box;
   display: flex;
-  width: 14.2857%;
-  min-height: calc(var(--calendar-cell-min-size) + 32rpx);
+  flex: 1 1 0;
+  min-width: 0;
   flex-direction: column;
   align-items: center;
-  justify-content: center;
-  padding: 8rpx 0;
-}
-
-.cell--other {
-  opacity: 0.45;
+  padding: 8rpx 0 12rpx;
 }
 
 .cell__day-wrap {
@@ -43,17 +42,6 @@
   align-items: center;
   justify-content: center;
   background: transparent;
-  border-radius: 50%;
-}
-
-.cell__favorite-dot {
-  position: absolute;
-  bottom: 2rpx;
-  left: 50%;
-  width: 6rpx;
-  height: 6rpx;
-  margin-left: -3rpx;
-  background: var(--color-gold);
   border-radius: 50%;
 }
 
@@ -77,15 +65,41 @@
   line-height: 1;
 }
 
+.cell--other .cell__day {
+  color: var(--color-ink-faint);
+}
+
 .cell--selected .cell__day {
   color: #fff;
 }
 
+.cell__badge {
+  position: absolute;
+  top: -8rpx;
+  right: -8rpx;
+  color: var(--color-cinnabar);
+  font-size: 20rpx;
+  line-height: 1;
+}
+
+.cell__favorite-dot {
+  position: absolute;
+  bottom: 0;
+  left: 50%;
+  width: 6rpx;
+  height: 6rpx;
+  margin-left: -3rpx;
+  background: var(--color-gold);
+  border-radius: 50%;
+}
+
 .cell__label {
+  max-width: 100%;
   margin-top: 6rpx;
   color: var(--color-ink-muted);
   font-size: 22rpx;
   line-height: 1.2;
+  white-space: nowrap;
 }
 
 .cell__label--solar-term {
@@ -104,11 +118,11 @@
   color: var(--color-ink-secondary);
 }
 
-.cell__badge {
-  position: absolute;
-  top: 4rpx;
-  right: 8rpx;
-  color: var(--color-cinnabar);
-  font-size: 20rpx;
-  line-height: 1;
+/* 非本月补位日整体降为辅助层级：用淡墨色而非透明度，避免真机上半透明层之间的接缝。 */
+.cell--other .cell__label,
+.cell--other .cell__label--solar-term,
+.cell--other .cell__label--festival,
+.cell--other .cell__label--commemoration,
+.cell--other .cell__label--lunar-month {
+  color: var(--color-ink-faint);
 }

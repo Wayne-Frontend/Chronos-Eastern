@@ -3,26 +3,26 @@
     <text wx:for="{{weekdayLabels}}" wx:key="*this" class="grid__weekday">{{item}}</text>
   </view>
 
-  <view class="grid__cells">
-    <view
-      wx:for="{{cells}}"
-      wx:key="dateKey"
-      class="cell {{item.isCurrentMonth ? '' : 'cell--other'}} {{item.isToday ? 'cell--today' : ''}} {{item.dateKey === selectedDateKey ? 'cell--selected' : ''}}"
-      data-date-key="{{item.dateKey}}"
-      bindtap="onCellTap"
-      hover-class="cell--pressed"
-      aria-role="button"
-      aria-label="公历 {{item.day}} 日 {{item.labelText}}"
-    >
-      <view class="cell__day-wrap">
-        <text class="cell__day">{{item.day}}</text>
-        <view wx:if="{{item.isFavorite}}" class="cell__favorite-dot" aria-hidden="true"></view>
-      </view>
-      <text
-        class="cell__label cell__label--{{item.labelKind}}"
-        >{{item.labelText}}</text
+  <view class="grid__rows">
+    <view wx:for="{{rows}}" wx:key="id" class="grid__row">
+      <view
+        wx:for="{{item.cells}}"
+        wx:for-item="cell"
+        wx:key="dateKey"
+        class="cell {{cell.isCurrentMonth ? '' : 'cell--other'}} {{cell.isToday ? 'cell--today' : ''}} {{cell.dateKey === selectedDateKey ? 'cell--selected' : ''}}"
+        data-date-key="{{cell.dateKey}}"
+        bindtap="onCellTap"
+        hover-class="cell--pressed"
+        aria-role="button"
+        aria-label="公历 {{cell.day}} 日 {{cell.labelText}}"
       >
-      <text wx:if="{{item.isToday}}" class="cell__badge">今</text>
+        <view class="cell__day-wrap">
+          <text class="cell__day">{{cell.day}}</text>
+          <text wx:if="{{cell.isToday}}" class="cell__badge">今</text>
+          <view wx:if="{{cell.isFavorite}}" class="cell__favorite-dot" aria-hidden="true"></view>
+        </view>
+        <text class="cell__label cell__label--{{cell.labelKind}}">{{cell.labelText}}</text>
+      </view>
     </view>
   </view>
 </view>
