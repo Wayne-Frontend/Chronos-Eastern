@@ -71,8 +71,13 @@ describe('getDateInfo', () => {
   })
 
   describe('getMonthGrid', () => {
-    function getGrid(year: number, month: number, todayKey = '2026-10-09'): MonthGridCell[] {
-      const result = getMonthGrid(year, month, todayKey)
+    function getGrid(
+      year: number,
+      month: number,
+      todayKey = '2026-10-09',
+      favoriteDateKeys: string[] = [],
+    ): MonthGridCell[] {
+      const result = getMonthGrid(year, month, todayKey, favoriteDateKeys)
 
       expect(result.ok).toBe(true)
 
@@ -129,6 +134,15 @@ describe('getDateInfo', () => {
         labelText: '除夕',
         labelKind: 'festival',
       })
+    })
+
+    it('标记收藏日期，未收藏的格子不受影响', () => {
+      const grid = getGrid(2026, 10, '2026-10-09', ['2026-09-28', '2026-10-09', '2030-01-01'])
+
+      expect(grid.filter((item) => item.isFavorite).map((item) => item.dateKey)).toEqual([
+        '2026-09-28',
+        '2026-10-09',
+      ])
     })
 
     it('只标记今天一格', () => {

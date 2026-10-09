@@ -16,6 +16,7 @@
     >
       <view class="cell__day-wrap">
         <text class="cell__day">{{item.day}}</text>
+        <view wx:if="{{item.isFavorite}}" class="cell__favorite-dot" aria-hidden="true"></view>
       </view>
       <text
         class="cell__label cell__label--{{item.labelKind}}"

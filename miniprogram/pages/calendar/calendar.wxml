@@ -72,4 +72,8 @@
   <text wx:if="{{view.status === 'ok' && view.noticeText}}" class="calendar-hint">
     {{view.noticeText}}
   </text>
+
+  <text wx:if="{{view.favoriteNotice}}" class="calendar-hint calendar-hint--error">
+    {{view.favoriteNotice}}
+  </text>
 </view>

@@ -36,12 +36,24 @@
 }
 
 .cell__day-wrap {
+  position: relative;
   display: flex;
   width: var(--calendar-selected-size);
   height: var(--calendar-selected-size);
   align-items: center;
   justify-content: center;
   background: transparent;
+  border-radius: 50%;
+}
+
+.cell__favorite-dot {
+  position: absolute;
+  bottom: 2rpx;
+  left: 50%;
+  width: 6rpx;
+  height: 6rpx;
+  margin-left: -3rpx;
+  background: var(--color-gold);
   border-radius: 50%;
 }
 

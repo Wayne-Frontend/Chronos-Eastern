@@ -100,3 +100,28 @@
   width: 100%;
   margin: 0;
 }
+
+.detail-action__button[disabled] {
+  opacity: 0.55;
+}
+
+.detail-favorite {
+  display: flex;
+  gap: 12rpx;
+  align-items: center;
+  justify-content: center;
+}
+
+.detail-favorite__icon {
+  font-size: 32rpx;
+  line-height: 1;
+}
+
+.detail-favorite__notice {
+  display: block;
+  margin-top: 16rpx;
+  color: var(--color-error);
+  font-size: 24rpx;
+  line-height: 1.5;
+  text-align: center;
+}

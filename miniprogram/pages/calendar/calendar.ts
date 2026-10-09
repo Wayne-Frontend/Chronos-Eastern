@@ -4,6 +4,7 @@ import {
   SUPPORTED_YEAR_MIN,
   type MonthGridCell,
 } from '../../services/calendar-service'
+import { listFavorites } from '../../services/favorite-service'
 import { getTodayDateKey, parseDateKey, shiftDateKeyToMonth } from '../../utils/date-key'
 
 interface CalendarViewModel {
@@ -18,6 +19,7 @@ interface CalendarViewModel {
   canGoPrev: boolean
   canGoNext: boolean
   noticeText: string
+  favoriteNotice: string
 }
 
 const BOUNDARY_NOTICE = `本版本支持 ${SUPPORTED_YEAR_MIN}–${SUPPORTED_YEAR_MAX} 年`
@@ -28,7 +30,7 @@ Component({
   },
   pageLifetimes: {
     show() {
-      this.refreshToday()
+      this.refresh()
     },
   },
   methods: {
@@ -79,16 +81,11 @@ Component({
         ),
       })
     },
-    refreshToday() {
-      const todayKey = getTodayDateKey()
-
-      if (todayKey === this.data.view.todayKey) {
-        return
-      }
-
+    // 返回本页或跨天后重建：今天标记与收藏标记都可能已变化。
+    refresh() {
       const { year, month, selectedDateKey } = this.data.view
 
-      this.setData({ view: buildView(year, month, selectedDateKey, todayKey) })
+      this.setData({ view: buildView(year, month, selectedDateKey) })
     },
   },
 })
@@ -110,6 +107,7 @@ function buildInitialView(): CalendarViewModel {
       canGoPrev: false,
       canGoNext: false,
       noticeText: '设备日期无效，无法生成月历',
+      favoriteNotice: '',
     }
   }
 
@@ -122,6 +120,7 @@ function buildView(
   selectedDateKey: string,
   todayKey = getTodayDateKey(),
 ): CalendarViewModel {
+  const favorites = listFavorites()
   const base = {
     year,
     month,
@@ -131,8 +130,14 @@ function buildView(
     selectedDateKey,
     canGoPrev: !(year === SUPPORTED_YEAR_MIN && month === 1),
     canGoNext: !(year === SUPPORTED_YEAR_MAX && month === 12),
+    favoriteNotice: favorites.ok ? '' : favorites.message,
   }
-  const grid = getMonthGrid(year, month, todayKey)
+  const grid = getMonthGrid(
+    year,
+    month,
+    todayKey,
+    favorites.ok ? favorites.value.map((item) => item.dateKey) : [],
+  )
 
   if (!grid.ok) {
     return {

@@ -21,6 +21,7 @@ export interface MonthGridCell {
   labelKind: 'solar-term' | 'festival' | 'commemoration' | 'lunar-month' | 'lunar-day' | 'none'
   isCurrentMonth: boolean
   isToday: boolean
+  isFavorite: boolean
 }
 
 const GRID_CELL_COUNT = 42
@@ -81,6 +82,7 @@ export function getMonthGrid(
   year: number,
   month: number,
   todayKey: string,
+  favoriteDateKeys: readonly string[] = [],
 ): AppResult<MonthGridCell[], CalendarServiceErrorCode, { dateKey: string }> {
   if (!Number.isInteger(month) || month < 1 || month > 12) {
     return getDateInfoFailure('INVALID_DATE', '月份参数无效', `${year}-${month}`)
@@ -128,6 +130,7 @@ export function getMonthGrid(
       labelKind: label.kind,
       isCurrentMonth: date.isCurrentMonth,
       isToday: date.dateKey === todayKey,
+      isFavorite: favoriteDateKeys.includes(date.dateKey),
     }
   })
 

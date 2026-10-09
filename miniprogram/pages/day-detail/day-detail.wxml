@@ -46,6 +46,22 @@
     ></empty-state>
   </view>
 
+  <view wx:if="{{view.status === 'ok'}}" class="detail-action">
+    <button
+      class="{{view.isFavorite ? 'primary-button' : 'secondary-button'}} detail-action__button detail-favorite"
+      disabled="{{view.favoriteStatus !== 'ok'}}"
+      bindtap="toggleFavorite"
+      hover-class="button-pressed"
+    >
+      <text class="detail-favorite__icon">{{view.isFavorite ? '★' : '☆'}}</text>
+      <text>{{view.isFavorite ? '已收藏' : '收藏'}}</text>
+    </button>
+  </view>
+
+  <text wx:if="{{view.favoriteNotice}}" class="detail-favorite__notice">
+    {{view.favoriteNotice}}
+  </text>
+
   <view wx:if="{{view.status !== 'ok'}}" class="detail-action">
     <button
       class="secondary-button detail-action__button"

@@ -5,6 +5,7 @@ import {
   type CalendarServiceErrorCode,
 } from '../../services/calendar-service'
 import { FESTIVAL_CATEGORY_LABELS } from '../../data/festivals'
+import { addFavorite, isFavorite, removeFavorite } from '../../services/favorite-service'
 import { matchFestivals } from '../../services/festival-service'
 import type { DateInfo } from '../../types/calendar'
 import { addDaysToDateKey, getTodayDateKey, parseDateKey } from '../../utils/date-key'
@@ -36,6 +37,10 @@ interface DayDetailViewModel {
   todaySolarTermText: string
   nextSolarTermText: string
   festivalItems: FestivalDisplayItem[]
+  calendarDataVersion: string
+  favoriteStatus: 'ok' | 'unreadable'
+  isFavorite: boolean
+  favoriteNotice: string
   noticeText: string
 }
 
@@ -51,6 +56,10 @@ Page({
       todaySolarTermText: '',
       nextSolarTermText: '',
       festivalItems: [],
+      calendarDataVersion: '',
+      favoriteStatus: 'ok',
+      isFavorite: false,
+      favoriteNotice: '',
       noticeText: '',
     } as DayDetailViewModel,
   },
@@ -61,6 +70,27 @@ Page({
     wx.redirectTo({
       url: `/pages/day-detail/day-detail?date=${getTodayDateKey()}`,
     })
+  },
+  toggleFavorite() {
+    const view = this.data.view
+
+    if (view.favoriteStatus !== 'ok' || view.dateKey === '') {
+      return
+    }
+
+    const result = view.isFavorite
+      ? removeFavorite(view.dateKey)
+      : addFavorite(view.dateKey, view.calendarDataVersion)
+
+    if (!result.ok) {
+      wx.showToast({ title: result.message, icon: 'none' })
+      return
+    }
+
+    const isFavoriteNow = result.value.some((item) => item.dateKey === view.dateKey)
+
+    this.setData({ 'view.isFavorite': isFavoriteNow })
+    wx.showToast({ title: isFavoriteNow ? '已收藏' : '已取消', icon: 'none' })
   },
 })
 
@@ -77,6 +107,7 @@ function buildDayDetailViewModel(input: string): DayDetailViewModel {
 function buildSuccessViewModel(info: DateInfo): DayDetailViewModel {
   const nextDayKey = addDaysToDateKey(info.dateKey, 1)
   const nextDay = nextDayKey ? getDateInfo(nextDayKey) : null
+  const favorite = isFavorite(info.dateKey)
 
   return {
     status: 'ok',
@@ -98,6 +129,10 @@ function buildSuccessViewModel(info: DateInfo): DayDetailViewModel {
           info.nextSolarTerm.instant,
         )}`
       : '',
+    calendarDataVersion: info.versions.calendarAdapter,
+    favoriteStatus: favorite.ok ? 'ok' : 'unreadable',
+    isFavorite: favorite.ok ? favorite.value : false,
+    favoriteNotice: favorite.ok ? '' : favorite.message,
     noticeText: '',
   }
 }
@@ -124,6 +159,10 @@ function buildFailureViewModel(input: string, code: CalendarServiceErrorCode): D
     todaySolarTermText: '',
     nextSolarTermText: '',
     festivalItems: [],
+    calendarDataVersion: '',
+    favoriteStatus: 'ok',
+    isFavorite: false,
+    favoriteNotice: '',
     noticeText: buildFailureNotice(code),
   }
 }
