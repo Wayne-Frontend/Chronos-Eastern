@@ -24,7 +24,7 @@ vi.mock('../miniprogram/services/calendar-service', async (importOriginal) => {
   }
 })
 
-const { findDates } = await import('../miniprogram/services/find-date-service')
+const { describeRangeIssue, findDates } = await import('../miniprogram/services/find-date-service')
 
 function query(startDate: string, endDate: string, eventType = 'travel') {
   return findDates({ eventType, startDate, endDate })
@@ -235,5 +235,35 @@ describe('findDates 筛选结果', () => {
     )
 
     expect(callCountsAtProgress[0]).toBeLessThanOrEqual(13)
+  })
+})
+
+describe('describeRangeIssue', () => {
+  it('合法范围返回空串，含正好达到上限的边界', () => {
+    expect(describeRangeIssue('2026-10-11', '2026-10-11', 90)).toBe('')
+    expect(describeRangeIssue('2026-10-11', '2027-01-08', 90)).toBe('')
+  })
+
+  it('起始日晚于结束日时提示不能早于', () => {
+    expect(describeRangeIssue('2026-11-20', '2026-10-11', 90)).toBe('结束日期不能早于开始日期')
+  })
+
+  it('超过上限时同时说明上限与当前选择的天数', () => {
+    expect(describeRangeIssue('2026-10-11', '2027-01-09', 90)).toBe(
+      '查询范围最长 90 天，当前选择了 91 天',
+    )
+    expect(describeRangeIssue('2026-10-11', '2027-03-01', 90)).toBe(
+      '查询范围最长 90 天，当前选择了 142 天',
+    )
+  })
+
+  it('判据与查询失败时的 INVALID_RANGE 文案同源，页面与结果不会各说各话', async () => {
+    const result = await query('2026-10-11', '2027-03-01')
+
+    expect(result).toMatchObject({
+      ok: false,
+      code: 'INVALID_RANGE',
+      message: describeRangeIssue('2026-10-11', '2027-03-01', 90),
+    })
   })
 })

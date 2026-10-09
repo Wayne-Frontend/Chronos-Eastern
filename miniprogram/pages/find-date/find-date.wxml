@@ -71,7 +71,9 @@
     <text>{{view.noticeText}}</text>
   </view>
 
-  <view wx:if="{{view.status === 'ok' || view.status === 'partial'}}" class="section-card block">
+  <!-- 条件行与汇总行只要算出来了就要显示：status 为 empty 时同样有核对总数与冲突计数，
+       原先按 status 挡，会让 0 个通过的范围内所有统计凭空消失。 -->
+  <view wx:if="{{view.summaryText}}" class="section-card block">
     <text class="condition-text">{{view.conditionText}}</text>
     <text class="summary-text">{{view.summaryText}}</text>
   </view>

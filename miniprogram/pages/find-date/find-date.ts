@@ -1,6 +1,10 @@
 import { canQueryEventType, EVENT_TYPES, getStatusBadgeText } from '../../data/event-types'
 import { PARTIAL_COVERAGE_NOTICE } from '../../data/rules/manifest'
-import { findDates, type FindDateOutcome } from '../../services/find-date-service'
+import {
+  describeRangeIssue,
+  findDates,
+  type FindDateOutcome,
+} from '../../services/find-date-service'
 import { listFavorites } from '../../services/favorite-service'
 import {
   addDaysToDateKey,
@@ -125,12 +129,14 @@ Component({
         return
       }
 
+      const rangeIssue = describeRangeIssue(view.startDate, view.endDate, option.maxRangeDays)
+
       this.resetResults({
         selectedEventId: option.id,
-        canQuery: isRangeQueryable(view.startDate, view.endDate),
-        // limited 事项在入口处先说明覆盖范围，避免用户把结果当作完整结论。
-        noticeText: option.status === 'limited' ? option.statusNote : '',
-        noticeTone: 'info',
+        canQuery: rangeIssue === '',
+        // 范围非法时先说范围；否则 limited 事项在入口处先说明覆盖范围，避免用户把结果当作完整结论。
+        noticeText: rangeIssue || (option.status === 'limited' ? option.statusNote : ''),
+        noticeTone: rangeIssue ? 'error' : 'info',
         disclaimerText: option.disclaimer,
       })
     },
@@ -148,11 +154,20 @@ Component({
       }
 
       const hadResults = view.results.length > 0 || view.status === 'ok' || view.status === 'empty'
+      const option = EVENT_TYPES.find((entry) => entry.id === view.selectedEventId)
+      const rangeIssue = describeRangeIssue(
+        startDate,
+        endDate,
+        option?.maxRangeDays ?? view.maxRangeDays,
+      )
 
       this.resetResults({
         startDate,
         endDate,
-        canQuery: view.selectedEventId !== '' && isRangeQueryable(startDate, endDate),
+        canQuery: view.selectedEventId !== '' && rangeIssue === '',
+        // 范围非法时先说范围；否则 limited 事项继续说明覆盖范围。
+        noticeText: rangeIssue || (option?.status === 'limited' ? option.statusNote : ''),
+        noticeTone: rangeIssue ? 'error' : 'info',
         expiredNotice: hadResults ? '条件已修改，结果已过期，请重新查询' : '',
       })
     },
@@ -197,7 +212,12 @@ Component({
       const option = EVENT_TYPES.find((entry) => entry.id === eventTypeId)
 
       if (!outcome.ok) {
-        this.setView({ status: 'blocked', noticeText: outcome.message, progressText: '' })
+        this.setView({
+          status: 'blocked',
+          noticeText: outcome.message,
+          noticeTone: 'error',
+          progressText: '',
+        })
         return
       }
 
@@ -221,6 +241,9 @@ Component({
           this.data.view.endDate
         } · 规则包 ${value.rulePack.id}@${value.rulePack.version}`,
         disclaimerText: option?.disclaimer ?? '',
+        // 语气跟提示本身的语义走：计算失败才是 error，查无结果是正常结论。
+        // 之前这里不设值，语气会残留自用户点按顺序，同一句话时红时灰。
+        noticeTone: partial ? 'error' : 'info',
         noticeText: partial
           ? '部分日期计算失败，本次结果不完整，请重试'
           : results.length === 0
@@ -291,12 +314,6 @@ function buildInitialView(): FindDateViewModel {
     conflictCards: [],
     disclaimerText: '',
   }
-}
-
-function isRangeQueryable(startDate: string, endDate: string): boolean {
-  const days = countDaysBetween(startDate, endDate)
-
-  return days !== null && days >= 0 && days + 1 <= 90
 }
 
 function toCard(item: FindDateOutcome['results'][number], favoriteKeys: Set<string>): ResultCard {

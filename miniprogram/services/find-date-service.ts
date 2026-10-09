@@ -112,16 +112,14 @@ export async function findDates(
   }
 
   const totalDays = countDaysBetween(query.startDate, query.endDate)
+  const rangeIssue = describeRangeIssue(query.startDate, query.endDate, eventType.maxRangeDays)
 
-  if (totalDays === null || totalDays < 0) {
-    return failure('INVALID_RANGE', '结束日期不能早于开始日期', context)
+  if (rangeIssue !== '') {
+    return failure('INVALID_RANGE', rangeIssue, context)
   }
 
-  const checkedDays = totalDays + 1
-
-  if (checkedDays > eventType.maxRangeDays) {
-    return failure('INVALID_RANGE', `查询范围最长 ${eventType.maxRangeDays} 天`, context)
-  }
+  // describeRangeIssue 通过后，totalDays 必为非空且非负。
+  const checkedDays = (totalDays ?? 0) + 1
 
   if (start.value.year < SUPPORTED_YEAR_MIN || end.value.year > SUPPORTED_YEAR_MAX) {
     return failure(
@@ -214,6 +212,32 @@ export async function findDates(
       },
     },
   }
+}
+
+/**
+ * 校验查询范围，返回就地提示；合法时返回空串。
+ * 原因：方案 2.4 要求范围非法时「就地提示并阻止查询」。页面必须在点击之前就能说明按钮为何不可用，
+ * 而查询失败也要给出同一句话，两处共用这一份判据与文案，不得各写一套。
+ * 边界：日期键无法相减时按「起始日晚于结束日」处理；只校验范围本身，年份上下限由调用方另判。
+ */
+export function describeRangeIssue(
+  startDate: string,
+  endDate: string,
+  maxRangeDays: number,
+): string {
+  const days = countDaysBetween(startDate, endDate)
+
+  if (days === null || days < 0) {
+    return '结束日期不能早于开始日期'
+  }
+
+  const checkedDays = days + 1
+
+  if (checkedDays > maxRangeDays) {
+    return `查询范围最长 ${maxRangeDays} 天，当前选择了 ${checkedDays} 天`
+  }
+
+  return ''
 }
 
 function buildResultItem(
