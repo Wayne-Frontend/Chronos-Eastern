@@ -110,14 +110,30 @@
   font-size: 24rpx;
 }
 
+/*
+ * 微信 <button> 的默认样式按内容宽度排版并自动居中，只写 width 不足以撑满卡片。
+ * 这里显式改成块级、撑满、单行，并把内边距收进盒子内，避免文字被挤断。
+ */
 .query-button {
+  box-sizing: border-box;
+  display: block;
   width: 100%;
+  padding: 0 24rpx;
   margin: 28rpx 0 0;
+  line-height: 88rpx;
+  white-space: nowrap;
 }
 
+/*
+ * 禁用态：微信默认会把按钮压得很淡，原先用的浅灰底叠在浅色卡片上对比度不足，
+ * 按钮的边界几乎看不见，用户既不知道按钮在哪、也不知道它是"还不能点"而非"坏了"。
+ * 改为保留实体边界、只把颜色压低的未就绪样式。
+ */
 .query-button[disabled] {
-  color: #9b948b;
-  background: #e8e2d8;
+  color: var(--color-ink-faint);
+  background: var(--color-paper);
+  border: 1rpx solid var(--color-border);
+  opacity: 1;
 }
 
 .progress-text {
@@ -139,12 +155,21 @@
 .notice-card {
   padding: 20rpx 24rpx;
   margin-bottom: 24rpx;
-  color: var(--color-error);
   font-size: 26rpx;
   line-height: 1.6;
   background: var(--color-surface);
-  border: 1rpx solid var(--color-error);
   border-radius: var(--radius-card);
+}
+
+.notice-card--error {
+  color: var(--color-error);
+  border: 1rpx solid var(--color-error);
+}
+
+.notice-card--info {
+  color: var(--color-info-text);
+  background: var(--color-info-bg);
+  border: 1rpx solid var(--color-info-text);
 }
 
 .condition-text {
@@ -223,6 +248,73 @@
   margin-top: 12rpx;
   color: var(--color-ink-muted);
   font-size: 24rpx;
+}
+
+.coverage-alert {
+  padding: 20rpx 24rpx;
+  margin-bottom: 24rpx;
+  background: var(--color-info-bg);
+  border: 1rpx solid var(--color-info-text);
+  border-radius: var(--radius-card);
+}
+
+.coverage-alert__text {
+  color: var(--color-info-text);
+  font-size: 25rpx;
+  font-weight: 600;
+  line-height: 1.6;
+}
+
+.conflict-card {
+  padding: 24rpx 28rpx;
+  margin-bottom: 24rpx;
+  background: var(--color-surface);
+  border: 1rpx solid var(--color-border);
+  border-radius: var(--radius-card);
+}
+
+.conflict-card__title {
+  display: block;
+  margin-bottom: 10rpx;
+  font-size: 27rpx;
+  font-weight: 600;
+}
+
+.conflict-card__hint {
+  display: block;
+  margin-bottom: 18rpx;
+  color: var(--color-ink-muted);
+  font-size: 24rpx;
+  line-height: 1.6;
+}
+
+.conflict-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 14rpx;
+}
+
+.conflict-item {
+  display: flex;
+  gap: 8rpx;
+  align-items: baseline;
+  padding: 12rpx 20rpx;
+  background: var(--color-paper);
+  border: 1rpx solid var(--color-border);
+  border-radius: var(--radius-button);
+}
+
+.conflict-item--pressed {
+  background: var(--color-cinnabar-soft);
+}
+
+.conflict-item__date {
+  font-size: 26rpx;
+}
+
+.conflict-item__weekday {
+  color: var(--color-ink-muted);
+  font-size: 22rpx;
 }
 
 .coverage-card {

@@ -1,9 +1,9 @@
-import { findEventType } from '../data/event-types'
+import { canQueryEventType, findEventType } from '../data/event-types'
 import { findVerifiedRulePack } from '../data/rules/manifest'
 import { findSource, type SourceEntry } from '../data/sources'
 import type { DateKey } from '../types/calendar'
 import type { AppFailure, AppResult } from '../types/result'
-import type { RuleEffect, RuleStatus } from '../types/rule'
+import type { RuleEffect, RulePackCompleteness, RuleStatus } from '../types/rule'
 import { getDateInfo, type CalendarServiceErrorCode } from './calendar-service'
 import { buildDateFacts, evaluateDay, type DayStatus } from './rule-engine'
 
@@ -34,6 +34,8 @@ export interface DateRuleExplanation {
   rulePack: {
     id: string
     version: string
+    /** partial 时详情页必须在规则区显著展示覆盖范围。 */
+    completeness: RulePackCompleteness
     coverage: string
   }
 }
@@ -41,7 +43,7 @@ export interface DateRuleExplanation {
 /**
  * 生成单日规则解释。
  * 原因：详情页需要展示与筛选服务同源的完整依据，不能自行读取规则包或重复合并逻辑。
- * 边界：只接受已开放事项、verified 且来源完整的规则包；来源门禁由 manifest 统一执行。
+ * 边界：只接受可查询事项、verified 且来源完整的规则包；来源门禁由 manifest 统一执行。
  */
 export function getDateRuleExplanation(
   dateKey: string,
@@ -51,7 +53,7 @@ export function getDateRuleExplanation(
   const eventType = findEventType(eventTypeId)
   const pack = findVerifiedRulePack(eventTypeId)
 
-  if (!eventType || eventType.status !== 'supported' || !pack) {
+  if (!eventType || !canQueryEventType(eventType) || !pack) {
     return failure('RULE_PACK_MISSING', '该事项暂无已验证规则包', context)
   }
 
@@ -91,6 +93,7 @@ export function getDateRuleExplanation(
       rulePack: {
         id: pack.id,
         version: pack.version,
+        completeness: pack.completeness,
         coverage: pack.coverage,
       },
     },

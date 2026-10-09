@@ -17,7 +17,7 @@
       >
         <text class="event-chip__name">{{item.displayName}}</text>
         <text class="event-chip__term">{{item.classicalText}}</text>
-        <text wx:if="{{item.disabled}}" class="event-chip__note">整理中</text>
+        <text wx:if="{{item.badgeText}}" class="event-chip__note">{{item.badgeText}}</text>
       </view>
     </view>
   </view>
@@ -53,8 +53,10 @@
     </view>
     <text class="range-hint">最早为今天，最长 {{view.maxRangeDays}} 天</text>
 
+    <!-- 内联宽度是对微信 <button> 默认尺寸行为的兜底覆盖，见 find-date.scss 的 .query-button -->
     <button
       class="primary-button query-button"
+      style="width: 100%;"
       disabled="{{!view.canQuery || view.status === 'running'}}"
       bindtap="onQuery"
       hover-class="button-pressed"
@@ -65,13 +67,17 @@
     <text wx:if="{{view.expiredNotice}}" class="expired-text">{{view.expiredNotice}}</text>
   </view>
 
-  <view wx:if="{{view.noticeText}}" class="notice-card">
+  <view wx:if="{{view.noticeText}}" class="notice-card notice-card--{{view.noticeTone}}">
     <text>{{view.noticeText}}</text>
   </view>
 
   <view wx:if="{{view.status === 'ok' || view.status === 'partial'}}" class="section-card block">
     <text class="condition-text">{{view.conditionText}}</text>
     <text class="summary-text">{{view.summaryText}}</text>
+  </view>
+
+  <view wx:if="{{view.partialNoticeText}}" class="coverage-alert" aria-role="note">
+    <text class="coverage-alert__text">{{view.partialNoticeText}}</text>
   </view>
 
   <view wx:if="{{view.status === 'ok' && view.results.length > 0}}" class="result-list">
@@ -97,6 +103,28 @@
         </text>
       </view>
       <text wx:if="{{item.moreText}}" class="result-more">{{item.moreText}}</text>
+    </view>
+  </view>
+
+  <view wx:if="{{view.conflictCards.length > 0}}" class="conflict-card">
+    <text class="conflict-card__title">{{view.conflictCards.length}} 日因规则冲突未列入</text>
+    <text class="conflict-card__hint">
+      这些日子同时命中宜项与忌项。原书对宜忌并见且无德神裁决者的常例是两者皆不注，故本版本不作结论。点开可看双方依据。
+    </text>
+    <view class="conflict-list">
+      <view
+        wx:for="{{view.conflictCards}}"
+        wx:key="dateKey"
+        class="conflict-item"
+        data-date-key="{{item.dateKey}}"
+        bindtap="onOpenDetail"
+        hover-class="conflict-item--pressed"
+        aria-role="button"
+        aria-label="查看 {{item.dateKey}} 的冲突依据"
+      >
+        <text class="conflict-item__date">{{item.dateText}}</text>
+        <text class="conflict-item__weekday">{{item.weekdayText}}</text>
+      </view>
     </view>
   </view>
 

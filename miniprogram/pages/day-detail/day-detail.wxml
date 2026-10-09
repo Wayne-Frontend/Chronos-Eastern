@@ -54,6 +54,10 @@
       {{view.ruleSection.noticeText}}
     </text>
 
+    <view wx:if="{{view.ruleSection.partialNoticeText}}" class="detail-rules__alert">
+      <text>{{view.ruleSection.partialNoticeText}}</text>
+    </view>
+
     <view wx:for="{{view.ruleSection.rules}}" wx:key="id" class="detail-rule">
       <view class="detail-rule__head">
         <text class="detail-rule__badge detail-rule__badge--{{item.effectClass}}">

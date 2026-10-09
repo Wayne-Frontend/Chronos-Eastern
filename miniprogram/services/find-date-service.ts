@@ -1,8 +1,8 @@
-import { findEventType } from '../data/event-types'
+import { canQueryEventType, findEventType } from '../data/event-types'
 import { findVerifiedRulePack } from '../data/rules/manifest'
 import type { DateInfo, DateKey } from '../types/calendar'
 import type { AppFailure, AppResult } from '../types/result'
-import type { RulePack } from '../types/rule'
+import type { RulePack, RulePackCompleteness } from '../types/rule'
 import { addDaysToDateKey, countDaysBetween, parseDateKey } from '../utils/date-key'
 import { formatLunarText, formatWeekday } from '../utils/format'
 import { getDateInfo, SUPPORTED_YEAR_MAX, SUPPORTED_YEAR_MIN } from './calendar-service'
@@ -44,9 +44,17 @@ export interface FindDateOutcome {
   status: 'complete' | 'partial'
   results: readonly FindDateResultItem[]
   summary: FindDateSummary
+  /**
+   * 纳入与排除同级命中、未经裁决因而不进入结果的日子（方案 6.7）。
+   * 原因：只给计数会让用户看到日期凭空消失，这里连同计数一起交给页面逐日说明。
+   * 边界：只给日期，不替用户裁决谁先谁后；详情页会列出双方依据。
+   */
+  conflictDates: readonly DateKey[]
   rulePack: {
     id: string
     version: string
+    /** partial 时页面必须显著展示覆盖范围，不得让用户当作完整结论。 */
+    completeness: RulePackCompleteness
     coverage: string
   }
 }
@@ -81,7 +89,7 @@ export async function findDates(
   }
   const eventType = findEventType(query.eventType)
 
-  if (!eventType || eventType.status !== 'supported') {
+  if (!eventType || !canQueryEventType(eventType)) {
     return failure('RULE_PACK_MISSING', '该事项尚未开放查询', context)
   }
 
@@ -142,6 +150,7 @@ export async function findDates(
   }
 
   const results: FindDateResultItem[] = []
+  const conflictDates: DateKey[] = []
   const summary: FindDateSummary = {
     checkedDays,
     passedDays: 0,
@@ -172,6 +181,7 @@ export async function findDates(
           break
         case 'unresolved':
           summary.conflictDays += 1
+          conflictDates.push(info.dateKey)
           break
         case 'unknown':
           summary.unknownDays += 1
@@ -195,9 +205,11 @@ export async function findDates(
       status: summary.errorDays > 0 ? 'partial' : 'complete',
       results,
       summary,
+      conflictDates,
       rulePack: {
         id: pack.id,
         version: pack.version,
+        completeness: pack.completeness,
         coverage: pack.coverage,
       },
     },

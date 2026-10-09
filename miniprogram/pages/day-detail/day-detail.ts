@@ -5,6 +5,7 @@ import {
   type CalendarServiceErrorCode,
 } from '../../services/calendar-service'
 import { FESTIVAL_CATEGORY_LABELS } from '../../data/festivals'
+import { PARTIAL_COVERAGE_NOTICE } from '../../data/rules/manifest'
 import { addFavorite, isFavorite, removeFavorite } from '../../services/favorite-service'
 import { matchFestivals } from '../../services/festival-service'
 import {
@@ -53,6 +54,8 @@ interface RuleSectionViewModel {
   coverageText: string
   versionText: string
   noticeText: string
+  /** 规则包只收录部分条款时的显著提示；覆盖完整时为空串。 */
+  partialNoticeText: string
 }
 
 interface DayDetailViewModel {
@@ -233,6 +236,7 @@ function buildRuleSection(dateKey: string, eventType: string): RuleSectionViewMo
     coverageText: value.rulePack.coverage,
     versionText: `${value.rulePack.id}@${value.rulePack.version}`,
     noticeText: '',
+    partialNoticeText: value.rulePack.completeness === 'partial' ? PARTIAL_COVERAGE_NOTICE : '',
   }
 }
 
@@ -247,6 +251,7 @@ function buildEmptyRuleSection(): RuleSectionViewModel {
     coverageText: '',
     versionText: '',
     noticeText: '',
+    partialNoticeText: '',
   }
 }
 
@@ -285,7 +290,8 @@ function describeRuleStatus(status: DateRuleExplanation['status']): {
     case 'unresolved':
       return {
         title: '规则依据存在冲突',
-        description: '纳入与排除依据同时命中，且来源未提供裁决顺序，因此不作结论。',
+        description:
+          '本日同时命中宜项与忌项。原书对宜忌并见且无德神裁决者的常例是两者皆不注，故本版本不作结论。',
       }
     case 'unknown':
       return {

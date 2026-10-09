@@ -123,6 +123,18 @@
   color: var(--color-error);
 }
 
+.detail-rules__alert {
+  padding: 20rpx 24rpx;
+  margin-top: 16rpx;
+  color: var(--color-info-text);
+  font-size: 25rpx;
+  font-weight: 600;
+  line-height: 1.6;
+  background: var(--color-info-bg);
+  border: 1rpx solid var(--color-info-text);
+  border-radius: var(--radius-button);
+}
+
 .detail-rule {
   padding: 24rpx 0;
   margin-top: 20rpx;

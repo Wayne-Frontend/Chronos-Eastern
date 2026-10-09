@@ -1,4 +1,5 @@
-import { EVENT_TYPES } from '../../data/event-types'
+import { canQueryEventType, EVENT_TYPES, getStatusBadgeText } from '../../data/event-types'
+import { PARTIAL_COVERAGE_NOTICE } from '../../data/rules/manifest'
 import { findDates, type FindDateOutcome } from '../../services/find-date-service'
 import { listFavorites } from '../../services/favorite-service'
 import {
@@ -7,6 +8,8 @@ import {
   getTodayDateKey,
   parseDateKey,
 } from '../../utils/date-key'
+import { formatWeekday } from '../../utils/format'
+import { getGregorianWeekday } from '../../utils/util'
 
 type PageStatus = 'idle' | 'running' | 'ok' | 'empty' | 'partial' | 'blocked'
 
@@ -15,6 +18,8 @@ interface EventOption {
   displayName: string
   classicalText: string
   disabled: boolean
+  /** chip 上的状态短标记；覆盖完整的 supported 为空串。 */
+  badgeText: string
   statusNote: string
 }
 
@@ -39,13 +44,25 @@ interface FindDateViewModel {
   maxRangeDays: number
   canQuery: boolean
   noticeText: string
+  /** noticeText 的语气：error 表示被拒绝或出错，info 表示覆盖范围等说明性内容。 */
+  noticeTone: 'error' | 'info'
   expiredNotice: string
   progressText: string
   conditionText: string
   coverageText: string
+  /** 规则包只收录部分条款时的显著提示，位于结果列表上方；覆盖完整时为空串。 */
+  partialNoticeText: string
   summaryText: string
   results: ResultCard[]
+  /** 因规则冲突未列入的日期，逐日列出并可跳详情看双方依据；无冲突时为空。 */
+  conflictCards: ConflictCard[]
   disclaimerText: string
+}
+
+interface ConflictCard {
+  dateKey: string
+  dateText: string
+  weekdayText: string
 }
 
 const DEFAULT_RANGE_DAYS = 30
@@ -70,10 +87,13 @@ Component({
       this.setView({
         status: 'idle',
         results: [],
+        conflictCards: [],
         summaryText: '',
         coverageText: '',
+        partialNoticeText: '',
         conditionText: '',
         noticeText: '',
+        noticeTone: 'error',
         progressText: '',
         expiredNotice: '',
         ...patch,
@@ -94,12 +114,13 @@ Component({
         return
       }
 
-      if (option.status !== 'supported') {
+      if (!canQueryEventType(option)) {
         this.resetResults({
           selectedEventId: option.id,
           status: 'blocked',
           noticeText: option.statusNote,
           canQuery: false,
+          disclaimerText: option.disclaimer,
         })
         return
       }
@@ -107,6 +128,9 @@ Component({
       this.resetResults({
         selectedEventId: option.id,
         canQuery: isRangeQueryable(view.startDate, view.endDate),
+        // limited 事项在入口处先说明覆盖范围，避免用户把结果当作完整结论。
+        noticeText: option.status === 'limited' ? option.statusNote : '',
+        noticeTone: 'info',
         disclaimerText: option.disclaimer,
       })
     },
@@ -136,7 +160,7 @@ Component({
       const view = this.data.view
       const option = EVENT_TYPES.find((entry) => entry.id === view.selectedEventId)
 
-      if (!option || option.status !== 'supported' || !view.canQuery || view.status === 'running') {
+      if (!option || !canQueryEventType(option) || !view.canQuery || view.status === 'running') {
         return
       }
 
@@ -188,9 +212,11 @@ Component({
       this.setView({
         status: partial ? 'partial' : results.length > 0 ? 'ok' : 'empty',
         results,
+        conflictCards: value.conflictDates.map(toConflictCard),
         progressText: '',
         summaryText: buildSummaryText(value),
         coverageText: `本版本收录范围：${value.rulePack.coverage}`,
+        partialNoticeText: value.rulePack.completeness === 'partial' ? PARTIAL_COVERAGE_NOTICE : '',
         conditionText: `${option?.displayName ?? ''} · ${this.data.view.startDate} 至 ${
           this.data.view.endDate
         } · 规则包 ${value.rulePack.id}@${value.rulePack.version}`,
@@ -243,7 +269,8 @@ function buildInitialView(): FindDateViewModel {
       id: entry.id,
       displayName: entry.displayName,
       classicalText: entry.classicalTerms.join('/'),
-      disabled: entry.status !== 'supported',
+      disabled: !canQueryEventType(entry),
+      badgeText: getStatusBadgeText(entry.status),
       statusNote: entry.statusNote,
     })),
     selectedEventId: '',
@@ -253,12 +280,15 @@ function buildInitialView(): FindDateViewModel {
     maxRangeDays: 90,
     canQuery: false,
     noticeText: '',
+    noticeTone: 'error',
     expiredNotice: '',
     progressText: '',
     conditionText: '',
     coverageText: '',
+    partialNoticeText: '',
     summaryText: '',
     results: [],
+    conflictCards: [],
     disclaimerText: '',
   }
 }
@@ -283,6 +313,18 @@ function toCard(item: FindDateOutcome['results'][number], favoriteKeys: Set<stri
     ruleTexts: [...item.ruleTexts],
     moreText: more > 0 ? `另有 ${more} 条依据，查看全部 ›` : '查看全部依据 ›',
     isFavorite: favoriteKeys.has(item.dateKey),
+  }
+}
+
+function toConflictCard(dateKey: string): ConflictCard {
+  const parsed = parseDateKey(dateKey)
+
+  return {
+    dateKey,
+    dateText: parsed.ok ? `${parsed.value.month}月${parsed.value.day}日` : dateKey,
+    weekdayText: parsed.ok
+      ? formatWeekday(getGregorianWeekday(parsed.value.year, parsed.value.month, parsed.value.day))
+      : '',
   }
 }
 
