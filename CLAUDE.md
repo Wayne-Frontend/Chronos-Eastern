@@ -44,7 +44,8 @@ pages / components  →  services（calendar-service 已建，其余待建）  �
 - 页面间只传 `YYYY-MM-DD`（如 `?date=YYYY-MM-DD&from=calendar`），禁止传时间戳
 
 已存在：`pages/`（index、calendar、find-date、day-detail）、`components/`（empty-state、navigation-bar、calendar-grid）、`adapters/`、`services/`（calendar-service、festival-service、favorite-service、rule-engine、find-date-service）、`data/`（festivals、sources、event-types、rules/ 的 manifest 与 travel.v1）、`types/`（calendar、home、result、rule）、`utils/`（date-key、format、ganzhi、util）、`vendor/`。方案 5.3 列出的模块已全部创建，四页均已接入真实数据。
-找日子只对 `status: supported` 事项开放（当前只有出行，规则包 `xjbf-travel@1.0.0`）；其余事项置灰并显示整理说明。结果卡展示依据时**必须同时展示规则包的 `coverage`**，不得让用户以为已收录全部古籍条款。
+事项状态有四个：`supported`（规则完整、来源已定位、测试通过）、`limited`（已有 verified 规则可查询，但条目未收全）、`reviewing`（整理中，不可查询）、`unsupported`（本版本不提供）。**`supported` 与 `limited` 可查询，门禁只在 `data/event-types.ts` 的 `canQueryEventType()` 一处**，页面与服务不得各自比较字面量。当前出行是 `limited`（规则包 `xjbf-travel@1.14.0`，只收宜 14/16、忌 15/16）。
+规则包的 `completeness`（`complete`/`partial`）与 `status` 正交：前者说整包是否收全，后者说包内单条规则是否过校勘；事项状态与它必须一一对应（`limited` ⟺ `partial`），有测试守这条不变量。`partial` 时事项入口（chip 标记 + 选中提示）、结果列表上方、详情页规则区**三处都必须显示覆盖范围**，统一用 `data/rules/manifest.ts` 的 `PARTIAL_COVERAGE_NOTICE`，不得让用户以为已收录全部古籍条款；结果卡展示依据时同时展示 `coverage`。
 
 古籍规则的入库门槛：转录文本（维基文库等）只能用于检索定位，**必须回看影印件核对后才能标 `verified`**；每条规则的 `sourceIds` 指向 `data/sources.ts` 中已实际打开核对过的页面，`locator` 记录卷次与条目。规则包必须写 `coverage`，声明本版本收录了什么、哪些条款尚未收录，页面要向用户展示。
 
@@ -69,11 +70,15 @@ pages / components  →  services（calendar-service 已建，其余待建）  �
 
 即：库内**宜忌、吉神凶煞、黄黑道、八字、法定节假日、节日数据全部禁用**；宜忌只能来自项目自己校勘过的 `verified` 规则包。方案 6.6 与评估文档 4.3 是这条线的依据，改动前请重读。
 
-规则相关语义（方案 6.7）：`unknown`（缺输入）不等于"未命中"，不得当作通过；同级纳入/排除冲突且无来源裁决时返回 unresolved，该日不进入结果；规则不计算吉凶分、不按命中条数排序、结果只按日期升序；规则包版本不匹配则整次查询失败。规则状态机 `draft → located → transcribed → interpreted → reviewed → verified → deprecated`，只有 `verified` 参与筛选，改规则要递增规则包版本。
+规则相关语义（方案 6.7）：`unknown`（缺输入）不等于"未命中"，不得当作通过；同级纳入/排除冲突且无来源裁决时返回 unresolved，该日不进入结果；规则不计算吉凶分、不按命中条数排序、结果只按日期升序；规则包版本不匹配则整次查询失败。
+
+冲突不能只给计数：`findDates` 除 `summary.conflictDays` 外还必须返回 `conflictDates`，找日子页要逐日列出并可跳到详情看双方依据。原因：随规则增多，冲突日占比已到约 10%，只显示计数等于让日期凭空消失。
+
+**`unresolved` 不是权宜之计**：卷十「宜忌」的常例就是宜忌并见且无德神裁决时"两者皆不注"，与本项目语义一致（见 `docs/conflict-adjudication-audit.md`）。原书另外给出了德合并临、六等第、宜忌等第表等例外，但**射程不全**（「巳日」这类用事自带的日支忌不在卷十体系内）且需要跨条件裁决能力，本版一律按常例处理，偏保守。**不得在引擎里自行加"忌优先"或"德神优先"**；要加必须先补完该审计列的流程。文案不要写"来源未提供裁决顺序"——原书有常例，措辞要如实。规则状态机 `draft → located → transcribed → interpreted → reviewed → verified → deprecated`，只有 `verified` 参与筛选，改规则要递增规则包版本。
 
 ## 测试
 
-- `vitest`，无配置文件，测试在 `tests/`（node 环境），当前覆盖 `date-key`、`format`、`ganzhi`、`lunar-adapter`、`calendar-service`、`festival-service`、`favorite-service`、`rule-engine`、`find-date-service` 与 `solar-terms`（共 176 项，约 1 秒）；测 Storage 相关代码用 `vi.stubGlobal('wx', ...)` 注入假存储，测 partial 等异常分支用 `vi.mock` 改造 `calendar-service`
+- `vitest`，无配置文件，测试在 `tests/`（node 环境），当前覆盖 `date-key`、`format`、`ganzhi`、`lunar-adapter`、`calendar-service`、`festival-service`、`favorite-service`、`rule-engine`、`rule-explanation-service`、`find-date-service`、`event-types` 与 `solar-terms`（共 190 项，约 1 秒）；测 Storage 相关代码用 `vi.stubGlobal('wx', ...)` 注入假存储，测 partial 等异常分支用 `vi.mock` 改造 `calendar-service`
 - 权威样本夹具：`tests/fixtures/calendar-authority.ts`（公农历，HKO）与 `tests/fixtures/solar-terms-authority.ts`（2017–2026 紫金山含交节时刻、2027–2030 HKO），每条样本都带 `source`。新增样本必须能定位到权威来源（紫金山天文台 / GB/T 33661 优先，HKO 为交叉源），**不得用两个同源网络黄历互证，也不得拿库自身输出当期望值**
 - 现有测试已覆盖：闰月首日、春节边界、1901/2100 范围边界、双年干支口径、立春/惊蛰当日按日换年换月、节气名称与时刻、连续 10 年 24 节气逐日扫描（紫金山主源，交节时刻分钟级一致）、跨宿主时区（`TZ` 三值）一致、"今天"按 UTC+8 换日、库星期与公历推算交叉核对、非法日期不外泄库异常、世纪闰年 2100、service 层统一错误码
 - 评估文档第 6 节列出尚未补齐的阻断样本（2051/2083/2084 近午夜风险日、交节时刻秒级精度、历史区间 1901–1948 的官方颁行历表一致性）——扩展夹具时优先从这里取
@@ -89,7 +94,8 @@ pages / components  →  services（calendar-service 已建，其余待建）  �
 ## 产品合规红线（影响文案与功能取舍）
 
 - 禁止命理/预测/效果保证类表达：算命、改运、消灾、灵验、"最佳吉日"、"百无禁忌"、对婚姻/财富/健康/事故作预测；不得出现星级、百分比、综合吉凶分
-- 找日子只对 `supported` 事项开放查询，`reviewing`/`unsupported` 事项必须置灰且不可触发查询；无规则时显示"资料整理中"，**不得回退到第三方库宜忌**
+- 找日子只对 `supported`/`limited` 事项开放查询，`reviewing`/`unsupported` 事项必须置灰且不可触发查询；无规则时显示"资料整理中"，**不得回退到第三方库宜忌**
+- `limited` 事项的结果不得呈现为完整传统结论：事项入口、结果列表上方、详情页规则区三处都必须显示覆盖范围
 - 数据缺失、规则冲突、计算失败时宁可不出结果，并区分"无数据/无匹配/有明确排除"三种语义
 - 详情页每个宜忌标签都要能展开到 `verified` 规则与来源定位；不得把库内所有宜忌称为《协纪辨方书》结论
 - 不新增依赖（尤其历法/UI/状态管理/请求库）前先说明原因、替代方案与影响范围；`vendor/THIRD_PARTY_NOTICES.md` 的 MIT 文本必须随代码保留
