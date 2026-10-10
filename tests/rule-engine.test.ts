@@ -1269,7 +1269,8 @@ describe('嫁娶规则包', () => {
     }
     // 卷六《三合》历例（影印本第 10 帧）：「正月在午戌，二月在未亥，三月在子申，四月在丑酉，
     // 五月在寅戌，六月在卯亥，七月在子辰，八月在丑巳，九月在寅午，十月在卯未，
-    // 十一月在辰申，十二月在丑巳。」
+    // 十一月在辰申，十二月在丑巳。」底本十二月与八月（酉月）一项全同，系「酉」误作「丑」；
+    // 本表按同条曾门经「巳酉丑金之三合」与《考原》「各与其月建会成三合局」取「巳酉」。
     const byMonth = [
       '午|戌',
       '未|亥',
@@ -1282,7 +1283,7 @@ describe('嫁娶规则包', () => {
       '寅|午',
       '卯|未',
       '辰|申',
-      '丑|巳',
+      '巳|酉',
     ]
     const table = conditionTableOf('xjbf-marriage-0007')
 
@@ -1290,24 +1291,20 @@ describe('嫁娶规则包', () => {
       expect(table[month], `三合第 ${month + 1} 月`).toBe(byMonth[month])
     }
 
-    // 节令月支：正月起寅，表第 0 项即寅月。逐月核对「月建三合局的另外两支」。
-    // 十二月是例外：历例作「丑巳」，含月建丑日本身而漏酉，与其余十一个月、
-    // 也与同条《考原》「各与其月建会成三合局」不合。本版本照影印本录入，不代为改正，
-    // 差异记在该条 limitations 里，故此处对它单列断言。
+    // 节令月支：正月起寅，表第 0 项即寅月。十二月改正后，十二个月一律等于「月建三合局的另外两支」。
     for (let month = 0; month < MONTH_COUNT; month++) {
       const 月建 = EARTHLY_BRANCHES[(2 + month) % 12] as string
       const 另外两支 = (三合局[月建] ?? []).filter((branch) => branch !== 月建)
       const 实际 = (table[month] ?? '').split('|').sort()
 
-      if (month === MONTH_COUNT - 1) {
-        expect(实际, '十二月照历例原文').toEqual(['丑', '巳'])
-        continue
-      }
-
       expect(实际, `${月建}月三合局`).toEqual([...另外两支].sort())
     }
 
-    expect(marriageRuleOf('xjbf-marriage-0007').limitations.join('')).toContain('丑巳')
+    // 偏离底本字面必须留在面向用户的限制里：底本印作什么、本条取了什么，两句都要在。
+    const limitation = marriageRuleOf('xjbf-marriage-0007').limitations.join('')
+
+    expect(limitation).toContain('丑巳')
+    expect(limitation).toContain('巳酉')
   })
 
   it('六合逐月与月建六合一致', () => {
