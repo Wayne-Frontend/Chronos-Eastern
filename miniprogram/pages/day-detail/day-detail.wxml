@@ -39,34 +39,37 @@
     <text wx:if="{{view.festivalItems.length === 0}}" class="detail-caption">无已收录节日</text>
   </view>
 
-  <view wx:if="{{!view.ruleSection.hasContext}}" class="detail-block section-card">
+  <view wx:if="{{view.ruleSections.length === 0}}" class="detail-block section-card">
     <empty-state
       title="今天暂无传统择日建议"
       description="从“找日子”或首页的当天参考进入，可以查看对应事项的结果。"
     ></empty-state>
   </view>
 
-  <view wx:else class="detail-rules section-card">
-    <text class="detail-rules__eyebrow">{{view.ruleSection.eventName}}参考</text>
-    <text class="detail-rules__title">{{view.ruleSection.title}}</text>
-    <text class="detail-rules__description">{{view.ruleSection.description}}</text>
-    <text wx:if="{{view.ruleSection.suggestion}}" class="detail-rules__suggestion">{{view.ruleSection.suggestion}}</text>
-    <text wx:if="{{view.ruleSection.noticeText}}" class="detail-rules__notice">
-      {{view.ruleSection.noticeText}}
+  <!-- 逐事项一张卡：首页的今日宜忌可能同时给出几个事项的结论，只讲其中一个会让用户对不上账。 -->
+  <view
+    wx:for="{{view.ruleSections}}"
+    wx:for-item="section"
+    wx:for-index="sectionIndex"
+    wx:key="eventTypeId"
+    class="detail-rules section-card"
+  >
+    <text class="detail-rules__eyebrow">{{section.eventName}}参考</text>
+    <text class="detail-rules__title">{{section.title}}</text>
+    <text class="detail-rules__description">{{section.description}}</text>
+    <text wx:if="{{section.suggestion}}" class="detail-rules__suggestion">{{section.suggestion}}</text>
+    <text wx:if="{{section.noticeText}}" class="detail-rules__notice">{{section.noticeText}}</text>
+
+    <text wx:if="{{section.coverageNoticeText}}" class="detail-rules__coverage-notice">
+      {{section.coverageNoticeText}}
+    </text>
+    <text wx:if="{{section.coverageText}}" class="detail-rules__coverage-text">
+      {{section.coverageText}}
     </text>
 
-    <text wx:if="{{view.ruleSection.coverageNoticeText}}" class="detail-rules__coverage-notice">
-      {{view.ruleSection.coverageNoticeText}}
-    </text>
-    <text wx:if="{{view.ruleSection.coverageText}}" class="detail-rules__coverage-text">
-      {{view.ruleSection.coverageText}}
-    </text>
+    <text wx:if="{{section.rules.length > 0}}" class="detail-rules__reason-title">为什么这样说</text>
 
-    <text wx:if="{{view.ruleSection.rules.length > 0}}" class="detail-rules__reason-title">
-      为什么这样说
-    </text>
-
-    <view wx:for="{{view.ruleSection.rules}}" wx:key="id" class="detail-rule">
+    <view wx:for="{{section.rules}}" wx:key="id" class="detail-rule">
       <view class="detail-rule__head">
         <view class="detail-rule__badge detail-rule__badge--{{item.effectClass}}">
           {{item.badgeText}}
@@ -78,6 +81,7 @@
       </view>
       <view
         class="detail-rule__source-toggle"
+        data-section-index="{{sectionIndex}}"
         data-index="{{index}}"
         bindtap="toggleRuleSource"
         hover-class="detail-rule__source-toggle--pressed"

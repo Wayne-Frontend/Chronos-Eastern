@@ -34,5 +34,11 @@ export interface HomeViewModel {
   noticeText: string
   almanacRows: HomeAlmanacRow[]
   /** 当前可用于查看来源详情的事项；后续多事项时由具体行携带事项 id。 */
-  ruleEventTypeId: string
+  /**
+   * 摘要读到的全部事项，逗号分隔。
+   * 原因：首页的今日宜忌是几个事项合并成行的，详情页必须一次拿到同一批事项，
+   * 否则用户看到「宜出行、忌开业」却只读到一个说法。
+   * 边界：只含有结论的事项；空串表示今天没有可展示的结论。
+   */
+  ruleEventTypeIds: string
 }

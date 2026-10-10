@@ -48,18 +48,16 @@ Component({
       this.setData({ view: buildHomeViewModel() })
     },
     openDetail() {
-      const eventTypeQuery = this.data.view.ruleEventTypeId
-        ? `&eventType=${this.data.view.ruleEventTypeId}`
-        : ''
+      const eventTypes = this.data.view.ruleEventTypeIds
+      const eventTypeQuery = eventTypes ? `&eventTypes=${eventTypes}` : ''
 
       wx.navigateTo({
-        // 首页摘要与详情必须读取同一事项；否则首页显示了宜忌，详情却会因为缺少上下文而显示无规则。
+        // 首页摘要与详情必须读取同一批事项；否则首页显示了几个事项的宜忌，详情却只讲其中一个。
         url: `/pages/day-detail/day-detail?date=${this.data.view.dateKey}${eventTypeQuery}&from=index`,
       })
     },
     openAlmanac() {
-      // 「查看详情」按字面进当日详情，与上方摘要读同一事项（ruleEventTypeId）。
-      // 多事项并存时这里只带主事项，其余事项的当日结论仍到找日子逐项查。
+      // 「查看详情」按字面进当日详情，与上方摘要读同一批事项。
       this.openDetail()
     },
     openCalendar() {
@@ -111,7 +109,7 @@ function buildSuccessViewModel(info: DateInfo): HomeViewModel {
         : '今日宜忌暂不可用，请稍后再试'
       : '',
     almanacRows: almanacSection.rows,
-    ruleEventTypeId: almanacSection.primaryEventTypeId,
+    ruleEventTypeIds: almanacSection.eventTypeIds.join(','),
   }
 }
 
@@ -126,11 +124,13 @@ function buildSuccessViewModel(info: DateInfo): HomeViewModel {
  */
 function buildAlmanacSection(dateKey: string): {
   rows: HomeAlmanacRow[]
-  primaryEventTypeId: string
+  eventTypeIds: string[]
   hasFailure: boolean
 } {
   const queryableEvents = EVENT_TYPES.filter(canQueryEventType)
   const groups = new Map<HomeAlmanacRow['id'], { events: string[]; reasons: string[] }>()
+  // 只收「今天真有结论」的事项：详情页要展示的正是这一批，多带一个都会让上方摘要对不上账。
+  const eventTypeIds: string[] = []
   let hasFailure = false
 
   for (const eventType of queryableEvents) {
@@ -142,30 +142,29 @@ function buildAlmanacSection(dateKey: string): {
     }
 
     const value = result.value
+    const 结论类别: HomeAlmanacRow['id'] | null =
+      value.status === 'pass'
+        ? 'include'
+        : value.status === 'excluded'
+          ? 'exclude'
+          : value.status === 'unresolved'
+            ? 'caution'
+            : null
 
-    if (value.status === 'pass') {
-      addAlmanacItem(
-        groups,
-        'include',
-        value.eventName,
-        value.matchedRules.filter((rule) => rule.effect === 'include').map((rule) => rule.name),
-      )
-    } else if (value.status === 'excluded') {
-      addAlmanacItem(
-        groups,
-        'exclude',
-        value.eventName,
-        value.matchedRules.filter((rule) => rule.effect === 'exclude').map((rule) => rule.name),
-      )
-    } else if (value.status === 'unresolved') {
-      addAlmanacItem(
-        groups,
-        'caution',
-        value.eventName,
-        value.matchedRules.map((rule) => rule.name),
-      )
+    // 其余状态（not_matched／unknown）今天没有结论，不成行，也不进详情页的事项清单。
+    if (结论类别 === null) {
+      continue
     }
-    // 其余状态（not_matched／unknown）今天没有结论，不成行。
+
+    eventTypeIds.push(value.eventType)
+    addAlmanacItem(
+      groups,
+      结论类别,
+      value.eventName,
+      value.matchedRules
+        .filter((rule) => 结论类别 === 'caution' || rule.effect === 结论类别)
+        .map((rule) => rule.name),
+    )
   }
 
   const rowMeta: Record<HomeAlmanacRow['id'], Pick<HomeAlmanacRow, 'badge' | 'badgeClass'>> = {
@@ -194,7 +193,7 @@ function buildAlmanacSection(dateKey: string): {
   return {
     // 没有一行有结论时返回空数组，由页面隐藏整块，而不是补一行“暂无”充数。
     rows,
-    primaryEventTypeId: queryableEvents[0]?.id ?? '',
+    eventTypeIds,
     hasFailure,
   }
 }
@@ -258,6 +257,6 @@ function buildFailureViewModel(dateKey: string, code: CalendarServiceErrorCode):
       : CALENDAR_UNAVAILABLE_HINT,
     // 历法本身算不出来时整块隐藏：原因已由 noticeText 说明，再补一行「—」是重复。
     almanacRows: [],
-    ruleEventTypeId: '',
+    ruleEventTypeIds: '',
   }
 }

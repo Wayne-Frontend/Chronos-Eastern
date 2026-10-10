@@ -188,7 +188,8 @@ describe('覆盖范围披露', () => {
     // ② 结果列表上方。
     expect(findDateWxml).toContain('view.coverageNoticeText')
     // ③ 详情页规则区：披露语与收录范围都要在，且与逐条依据同屏。
-    expect(dayDetailWxml).toContain('view.ruleSection.coverageNoticeText')
-    expect(dayDetailWxml).toContain('view.ruleSection.coverageText')
+    // 多事项时详情页按事项逐张出卡，所以绑定挂在循环项 section 上，而不是整页唯一的 ruleSection。
+    expect(dayDetailWxml).toContain('section.coverageNoticeText')
+    expect(dayDetailWxml).toContain('section.coverageText')
   })
 })
