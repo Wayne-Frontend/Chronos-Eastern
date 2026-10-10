@@ -78,7 +78,7 @@ pages / components  →  services（calendar-service 已建，其余待建）  �
 
 ## 测试
 
-- `vitest`，无配置文件，测试在 `tests/`（node 环境），当前覆盖 `date-key`、`format`、`ganzhi`、`lunar-adapter`、`calendar-service`、`festival-service`、`favorite-service`、`rule-engine`、`rule-explanation-service`、`find-date-service`、`event-types` 与 `solar-terms`（共 190 项，约 1 秒）；测 Storage 相关代码用 `vi.stubGlobal('wx', ...)` 注入假存储，测 partial 等异常分支用 `vi.mock` 改造 `calendar-service`
+- `vitest`，无配置文件，测试在 `tests/`（node 环境），当前覆盖 `date-key`、`format`、`ganzhi`、`lunar-adapter`、`calendar-service`、`festival-service`、`favorite-service`、`rule-facts`、`rule-engine`、`rule-explanation-service`、`find-date-service`、`event-types` 与 `solar-terms`（截至 2026-10-10 共 13 个测试文件、256 项；以后以 `npm run check` 的最新输出为准）；测 Storage 相关代码用 `vi.stubGlobal('wx', ...)` 注入假存储，测 partial 等异常分支用 `vi.mock` 改造 `calendar-service`
 - 权威样本夹具：`tests/fixtures/calendar-authority.ts`（公农历，HKO）与 `tests/fixtures/solar-terms-authority.ts`（2017–2026 紫金山含交节时刻、2027–2030 HKO），每条样本都带 `source`。新增样本必须能定位到权威来源（紫金山天文台 / GB/T 33661 优先，HKO 为交叉源），**不得用两个同源网络黄历互证，也不得拿库自身输出当期望值**
 - 现有测试已覆盖：闰月首日、春节边界、1901/2100 范围边界、双年干支口径、立春/惊蛰当日按日换年换月、节气名称与时刻、连续 10 年 24 节气逐日扫描（紫金山主源，交节时刻分钟级一致）、跨宿主时区（`TZ` 三值）一致、"今天"按 UTC+8 换日、库星期与公历推算交叉核对、非法日期不外泄库异常、世纪闰年 2100、service 层统一错误码
 - 评估文档第 6 节列出尚未补齐的阻断样本（2051/2083/2084 近午夜风险日、交节时刻秒级精度、历史区间 1901–1948 的官方颁行历表一致性）——扩展夹具时优先从这里取

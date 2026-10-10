@@ -37,11 +37,12 @@ export const EVENT_TYPES: readonly EventTypeEntry[] = [
     id: 'travel',
     displayName: '出行',
     classicalTerms: ['出行', '行幸遣使'],
-    // 卷十一该条目宜 16 条、忌 16 条，当前只收录其中 29 条，故为 limited 而非 supported。
+    // 卷十一的宜 16 条、忌 16 条均已录入；但天德在四仲月只记四维、无法判到具体日期，故维持 limited。
     status: 'limited',
     rulePackId: 'xjbf-travel',
     maxRangeDays: 90,
-    statusNote: '仅收录卷十一出行条目的部分条款，其余条款尚在校勘；结果不代表完整的传统结论。',
+    statusNote:
+      '出行条目已全部录入；天德在部分月份无法判到具体日期，冲突例外仍采用保守处理，结果不代表完整的传统结论。',
     disclaimer: '仅按已收录传统规则提供文化参考，不涉及现实交通与安全判断。',
   },
   {

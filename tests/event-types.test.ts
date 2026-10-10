@@ -8,7 +8,7 @@ import {
   type EventTypeEntry,
   type EventTypeStatus,
 } from '../miniprogram/data/event-types'
-import { RULE_PACKS } from '../miniprogram/data/rules/manifest'
+import { PARTIAL_COVERAGE_NOTICE, RULE_PACKS } from '../miniprogram/data/rules/manifest'
 
 function entryWithStatus(status: EventTypeStatus): EventTypeEntry {
   return {
@@ -102,5 +102,14 @@ describe('事项状态与规则包完整性的一致性', () => {
       rulePackId: 'xjbf-travel',
       maxRangeDays: 90,
     })
+  })
+
+  it('出行有限支持说明与当前 32/32 覆盖一致，不再声称仍有条款未收录', () => {
+    const travel = findEventType('travel')
+
+    expect(travel?.statusNote).toContain('出行条目已全部录入')
+    expect(travel?.statusNote).toContain('天德')
+    expect(travel?.statusNote).not.toContain('其余条款尚在校勘')
+    expect(PARTIAL_COVERAGE_NOTICE).not.toContain('未收录条款')
   })
 })

@@ -208,7 +208,7 @@ v1.7.6 修复过闰月及后续月份干支错误，因此不能只验证闰月�
 | 代码边界扫描 | 通过 | 只有 `adapters/lunar-adapter.ts` 引用第三方包（他处仅版本号字符串）；调用面全部落在白名单；`getDayYi`/`getDayJi`/`getJiShen`/`getEightChar`/`HolidayUtil`/`getFestivals`/`fromDate`/`toFullString` 在业务路径零命中；`vendor/THIRD_PARTY_NOTICES.md` 保留 MIT 全文 |
 | 干支口径 | 已定案：年/月统一按日 | 见 4.2；`yearLiChun` 用 `getYearInGanZhiByLiChun`、`monthJieQi` 用 `getMonthInGanZhi`，交节日整日切换；`tests/lunar-adapter.test.ts` 覆盖立春（2026-02-04）与惊蛰（2026-03-05）当日边界 |
 | Issue #66/#70 复现 | 日期级路径通过 | `2025-12-21` 为冬至、`2026-01-02` 无当日节气、`2026-01-05` 为小寒；秒级精度和立春临界仍待权威时刻核验 |
-| 自动化结果 | 通过 | 当前全量质量门禁共 11 个测试文件、180 项测试通过；除原有历法、节气、日期、格式测试外，已覆盖节日、收藏、规则引擎、找日子分批查询与单日规则解释。具体数量以 `npm run check` 的最新输出为准。 |
+| 自动化结果 | 通过 | 2026-10-10 全量质量门禁共 13 个测试文件、256 项测试通过；除历法、节气、日期、格式、节日和收藏外，已覆盖规则事实层、完整出行条目、有限支持门禁、找日子分批查询、冲突日期清单与单日规则解释。后续以 `npm run check` 的最新输出为准。 |
 | 最终决定 | 部分 Go（仅剩 Android 真机） | 微信构建、包体积、产物扫描、Skyline + WebView 双路径、iOS 真机、10 年 24 节气回归、代码边界扫描均已通过；生产采用前还需 Android 真机复验 |
 
 ## 9. 升级规则

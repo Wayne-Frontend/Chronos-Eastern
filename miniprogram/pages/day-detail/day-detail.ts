@@ -54,7 +54,7 @@ interface RuleSectionViewModel {
   coverageText: string
   versionText: string
   noticeText: string
-  /** 规则包只收录部分条款时的显著提示；覆盖完整时为空串。 */
+  /** 规则包仍有未能判定或尚未实现边界时的显著提示；覆盖完整时为空串。 */
   partialNoticeText: string
 }
 

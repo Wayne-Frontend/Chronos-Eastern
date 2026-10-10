@@ -34,8 +34,10 @@ export interface HomeViewModel {
   festivalText: string
   noticeText: string
   ruleRows: HomeRuleRow[]
+  /** 首页规则摘要对应的事项；规则不可用时为空，进入详情时不附带规则上下文。 */
+  ruleEventTypeId: string
   /** 命中的已校勘规则条数；无命中或规则不可用时为空串。不含规则包 id@version 这类术语。 */
   ruleCountText: string
-  /** 规则包只收部分条款时的覆盖范围说明；覆盖完整或规则不可用时为空串。 */
+  /** 规则包仍有未能判定或尚未实现边界时的提示；覆盖完整或规则不可用时为空串。 */
   ruleCoverageText: string
 }

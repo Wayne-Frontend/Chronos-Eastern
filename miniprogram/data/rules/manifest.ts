@@ -6,11 +6,11 @@ import { TRAVEL_RULE_PACK } from './travel.v1'
 export const RULE_PACKS: readonly RulePack[] = [TRAVEL_RULE_PACK]
 
 /**
- * 规则包只收录部分条款时的统一提示语。
- * 原因：结果页与详情页都要展示覆盖范围，口径只写一份，避免两处文案日久漂移。
+ * 规则包仍有未能判定或尚未实现边界时的统一提示语。
+ * 原因：partial 不一定表示缺少原文条款，也可能是条款无法落实到具体日期；统一文案不能误报缺项。
  */
 export const PARTIAL_COVERAGE_NOTICE =
-  '本事项仅收录部分古籍条款，未收录条款不参与判断，结果不代表完整的传统规则结论。'
+  '本事项仍有未能判定或尚未实现的适用边界，结果不代表完整的传统规则结论。'
 
 export function findVerifiedRulePack(eventType: string): RulePack | null {
   return (

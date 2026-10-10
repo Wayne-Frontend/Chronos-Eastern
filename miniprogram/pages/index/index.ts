@@ -56,8 +56,13 @@ Component({
       this.setData({ view: buildHomeViewModel() })
     },
     openDetail() {
+      const eventTypeQuery = this.data.view.ruleEventTypeId
+        ? `&eventType=${this.data.view.ruleEventTypeId}`
+        : ''
+
       wx.navigateTo({
-        url: `/pages/day-detail/day-detail?date=${this.data.view.dateKey}`,
+        // 首页摘要与详情必须读取同一事项；否则首页显示了宜忌，详情却会因为缺少上下文而显示无规则。
+        url: `/pages/day-detail/day-detail?date=${this.data.view.dateKey}${eventTypeQuery}&from=index`,
       })
     },
     openCalendar() {
@@ -110,6 +115,7 @@ function buildSuccessViewModel(info: DateInfo): HomeViewModel {
         : '今日无传统节日',
     noticeText: '',
     ruleRows: ruleSection.rows,
+    ruleEventTypeId: ruleSection.eventTypeId,
     ruleCountText: ruleSection.countText,
     ruleCoverageText: ruleSection.coverageText,
   }
@@ -123,6 +129,7 @@ function buildSuccessViewModel(info: DateInfo): HomeViewModel {
  */
 function buildRuleSection(dateKey: string): {
   rows: HomeRuleRow[]
+  eventTypeId: string
   countText: string
   coverageText: string
 } {
@@ -131,6 +138,7 @@ function buildRuleSection(dateKey: string): {
   if (!eventType) {
     return {
       rows: [unavailableRow()],
+      eventTypeId: '',
       countText: '',
       coverageText: '',
     }
@@ -141,6 +149,7 @@ function buildRuleSection(dateKey: string): {
   if (!result.ok) {
     return {
       rows: [unavailableRow()],
+      eventTypeId: '',
       countText: '',
       coverageText: '',
     }
@@ -177,6 +186,7 @@ function buildRuleSection(dateKey: string): {
 
   return {
     rows,
+    eventTypeId: eventType.id,
     // 不给用户看规则包 id@version 这类术语；版本与来源在日期详情页的覆盖范围块里给。
     countText:
       value.matchedRules.length > 0
@@ -255,6 +265,7 @@ function buildFailureViewModel(dateKey: string, code: CalendarServiceErrorCode):
       ? `设备日期超出本版本支持范围（${SUPPORTED_YEAR_MIN}-01-01 至 ${SUPPORTED_YEAR_MAX}-12-31）`
       : CALENDAR_UNAVAILABLE_HINT,
     ruleRows: [unavailableRow()],
+    ruleEventTypeId: '',
     ruleCountText: '',
     ruleCoverageText: '',
   }
