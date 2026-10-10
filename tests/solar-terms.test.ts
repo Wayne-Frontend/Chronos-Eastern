@@ -104,4 +104,15 @@ describe('二十四节气与权威资料比对', () => {
       }
     },
   )
+
+  // 香港天文台的对照表是逐年文件：段落挂了别年的链接时，照链接复查会查不到，追溯链即断。
+  it('香港天文台样本的链接年份与段落年份一致', () => {
+    for (const { year, source } of SOLAR_TERM_AUTHORITY) {
+      if (!source.url.includes('hko.gov.hk')) {
+        continue
+      }
+
+      expect(source.url, `${year} 年段落出处`).toContain(`T${year}c`)
+    }
+  })
 })

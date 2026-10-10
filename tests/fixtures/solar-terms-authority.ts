@@ -28,6 +28,8 @@ export interface SolarTermAuthorityYear {
  * 来源：2017—2026 年取自中国科学院紫金山天文台《日历资料》（编制标准 GB/T 33661-2017），
  *      2027—2030 年取自香港天文台公历与农历对照表；两源在 2021—2026 重叠年份的 144 条日期完全一致。
  * 维护：年份段落各带 source，扩样本时按同样格式追加，禁止用手工转抄替换现有期望值。
+ *      香港天文台的对照表是**逐年**文件，各年段落必须指向该年自己的 T<年份>c.txt；
+ *      2027—2030 四段曾一并误挂 T2026c.txt，2026-10-10 逐条与各年文件比对后改正（数值本身无误）。
  */
 export const SOLAR_TERM_AUTHORITY: readonly SolarTermAuthorityYear[] = [
   {
@@ -374,7 +376,7 @@ export const SOLAR_TERM_AUTHORITY: readonly SolarTermAuthorityYear[] = [
     year: 2027,
     source: {
       name: '香港天文台公历与农历日期对照表',
-      url: 'https://www.hko.gov.hk/tc/gts/time/calendar/text/files/T2026c.txt',
+      url: 'https://www.hko.gov.hk/tc/gts/time/calendar/text/files/T2027c.txt',
       publishesTime: false,
     },
     terms: [
@@ -408,7 +410,7 @@ export const SOLAR_TERM_AUTHORITY: readonly SolarTermAuthorityYear[] = [
     year: 2028,
     source: {
       name: '香港天文台公历与农历日期对照表',
-      url: 'https://www.hko.gov.hk/tc/gts/time/calendar/text/files/T2026c.txt',
+      url: 'https://www.hko.gov.hk/tc/gts/time/calendar/text/files/T2028c.txt',
       publishesTime: false,
     },
     terms: [
@@ -442,7 +444,7 @@ export const SOLAR_TERM_AUTHORITY: readonly SolarTermAuthorityYear[] = [
     year: 2029,
     source: {
       name: '香港天文台公历与农历日期对照表',
-      url: 'https://www.hko.gov.hk/tc/gts/time/calendar/text/files/T2026c.txt',
+      url: 'https://www.hko.gov.hk/tc/gts/time/calendar/text/files/T2029c.txt',
       publishesTime: false,
     },
     terms: [
@@ -476,7 +478,7 @@ export const SOLAR_TERM_AUTHORITY: readonly SolarTermAuthorityYear[] = [
     year: 2030,
     source: {
       name: '香港天文台公历与农历日期对照表',
-      url: 'https://www.hko.gov.hk/tc/gts/time/calendar/text/files/T2026c.txt',
+      url: 'https://www.hko.gov.hk/tc/gts/time/calendar/text/files/T2030c.txt',
       publishesTime: false,
     },
     terms: [

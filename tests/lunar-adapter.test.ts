@@ -4,6 +4,10 @@ import { getLunarDateFacts } from '../miniprogram/adapters/lunar-adapter'
 import { parseDateKey } from '../miniprogram/utils/date-key'
 import { getGregorianWeekday } from '../miniprogram/utils/util'
 import { CALENDAR_AUTHORITY_FIXTURES } from './fixtures/calendar-authority'
+import {
+  SOLAR_TERM_AUTHORITY,
+  type SolarTermAuthorityEntry,
+} from './fixtures/solar-terms-authority'
 
 function getFacts(dateKey: string) {
   const parsed = parseDateKey(dateKey)
@@ -21,6 +25,36 @@ function getFacts(dateKey: string) {
   }
 
   return result.value
+}
+
+/** 取权威样本中的一条；缺时刻时直接抛错，避免断言被静默跳过。 */
+function authorityTerm(
+  year: number,
+  name: string,
+): SolarTermAuthorityEntry & {
+  hour: number
+  minute: number
+} {
+  const entry = SOLAR_TERM_AUTHORITY.find((item) => item.year === year)?.terms.find(
+    (term) => term.name === name,
+  )
+
+  if (!entry || entry.hour === null || entry.minute === null) {
+    throw new Error(`权威样本缺失或未公布时刻：${year} ${name}`)
+  }
+
+  return { ...entry, hour: entry.hour, minute: entry.minute }
+}
+
+/** 从 ISO 时刻取出当日的秒数。秒位来自历法库自身输出，按项目约定不作期望值。 */
+function instantSeconds(instant: string): number {
+  const match = /T(\d{2}):(\d{2}):(\d{2})\+08:00$/.exec(instant)
+
+  if (!match) {
+    throw new Error(`交节时刻格式异常：${instant}`)
+  }
+
+  return Number(match[1]) * 3600 + Number(match[2]) * 60 + Number(match[3])
 }
 
 describe('getLunarDateFacts', () => {
@@ -69,17 +103,26 @@ describe('getLunarDateFacts', () => {
 
   it('返回节气名称、北京时间时刻及下一节气', () => {
     const facts = getFacts('2026-10-08')
+    const hanLu = authorityTerm(2026, '寒露')
+    const shuangJiang = authorityTerm(2026, '霜降')
 
-    expect(facts.solarTerm).toEqual({
-      name: '寒露',
-      instant: '2026-10-08T14:29:17+08:00',
-      localDate: '2026-10-08',
+    // 时刻只与来源比对到「分钟级 ± 取整」：来源（紫金山《日历资料》，编制标准 GB/T 33661—2017）
+    // 只公布到分钟，秒位是历法库自身输出，按评估文档「不得拿库自身输出当期望值」不作断言。
+    // 2026 霜降即落在取整边界上：来源作 17:38，库算得 17:37:57。
+    expect(facts.solarTerm).toMatchObject({ name: hanLu.name, localDate: hanLu.dateKey })
+    expect(facts.nextSolarTerm).toMatchObject({
+      name: shuangJiang.name,
+      localDate: shuangJiang.dateKey,
     })
-    expect(facts.nextSolarTerm).toEqual({
-      name: '霜降',
-      instant: '2026-10-23T17:37:57+08:00',
-      localDate: '2026-10-23',
-    })
+
+    for (const [instant, term] of [
+      [facts.solarTerm?.instant ?? '', hanLu],
+      [facts.nextSolarTerm?.instant ?? '', shuangJiang],
+    ] as const) {
+      const delta = Math.abs(instantSeconds(instant) - (term.hour * 3600 + term.minute * 60))
+
+      expect(delta, `${term.dateKey} ${term.name}`).toBeLessThanOrEqual(60)
+    }
   })
 
   it.each([
