@@ -1,4 +1,9 @@
-import { canQueryEventType, EVENT_TYPES, getStatusBadgeText } from '../../data/event-types'
+import {
+  canQueryEventType,
+  EVENT_TYPES,
+  getStatusBadgeText,
+  type EventTypeEntry,
+} from '../../data/event-types'
 import { describeCoverage } from '../../data/rules/manifest'
 import {
   describeRangeIssue,
@@ -76,6 +81,19 @@ interface ConflictCard {
 }
 
 const DEFAULT_RANGE_DAYS = 30
+
+/**
+ * 改日期范围后要显示的提示：范围问题优先，其次是未开放事项的整理说明；可查询且范围合法时不提示。
+ * 原因：选中未开放事项后再改日期，若把提示清空又让按钮可用，用户点了不会有任何反馈，
+ * 也看不到「为什么不能查」；两句话都会出现时必须固定优先级。
+ */
+function describeRangeNotice(rangeIssue: string, option: EventTypeEntry | undefined): string {
+  if (rangeIssue !== '') {
+    return rangeIssue
+  }
+
+  return option && !canQueryEventType(option) ? option.statusNote : ''
+}
 
 /** 查询令牌：只采纳最新一次查询的结果（方案 3.6）。 */
 let queryToken = 0
@@ -162,6 +180,9 @@ Component({
 
       const hadResults = view.results.length > 0 || view.status === 'ok' || view.status === 'empty'
       const option = EVENT_TYPES.find((entry) => entry.id === view.selectedEventId)
+      // 事项本身不可查询时，改日期不能让按钮重新可用（否则点击后 onQuery 会静默返回）；
+      // 同时保留该事项的整理说明，不因为改了日期就把原因抹掉。
+      const queryable = option !== undefined && canQueryEventType(option)
       const rangeIssue = describeRangeIssue(
         startDate,
         endDate,
@@ -171,8 +192,8 @@ Component({
       this.resetResults({
         startDate,
         endDate,
-        canQuery: view.selectedEventId !== '' && rangeIssue === '',
-        noticeText: rangeIssue,
+        canQuery: queryable && rangeIssue === '',
+        noticeText: describeRangeNotice(rangeIssue, option),
         noticeTone: 'error',
         expiredNotice: hadResults ? '条件已修改，结果已过期，请重新查询' : '',
       })
