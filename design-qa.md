@@ -11,7 +11,7 @@
 - viewport: WeChat Mini Program mobile viewport; exact rendered viewport unavailable
 - source pixel dimensions: homepage crop 373 × 314; detail capture 394 × 698
 - implementation pixel dimensions / CSS size / density: unavailable
-- state: homepage daily reference and date-detail explanation
+- state: homepage daily reference, date-detail explanation, and the About tab (application introduction, standards, traditional sources, disclaimer)
 
 ## Full-view comparison evidence
 
@@ -24,10 +24,16 @@ Blocked for the same reason. Code inspection confirms that the focused regions n
 ## Findings
 
 - [P1] Rendered mobile layout has not been visually verified.
-  - Location: homepage daily-reference block and date-detail reference card.
+  - Location: homepage daily-reference block, date-detail reference card, About tab, and the four-item tab bar.
   - Evidence: no post-change WeChat Developer Tools or real-device screenshot is available.
-  - Impact: text wrapping, vertical density, disclosure-button appearance, and multi-item homepage tabs could still have visual issues.
-  - Fix: open the project in WeChat Developer Tools, capture the same homepage and date-detail states, and compare at the same viewport before release.
+  - Impact: text wrapping, vertical density, disclosure-button appearance, multi-item homepage tabs, About-page card length and bottom safe area, and tab-bar item balance could still have visual issues.
+  - Fix: open the project in WeChat Developer Tools, capture the same homepage and date-detail states plus the About tab, and compare at the same viewport before release.
+
+- [P2] The About page's copy about the corrected edition lists volumes 3–6 and 11 but not volume 10.
+  - Location: `miniprogram/pages/about/about.ts`, `CULTURE_SOURCES[0].summary`.
+  - Evidence: `docs/conflict-adjudication-audit.md` derives the unresolved include/exclude semantics from volume 10 "宜忌" and its 铺注条例.
+  - Impact: the source list understates which volumes actually shaped current behaviour; it is not a false statement ("主要涉及"), but it is incomplete.
+  - Fix: decide with the author whether to add volume 10; do not edit user-facing copy unilaterally.
 
 ## Comparison history
 
@@ -36,6 +42,7 @@ Blocked for the same reason. Code inspection confirms that the focused regions n
 - Runtime review of the first revision: rejected because “2 项相关记录” still exposed an internal count instead of giving the user an actionable explanation.
 - Second fix: removed internal counts from the presentation API and made the homepage subtitle an actionable suggestion.
 - Third fix: replaced sentence-style outcomes with compact 宜/忌 presentation, grouped homepage items above their traditional names, made the section title matter-neutral, and added the nearest-festival countdown.
+- Fourth revision (uncommitted): added the About tab as a fourth tab-bar item, with an application introduction, two source groups and a full disclaimer.
 - Post-fix visual evidence: unavailable; no visual iteration could be completed.
 
 ## Required fidelity surfaces
@@ -61,7 +68,10 @@ Blocked for the same reason. Code inspection confirms that the focused regions n
 - [x] Matter name is dynamic rather than hard-coded to travel.
 - [x] Future queryable matters automatically appear in the homepage switcher.
 - [x] Source text is collapsed by default.
-- [x] TypeScript, ESLint, Stylelint, tests, and formatting pass.
+- [x] TypeScript, ESLint, Stylelint, tests, and formatting pass (15 test files, 263 tests, 2026-10-10).
+- [x] About tab registered in `app.json`; both 81 × 81 tab-bar icons present.
+- [x] Removed blocks ("我们的原则", "计算工具与使用边界") confirmed absent from the About page.
 - [ ] Capture and visually compare the revised mini-program screens.
+- [ ] Confirm the About tab and the four-item tab bar on a rendered device.
 
 final result: blocked
