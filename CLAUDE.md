@@ -72,7 +72,7 @@ pages / components  →  services（calendar-service 已建，其余待建）  �
 
 规则相关语义（方案 6.7）：`unknown`（缺输入）不等于"未命中"，不得当作通过；同级纳入/排除冲突且无来源裁决时返回 unresolved，该日不进入结果；规则不计算吉凶分、不按命中条数排序、结果只按日期升序；规则包版本不匹配则整次查询失败。算子只有 `in`、`month-indexed` 与 `month-indexed-set` 三个；`month-indexed-set` 的每月取值是多值、以 `|` 分隔（三合每月两支、阴阳不将每月十余个日柱），空串项表示本月无取值、永不命中；按完整日柱取值的条款读 `dayPillar` 事实（两字干支）。
 
-冲突不能只给计数：`findDates` 除 `summary.conflictDays` 外还必须返回 `conflictDates`，找日子页要逐日列出并可跳到详情看双方依据。原因：随规则增多，冲突日占比已到约 10%，只显示计数等于让日期凭空消失。
+冲突不能只给计数：`findDates` 除 `summary.conflictDays` 外还必须返回 `conflictDates`，找日子页要逐日列出并可跳到详情看双方依据。原因：随规则增多，冲突日占比迅速上升——2026-10-10 实测 2026-10-01 至 12-25（86 天）：出行 40 天、搬家 35 天、开业 22 天、婚嫁 36 天，只显示计数等于让日期凭空消失。冲突率这么高的根因是引擎按卷十常例保守处理「宜忌并见」，原书另给的德合并临、宜忌等第表等例外尚未实现，见 `docs/conflict-adjudication-audit.md`。
 
 **`unresolved` 不是权宜之计**：卷十「宜忌」的常例就是宜忌并见且无德神裁决时"两者皆不注"，与本项目语义一致（见 `docs/conflict-adjudication-audit.md`）。原书另外给出了德合并临、六等第、宜忌等第表等例外，但**射程不全**（「巳日」这类用事自带的日支忌不在卷十体系内）且需要跨条件裁决能力，本版一律按常例处理，偏保守。**不得在引擎里自行加"忌优先"或"德神优先"**；要加必须先补完该审计列的流程。文案不要写"来源未提供裁决顺序"——原书有常例，措辞要如实。规则状态机 `draft → located → transcribed → interpreted → reviewed → verified → deprecated`，只有 `verified` 参与筛选，改规则要递增规则包版本。
 
