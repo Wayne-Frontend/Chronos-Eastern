@@ -69,11 +69,12 @@ export const EVENT_TYPES: readonly EventTypeEntry[] = [
     id: 'opening',
     displayName: '开业',
     classicalTerms: ['开市'],
-    status: 'reviewing',
-    rulePackId: null,
+    // 卷十一「开市」条目的宜 6 条、忌 19 条均已录入；宜忌并见时的原书例外仍未实现，故维持 limited。
+    status: 'limited',
+    rulePackId: 'xjbf-opening',
     maxRangeDays: 90,
-    statusNote: '规则整理中：需完成现代词与开市的映射说明。',
-    disclaimer: '',
+    statusNote: '开市条目已全部录入；宜忌并见时仍按原书常例保守处理，结果不代表完整的传统结论。',
+    disclaimer: '仅按已收录传统规则提供文化参考，不涉及现实经营决策与投资判断。',
   },
   {
     id: 'marriage',

@@ -78,7 +78,7 @@ export const SOURCES: readonly SourceEntry[] = [
   },
   {
     id: 'src-xjbf-vol11-scan',
-    title: '钦定协纪辨方书·卷十一（影印本，用事：行幸遣使·出行同）',
+    title: '钦定协纪辨方书·卷十一（影印本，用事：行幸遣使·出行同、开市等）',
     publisher: 'Wikimedia Commons · CADAL 浙江大学图书馆藏本',
     url: 'https://commons.wikimedia.org/wiki/File:CADAL06056511_欽定協紀辨方書·卷十一~卷十二.djvu',
     kind: 'classic-scan',

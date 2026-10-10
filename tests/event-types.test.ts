@@ -40,12 +40,12 @@ describe('canQueryEventType', () => {
     expect(canQueryEventType(null)).toBe(false)
   })
 
-  it('事项表中只有出行可查询，其余全部置灰', () => {
+  it('事项表中只有出行与开业可查询，其余全部置灰', () => {
     const queryable = EVENT_TYPES.filter((entry) => canQueryEventType(entry)).map(
       (entry) => entry.id,
     )
 
-    expect(queryable).toEqual(['travel'])
+    expect(queryable).toEqual(['travel', 'opening'])
   })
 })
 

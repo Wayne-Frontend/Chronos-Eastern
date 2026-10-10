@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest'
 
 import { findVerifiedRulePack, RULE_PACKS } from '../miniprogram/data/rules/manifest'
+import { OPENING_RULE_PACK } from '../miniprogram/data/rules/opening.v1'
 import { TRAVEL_RULE_PACK } from '../miniprogram/data/rules/travel.v1'
 import { SOURCES } from '../miniprogram/data/sources'
 import { getDateInfo } from '../miniprogram/services/calendar-service'
@@ -379,21 +380,24 @@ describe('出行规则包（第一批）', () => {
     expect(factsOf('2026-10-08').jianChu).toBe('执')
   })
 
-  it('规则包自身完整：全部 verified、优先关系留空、来源可在台账中查到', () => {
+  it('每个规则包自身完整：全部 verified、优先关系留空、来源可在台账中查到', () => {
     const sourceIds = new Set(SOURCES.map((source) => source.id))
 
-    expect(TRAVEL_RULE_PACK.status).toBe('verified')
-    expect(TRAVEL_RULE_PACK.rules.length).toBeGreaterThan(0)
+    for (const pack of RULE_PACKS) {
+      expect(pack.status, pack.id).toBe('verified')
+      expect(pack.rules.length, pack.id).toBeGreaterThan(0)
 
-    for (const rule of TRAVEL_RULE_PACK.rules) {
-      expect(rule.status, rule.id).toBe('verified')
-      expect(rule.priority, rule.id).toBeNull()
-      expect(rule.conflictGroup, rule.id).toBe(TRAVEL_RULE_PACK.conflictGroup)
-      expect(rule.sourceIds.length, rule.id).toBeGreaterThan(0)
-      expect(rule.locator.length, rule.id).toBeGreaterThan(0)
+      for (const rule of pack.rules) {
+        expect(rule.status, rule.id).toBe('verified')
+        expect(rule.priority, rule.id).toBeNull()
+        expect(rule.conflictGroup, rule.id).toBe(pack.conflictGroup)
+        expect(rule.eventType, rule.id).toBe(pack.eventType)
+        expect(rule.sourceIds.length, rule.id).toBeGreaterThan(0)
+        expect(rule.locator.length, rule.id).toBeGreaterThan(0)
 
-      for (const sourceId of rule.sourceIds) {
-        expect(sourceIds.has(sourceId), `${rule.id} → ${sourceId}`).toBe(true)
+        for (const sourceId of rule.sourceIds) {
+          expect(sourceIds.has(sourceId), `${rule.id} → ${sourceId}`).toBe(true)
+        }
       }
     }
   })
@@ -765,9 +769,11 @@ describe('来源精度', () => {
       'src-xjbf-vol11-scan': '卷十一',
     }
 
-    for (const rule of TRAVEL_RULE_PACK.rules) {
-      for (const sourceId of rule.sourceIds) {
-        expect(rule.locator, `${rule.id} → ${sourceId}`).toContain(volumePrefix[sourceId])
+    for (const pack of RULE_PACKS) {
+      for (const rule of pack.rules) {
+        for (const sourceId of rule.sourceIds) {
+          expect(rule.locator, `${rule.id} → ${sourceId}`).toContain(volumePrefix[sourceId])
+        }
       }
     }
   })
@@ -781,42 +787,250 @@ describe('来源精度', () => {
       'src-xjbf-vol11-scan': '卷十一',
     }
 
-    for (const rule of TRAVEL_RULE_PACK.rules) {
-      // 只取「卷N《篇名》」这种带卷次的引用；「引《考原》」等别书名与同卷续引「及《…》」不在此列。
-      for (const match of rule.locator.matchAll(/卷(四|五|六|十一)《([^》]+)》/g)) {
-        const volumeText = match[1]
-        const section = match[2]
+    for (const pack of RULE_PACKS) {
+      for (const rule of pack.rules) {
+        // 只取「卷N《篇名》」这种带卷次的引用；「引《考原》」等别书名与同卷续引「及《…》」不在此列。
+        for (const match of rule.locator.matchAll(/卷(四|五|六|十一)《([^》]+)》/g)) {
+          const volumeText = match[1]
+          const section = match[2]
 
-        if (volumeText === undefined || section === undefined) {
-          throw new Error(`无法解析 locator 的卷次或篇名：${rule.id}`)
+          if (volumeText === undefined || section === undefined) {
+            throw new Error(`无法解析 locator 的卷次或篇名：${rule.id}`)
+          }
+
+          const volume = `卷${volumeText}`
+          const source = rule.sourceIds
+            .map((sourceId) => SOURCES.find((entry) => entry.id === sourceId))
+            .find((entry) => entry !== undefined && volumeOfSource[entry.id] === volume)
+
+          if (!source) {
+            throw new Error(`${rule.id} 引 ${volume}《${section}》，却没有挂 ${volume} 的来源`)
+          }
+
+          // 标题要么点名这一篇，要么用「等」声明只举其例。否则详情页上
+          // 「来源：卷四（义例二：建除十二神）」与「定位：卷四《月厌》」会被读成对不上。
+          expect(
+            source.title.includes(section) || source.title.includes('等'),
+            `${rule.id}：${volume}《${section}》未被来源标题「${source.title}」覆盖`,
+          ).toBe(true)
         }
-
-        const volume = `卷${volumeText}`
-        const source = rule.sourceIds
-          .map((sourceId) => SOURCES.find((entry) => entry.id === sourceId))
-          .find((entry) => entry !== undefined && volumeOfSource[entry.id] === volume)
-
-        if (!source) {
-          throw new Error(`${rule.id} 引 ${volume}《${section}》，却没有挂 ${volume} 的来源`)
-        }
-
-        // 标题要么点名这一篇，要么用「等」声明只举其例。否则详情页上
-        // 「来源：卷四（义例二：建除十二神）」与「定位：卷四《月厌》」会被读成对不上。
-        expect(
-          source.title.includes(section) || source.title.includes('等'),
-          `${rule.id}：${volume}《${section}》未被来源标题「${source.title}」覆盖`,
-        ).toBe(true)
       }
     }
   })
 
   it('每条规则都有条目名，且该名字就出现在自己的 locator 里', () => {
     // name 是摘要界面（首页）直接展示的文本，不能与 locator 各说各话。
-    for (const rule of TRAVEL_RULE_PACK.rules) {
-      expect(rule.name, `${rule.id} 缺少条目名`).not.toBe('')
-      expect(rule.locator, `${rule.id} 的 locator 未点名「${rule.name}」`).toContain(
-        `「${rule.name}」`,
+    for (const pack of RULE_PACKS) {
+      for (const rule of pack.rules) {
+        expect(rule.name, `${rule.id} 缺少条目名`).not.toBe('')
+        expect(rule.locator, `${rule.id} 的 locator 未点名「${rule.name}」`).toContain(
+          `「${rule.name}」`,
+        )
+      }
+    }
+  })
+})
+
+describe('开市规则包', () => {
+  const openingRuleOf = (id: string): RuleDefinition => {
+    const rule = OPENING_RULE_PACK.rules.find((item) => item.id === id)
+
+    if (!rule) {
+      throw new Error(`规则不存在：${id}`)
+    }
+
+    return rule
+  }
+
+  /** 取某条规则第 index 个条件的 12 项月表；0 对应正月（寅月）。 */
+  const tableOf = (id: string, index = 0): readonly string[] => {
+    const condition = openingRuleOf(id).when.all[index]
+
+    if (!condition) {
+      throw new Error(`规则缺少第 ${index + 1} 个条件：${id}`)
+    }
+
+    return condition.value
+  }
+
+  it('卷十一「开市」的宜六项、忌十九项全部落地，且大耗已并入月破', () => {
+    const includes = OPENING_RULE_PACK.rules.filter((rule) => rule.effect === 'include')
+    const excludes = OPENING_RULE_PACK.rules.filter((rule) => rule.effect === 'exclude')
+
+    expect(includes.map((rule) => rule.name)).toEqual([
+      '满日',
+      '成日',
+      '开日',
+      '天愿',
+      '民日',
+      '五富',
+    ])
+    // 原文忌项列 19 个名目，其中「大耗」与「月破」同为破日，合并为一条，故规则数为 18。
+    expect(excludes).toHaveLength(18)
+    expect(excludes.map((rule) => rule.name)).toContain('月破')
+    expect(excludes.map((rule) => rule.name)).not.toContain('大耗')
+    expect(OPENING_RULE_PACK.coverage).toContain('大耗')
+
+    expect(findVerifiedRulePack('opening')?.id).toBe('xjbf-opening')
+  })
+
+  it('破日只由「月破」一条规则承接，包内不存在第二条按破日取值的规则', () => {
+    const 破Rules = OPENING_RULE_PACK.rules.filter((rule) =>
+      rule.when.all.some(
+        (condition) =>
+          condition.fact === 'jianChu' &&
+          condition.operator === 'in' &&
+          condition.value.includes('破'),
+      ),
+    )
+
+    expect(破Rules.map((rule) => rule.name)).toEqual(['月破'])
+  })
+
+  it('「小耗」取建除之执日，与卷四「常居月建前五辰」同值', () => {
+    const rule = openingRuleOf('xjbf-opening-0011')
+
+    expect(rule.when.all).toEqual([{ fact: 'jianChu', operator: 'in', value: ['执'] }])
+
+    // 卷四《小耗》：「历例曰小耗者常居月建前五辰」——逐月核对执日正是月建前五辰。
+    for (const branch of EARTHLY_BRANCHES) {
+      const 月建前五辰 = EARTHLY_BRANCHES[(EARTHLY_BRANCHES.indexOf(branch) + 5) % 12]
+
+      expect(getJianChu(branch, 月建前五辰), `${branch}月`).toBe('执')
+    }
+  })
+
+  it('五富逐月等于卷六历例「正月起亥，顺行四孟」的顺推结果', () => {
+    // 四孟＝寅巳申亥；自亥顺行四孟即 亥寅巳申 四个月一循环。
+    const 四孟自亥起 = ['亥', '寅', '巳', '申']
+
+    for (let month = 0; month < MONTH_COUNT; month++) {
+      expect(tableOf('xjbf-opening-0006')[month], `五富第 ${month + 1} 月`).toBe(
+        四孟自亥起[month % 4],
       )
     }
+  })
+
+  it('月害逐月等于卷六历例「正月起巳，逆行十二辰」，并与六害取值逐月吻合', () => {
+    for (let month = 0; month < MONTH_COUNT; month++) {
+      const expected = EARTHLY_BRANCHES[(EARTHLY_BRANCHES.indexOf('巳') - month + 12) % 12]
+
+      expect(tableOf('xjbf-opening-0016')[month], `月害第 ${month + 1} 月`).toBe(expected)
+    }
+
+    // 曹震圭以六害立说（卯辰相害、寅巳相害……），与逐月逆行一支应逐项一致。
+    const 六害: Record<string, string> = {
+      子: '未',
+      未: '子',
+      丑: '午',
+      午: '丑',
+      寅: '巳',
+      巳: '寅',
+      卯: '辰',
+      辰: '卯',
+      申: '亥',
+      亥: '申',
+      酉: '戌',
+      戌: '酉',
+    }
+
+    for (const branch of EARTHLY_BRANCHES) {
+      const monthIndex = getMonthIndex(branch)
+
+      if (monthIndex === null) {
+        throw new Error(`无法解析月支：${branch}`)
+      }
+
+      expect(tableOf('xjbf-opening-0016')[monthIndex], `${branch}月六害`).toBe(六害[branch])
+    }
+  })
+
+  it('九空逐月等于卷五历例「正月在辰，逆行四季」的逆推结果', () => {
+    // 四季＝辰戌丑未；自辰逆行四季即 辰丑戌未，每月退三支。
+    const 四季自辰逆行 = ['辰', '丑', '戌', '未']
+
+    for (let month = 0; month < MONTH_COUNT; month++) {
+      expect(tableOf('xjbf-opening-0024')[month], `九空第 ${month + 1} 月`).toBe(
+        四季自辰逆行[month % 4],
+      )
+    }
+  })
+
+  it('民日逐季等于卷五《王官守相民日》「春午夏酉秋子冬卯」', () => {
+    const bySeason: Record<string, string> = { 春: '午', 夏: '酉', 秋: '子', 冬: '卯' }
+
+    for (const branch of EARTHLY_BRANCHES) {
+      const monthIndex = getMonthIndex(branch)
+      const season = getSeason(branch)
+
+      if (monthIndex === null || season === null) {
+        throw new Error(`无法解析月支：${branch}`)
+      }
+
+      expect(tableOf('xjbf-opening-0005')[monthIndex], `${branch}月（${season}）`).toBe(
+        bySeason[season],
+      )
+    }
+  })
+
+  it('四耗、四穷的干支两表合起来等于历例所载的四季日柱', () => {
+    const 四耗 = [
+      ['壬', '子'],
+      ['乙', '卯'],
+      ['戊', '午'],
+      ['辛', '酉'],
+    ]
+    const 四穷 = [
+      ['乙', '亥'],
+      ['丁', '亥'],
+      ['辛', '亥'],
+      ['癸', '亥'],
+    ]
+    const 季 = ['春', '夏', '秋', '冬']
+
+    for (let season = 0; season < 4; season++) {
+      for (let offset = 0; offset < 3; offset++) {
+        const month = season * 3 + offset
+        const label = `${季[season]}第 ${offset + 1} 月`
+
+        expect(tableOf('xjbf-opening-0020', 0)[month], `四耗${label}干`).toBe(四耗[season][0])
+        expect(tableOf('xjbf-opening-0020', 1)[month], `四耗${label}支`).toBe(四耗[season][1])
+        expect(tableOf('xjbf-opening-0022', 0)[month], `四穷${label}干`).toBe(四穷[season][0])
+        expect(tableOf('xjbf-opening-0022', 1)[month], `四穷${label}支`).toBe(四穷[season][1])
+      }
+    }
+  })
+
+  it('破日在出行与开市两个包里都命中「月破」，且两包各自只有一条月破规则', () => {
+    // 遍历一个月找出真实破日，不把某一日的建除写死在用例里。
+    const 破日 = Array.from(
+      { length: 28 },
+      (_, index) => `2026-10-${String(index + 1).padStart(2, '0')}`,
+    )
+      .map((dateKey) => ({ dateKey, facts: factsOf(dateKey) }))
+      .filter((item) => item.facts.jianChu === '破')
+
+    expect(破日.length, '2026 年 10 月应至少出现一个破日').toBeGreaterThan(0)
+
+    for (const { dateKey, facts } of 破日) {
+      for (const pack of [TRAVEL_RULE_PACK, OPENING_RULE_PACK]) {
+        const 月破 = pack.rules.filter((rule) => rule.name === '月破')
+        const rule = 月破[0]
+
+        expect(月破, `${pack.id}／${dateKey}`).toHaveLength(1)
+
+        if (!rule) {
+          throw new Error(`${pack.id} 缺少月破规则`)
+        }
+
+        expect(evaluateRule(rule, facts), `${pack.id}／${dateKey}`).toBe('matched')
+      }
+    }
+  })
+
+  it('开市与出行各自成包，冲突组互不相同，不跨包合并', () => {
+    expect(OPENING_RULE_PACK.id).not.toBe(TRAVEL_RULE_PACK.id)
+    expect(OPENING_RULE_PACK.conflictGroup).not.toBe(TRAVEL_RULE_PACK.conflictGroup)
+    expect(OPENING_RULE_PACK.eventType).toBe('opening')
   })
 })
