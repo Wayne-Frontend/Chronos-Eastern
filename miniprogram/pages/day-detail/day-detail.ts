@@ -5,6 +5,7 @@ import {
   type CalendarServiceErrorCode,
 } from '../../services/calendar-service'
 import { FESTIVAL_CATEGORY_LABELS } from '../../data/festivals'
+import { describeCoverage } from '../../data/rules/manifest'
 import { addFavorite, isFavorite, removeFavorite } from '../../services/favorite-service'
 import { matchFestivals } from '../../services/festival-service'
 import {
@@ -54,6 +55,10 @@ interface RuleSectionViewModel {
   suggestion: string
   rules: readonly RuleDisplayItem[]
   noticeText: string
+  /** partial 规则包的覆盖范围披露（合规要求的第三处），complete 时为空。 */
+  coverageNoticeText: string
+  /** 该事项本版本收录了什么、还差什么；与披露语配套显示。 */
+  coverageText: string
 }
 
 interface DayDetailViewModel {
@@ -232,6 +237,9 @@ function buildRuleSection(dateKey: string, eventType: string): RuleSectionViewMo
 
   const value = result.value
   const copy = describeDateOutcome(value.status, value.eventName)
+  // 详情页是唯一展开逐条依据的地方，覆盖范围必须与依据同屏出现：
+  // 只给结论不给收录范围，用户会把「本版本收录的部分」读成「原书的全部结论」。
+  const coverage = describeCoverage(value.rulePack.completeness, value.rulePack.coverage)
 
   return {
     hasContext: true,
@@ -245,6 +253,8 @@ function buildRuleSection(dateKey: string, eventType: string): RuleSectionViewMo
       ...value.unknownRules.map((rule) => toRuleDisplayItem(rule, value.eventName, true)),
     ],
     noticeText: '',
+    coverageNoticeText: coverage.noticeText,
+    coverageText: coverage.coverageText,
   }
 }
 
@@ -258,6 +268,8 @@ function buildEmptyRuleSection(): RuleSectionViewModel {
     suggestion: '',
     rules: [],
     noticeText: '',
+    coverageNoticeText: '',
+    coverageText: '',
   }
 }
 

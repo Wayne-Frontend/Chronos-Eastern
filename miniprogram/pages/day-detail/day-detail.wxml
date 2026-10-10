@@ -55,6 +55,13 @@
       {{view.ruleSection.noticeText}}
     </text>
 
+    <text wx:if="{{view.ruleSection.coverageNoticeText}}" class="detail-rules__coverage-notice">
+      {{view.ruleSection.coverageNoticeText}}
+    </text>
+    <text wx:if="{{view.ruleSection.coverageText}}" class="detail-rules__coverage-text">
+      {{view.ruleSection.coverageText}}
+    </text>
+
     <text wx:if="{{view.ruleSection.rules.length > 0}}" class="detail-rules__reason-title">
       为什么这样说
     </text>

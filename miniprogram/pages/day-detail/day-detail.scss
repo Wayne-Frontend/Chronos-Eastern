@@ -132,6 +132,26 @@
   color: var(--color-error);
 }
 
+/* 覆盖范围披露：与依据同屏，用信息色块把它从普通说明里区分出来。 */
+.detail-rules__coverage-notice {
+  display: block;
+  padding: 14rpx 18rpx;
+  margin-top: 20rpx;
+  color: var(--color-info-text);
+  font-size: 24rpx;
+  line-height: 1.6;
+  background: var(--color-info-bg);
+  border-radius: var(--radius-button);
+}
+
+.detail-rules__coverage-text {
+  display: block;
+  margin-top: 12rpx;
+  color: var(--color-ink-muted);
+  font-size: 23rpx;
+  line-height: 1.6;
+}
+
 .detail-rules__reason-title {
   display: block;
   margin-top: 32rpx;

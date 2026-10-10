@@ -1,4 +1,5 @@
-import { canQueryEventType, EVENT_TYPES } from '../../data/event-types'
+import { canQueryEventType, EVENT_TYPES, getStatusBadgeText } from '../../data/event-types'
+import { describeCoverage } from '../../data/rules/manifest'
 import {
   describeRangeIssue,
   findDates,
@@ -22,9 +23,11 @@ interface EventOption {
   displayName: string
   disabled: boolean
   /**
-   * 副行提示：优先显示古籍用语（让用户看见要查的是哪一条古籍条目），
-   * 与事项名同名而无可显示时退回状态短标记；两者都没有时为空串。
+   * 短标记，紧跟在事项名后：partial 事项显示「有限收录」（合规要求的第一处覆盖范围披露），
+   * 未开放事项只说明当前能否使用。覆盖完整的 supported 不加标记。
    */
+  badgeText: string
+  /** 副行提示：显示古籍用语（让用户看见要查的是哪一条古籍条目）；无可显示时为空串。 */
   hintText: string
   /** 读屏用的事项状态说明；未开放事项直接给出其整理原因。 */
   statusNote: string
@@ -56,6 +59,10 @@ interface FindDateViewModel {
   progressText: string
   conditionText: string
   summaryText: string
+  /** 选中事项的覆盖范围提示（合规要求的「选中提示」），未开放事项为空。 */
+  scopeNoteText: string
+  /** 结果列表上方的覆盖范围披露（合规要求的第二处），非 partial 时为空。 */
+  coverageNoticeText: string
   results: ResultCard[]
   /** 因传统说法不一致而未列入的日期；无冲突时为空。 */
   conflictCards: ConflictCard[]
@@ -97,6 +104,8 @@ Component({
         noticeTone: 'error',
         progressText: '',
         expiredNotice: '',
+        scopeNoteText: '',
+        coverageNoticeText: '',
         ...patch,
       })
     },
@@ -121,6 +130,7 @@ Component({
           status: 'blocked',
           noticeText: option.statusNote,
           canQuery: false,
+          scopeNoteText: '',
           disclaimerText: option.disclaimer,
         })
         return
@@ -133,6 +143,7 @@ Component({
         canQuery: rangeIssue === '',
         noticeText: rangeIssue,
         noticeTone: 'error',
+        scopeNoteText: option.statusNote,
         disclaimerText: option.disclaimer,
       })
     },
@@ -234,6 +245,8 @@ Component({
         progressText: '',
         summaryText: buildSummaryText(value),
         conditionText: `${option?.displayName ?? ''} · ${this.data.view.startDate} 至 ${this.data.view.endDate}`,
+        coverageNoticeText: describeCoverage(value.rulePack.completeness, value.rulePack.coverage)
+          .noticeText,
         disclaimerText: option?.disclaimer ?? '',
         // 语气跟提示本身的语义走：计算失败才是 error，查无结果是正常结论。
         // 之前这里不设值，语气会残留自用户点按顺序，同一句话时红时灰。
@@ -286,14 +299,19 @@ function buildInitialView(): FindDateViewModel {
     status: 'idle',
     eventOptions: EVENT_TYPES.map((entry) => {
       const queryable = canQueryEventType(entry)
-      // 可查询事项不向用户暴露内部支持等级；未开放事项只说明用户当前能否使用。
-      const statusBadge = entry.status === 'unsupported' ? '暂不支持' : queryable ? '' : '敬请期待'
 
       return {
         id: entry.id,
         displayName: entry.displayName,
         disabled: !queryable,
-        hintText: describeClassicalTerms(entry.displayName, entry.classicalTerms) || statusBadge,
+        // 可查询事项用状态短标记（partial 即「有限收录」）；未开放事项只说明用户当前能否使用，
+        // 不暴露内部的 supported / reviewing / unsupported 等级名。
+        badgeText: queryable
+          ? getStatusBadgeText(entry.status)
+          : entry.status === 'unsupported'
+            ? '暂不支持'
+            : '敬请期待',
+        hintText: describeClassicalTerms(entry.displayName, entry.classicalTerms),
         // 读屏用的事项说明取事项表里的原文，不再改写成通用句——那里的「整理中」原因本来就是面向用户的。
         statusNote: entry.statusNote,
       }
@@ -310,6 +328,8 @@ function buildInitialView(): FindDateViewModel {
     progressText: '',
     conditionText: '',
     summaryText: '',
+    scopeNoteText: '',
+    coverageNoticeText: '',
     results: [],
     conflictCards: [],
     disclaimerText: '',

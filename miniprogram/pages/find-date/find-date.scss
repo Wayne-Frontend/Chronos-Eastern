@@ -53,8 +53,25 @@
   opacity: 0.55;
 }
 
+.event-chip__line {
+  display: flex;
+  align-items: baseline;
+  justify-content: center;
+  gap: 8rpx;
+}
+
 .event-chip__name {
   font-size: 28rpx;
+}
+
+/*
+ * 短标记：partial 事项的覆盖范围披露，必须一直可见，不能只在选中时才出现。
+ * 用行内小字而不是角标，是因为 chip 只有 180rpx 宽，角标会挤压事项名。
+ */
+.event-chip__badge {
+  flex-shrink: 0;
+  color: var(--color-ink-muted);
+  font-size: 19rpx;
 }
 
 .event-chip--active .event-chip__name {
@@ -72,6 +89,27 @@
 
 .event-chip--disabled .event-chip__hint {
   color: inherit;
+}
+
+/* 选中提示：与 chip 短标记同为覆盖范围披露，语气用次要色，不与查询结果争注意力。 */
+.scope-note {
+  display: block;
+  margin-top: 20rpx;
+  color: var(--color-ink-muted);
+  font-size: 22rpx;
+  line-height: 1.6;
+}
+
+/* 结果列表上方的覆盖范围披露：用信息色块，确保 partial 时不会被当成普通说明滑过去。 */
+.coverage-notice {
+  display: block;
+  padding: 12rpx 16rpx;
+  margin-top: 16rpx;
+  color: var(--color-info-text);
+  font-size: 23rpx;
+  line-height: 1.6;
+  background: var(--color-info-bg);
+  border-radius: var(--radius-button);
 }
 
 .range-row {
