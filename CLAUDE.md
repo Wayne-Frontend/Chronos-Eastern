@@ -44,8 +44,10 @@ pages / components  →  services（calendar-service 已建，其余待建）  �
 - 页面间只传 `YYYY-MM-DD`（如 `?date=YYYY-MM-DD&from=calendar`），禁止传时间戳
 
 已存在：`pages/`（index、calendar、find-date、about、day-detail）、`components/`（empty-state、navigation-bar、calendar-grid）、`adapters/`、`services/`（calendar-service、festival-service、favorite-service、rule-engine、rule-facts、rule-explanation-service、find-date-service、upcoming-festival-service）、`data/`（festivals、sources、event-types、rules/ 的 manifest、month-gods 与 travel／opening／relocation／marriage 四个包）、`types/`（calendar、home、result、rule）、`utils/`（date-key、format、ganzhi、rule-presentation、util）、`vendor/`。方案 5.3 列出的模块已全部创建，各页均已接入真实数据（about 为静态说明页）。
-事项状态有四个：`supported`（规则完整、来源已定位、测试通过）、`limited`（已有 verified 规则可查询，但条目未收全）、`reviewing`（整理中，不可查询）、`unsupported`（本版本不提供）。**`supported` 与 `limited` 可查询，门禁只在 `data/event-types.ts` 的 `canQueryEventType()` 一处**，页面与服务不得各自比较字面量。当前 `limited` 有四个事项：出行（`xjbf-travel@1.17.1`，宜 16/16、忌 16/16）、搬家（`xjbf-relocation@1.0.0`，般移·移徙同，宜 14/14、忌 15/15）、开业（`xjbf-opening@1.0.0`，宜 6/6、忌 19/19）、婚嫁（`xjbf-marriage@1.0.0`，嫁娶条目，宜 10/10、忌 20/20）。四包都因「宜忌并见时的原书例外尚未实现」而保持 `partial`，出行与婚嫁另因天德在四仲月以四维记位、无值日可判，**一律不升级为 `supported`**，见审计 §8.11。入宅在卷十一全卷未检出同名条目，安葬的日期还取决于山向、形势，二者置灰。
+事项状态有四个：`supported`（规则完整、来源已定位、测试通过）、`limited`（已有 verified 规则可查询，但条目未收全）、`reviewing`（整理中，不可查询）、`unsupported`（本版本不提供）。**`supported` 与 `limited` 可查询，门禁只在 `data/event-types.ts` 的 `canQueryEventType()` 一处**，页面与服务不得各自比较字面量。当前 `limited` 有四个事项：出行（`xjbf-travel@1.17.1`，宜 16/16、忌 16/16）、搬家（`xjbf-relocation@1.0.0`，般移·移徙同，宜 14/14、忌 15/15）、开业（`xjbf-opening@1.0.0`，宜 6/6、忌 19/19）、婚嫁（`xjbf-marriage@1.1.0`，嫁娶条目，宜 10/10、忌 20/20；1.1.0 改正了「三合」十二月取值，见下）。四包都因「宜忌并见时的原书例外尚未实现」而保持 `partial`，出行与婚嫁另因天德在四仲月以四维记位、无值日可判，**一律不升级为 `supported`**，见审计 §8.11。入宅在卷十一全卷未检出同名条目，安葬的日期还取决于山向、形势，二者置灰。
 规则包的 `completeness`（`complete`/`partial`）与 `status` 正交：前者说整包是否收全，后者说包内单条规则是否过校勘；事项状态与它必须一一对应（`limited` ⟺ `partial`），有测试守这条不变量。`partial` 时事项入口（chip 标记 + 选中提示）、结果列表上方、详情页规则区**三处都必须显示覆盖范围**，统一用 `data/rules/manifest.ts` 的 `PARTIAL_COVERAGE_NOTICE`，不得让用户以为已收录全部古籍条款；结果卡展示依据时同时展示 `coverage`。
+规则的 `limitations` 是**面向用户的措辞，必须在详情页与出处同屏上屏**（`day-detail` 的规则卡展开区「适用范围与限制」），`tests/day-detail-context.test.ts` 守这条；因此写 limitations 时不要出现内部用语。
+**底本本身说不通时按「可证者改正、并记录偏离」处理**，不是一律照录：卷六《三合》历例十二月印作「丑巳」，与八月一项全同，而同条曾门经作「巳酉丑金之三合」、《考原》作「各与其月建会成三合局」，其余十一个月也一律取月建之外的两支，故取「巳酉」并在表注、limitations、来源台账三处写明依据（2026-10-10，逐字复核卷六第 10 帧）。同类先例：天愿用编者订正表、王日用对调后定稿、灾煞用编者订正的逆行。文字转录与影印仍有出入时，**影印仍是定稿依据**。
 
 古籍规则的入库门槛：转录文本（维基文库等）只能用于检索定位，**必须回看影印件核对后才能标 `verified`**；每条规则的 `sourceIds` 指向 `data/sources.ts` 中已实际打开核对过的页面，`locator` 记录卷次与条目。规则包必须写 `coverage`，声明本版本收录了什么、哪些条款尚未收录，页面要向用户展示。
 
@@ -56,7 +58,7 @@ pages / components  →  services（calendar-service 已建，其余待建）  �
 - **日期键**：全项目用 `DateKey`（`YYYY-MM-DD` 字符串，见 `types/calendar.ts`）。禁止 `new Date('YYYY-MM-DD')` 作为业务输入——不同环境可能按 UTC 解析；"今天"必须先按 UTC+8 取年月日再构造。时区固定 `Asia/Shanghai`
 - **干支必须带口径**：`GanzhiDateParts` 拆成 `yearLunarNewYear`（正月初一换年）/ `yearLiChun`（立春换年）/ `monthJieQi`（节令换月）/ `dayCivil`（民用日）四个字段，其中年、月两级**统一按"日"切换**（交节当天整日按新值，V1.0 无时刻输入，定案见评估文档 4.2）。不要新增含糊的 `ganzhiYear`，也不要用一个期望值覆盖多个口径
 - **节气**：输出 `{ name, instant(+08:00 的 ISO), localDate }`；只按日期展示时用 `localDate`，规则涉及交节前后必须比较 `instant`
-- **返回值**：有失败路径的 service/适配器一律返回 `AppResult`（`types/result.ts`）判别联合，不抛异常；纯查表且无失败路径的模块（如 `matchFestivals`）直接返回结果，不制造不会发生的错误分支。错误码沿用方案 5.9：`INVALID_DATE`、`CALENDAR_OUT_OF_RANGE`、`CALENDAR_COMPUTE_FAILED`、`RULE_PACK_MISSING`、`RULE_CONFLICT`、`STORAGE_READ_FAILED`、`STORAGE_WRITE_FAILED`
+- **返回值**：有失败路径的 service/适配器一律返回 `AppResult`（`types/result.ts`）判别联合，不抛异常；纯查表且无失败路径的模块（如 `matchFestivals`）直接返回结果，不制造不会发生的错误分支。错误码：`INVALID_DATE`、`INVALID_RANGE`、`CALENDAR_OUT_OF_RANGE`、`CALENDAR_COMPUTE_FAILED`、`RULE_PACK_MISSING`、`STORAGE_READ_FAILED`、`STORAGE_WRITE_FAILED`、`FAVORITE_LIMIT_REACHED`。「宜忌并见且无裁决」不是错误码，而是单日状态 `unresolved`（不中断整次查询），方案 5.9 原列的 `RULE_CONFLICT` 代码未使用
 - **支持年份**：1901-01-01 至 2100-12-31，范围判断属于 service 层（适配器只校验单个公历日的合法性）
 - **类型声明**：`typings/lunar-javascript/index.d.ts` 是手写的最小声明，只暴露白名单方法。要用新的库 API，必须同时改这里 + 更新评估文档白名单
 - 改库版本时要同步 `adapterVersion: 'lunar-javascript@1.7.7'`、`typings/`、评估文档，并重跑全部权威夹具
