@@ -29,8 +29,10 @@ const STATUS_BADGE_TEXT: Record<EventTypeStatus, string> = {
 
 /**
  * 找日子的事项表。supported 与 limited 允许查询（方案 1.6 状态门禁）。
- * 边界：现代词与古籍用语的对应关系逐项记录；「入宅」在卷十一未检出独立条目，
- * 不得并入「般移」，因此在完成专项校勘前保持 reviewing。
+ * 边界：现代词与古籍用语的对应关系逐项记录。只有「入宅」仍是 reviewing——
+ * 卷十一全卷（御用六十七事、民用三十七事、通书六十事三份清单及逐条宜忌）均无同名条目，
+ * 不得把它并入「般移」，也不得按现代语义自造条目。安葬的日期还取决于山向、形势等
+ * 本版本不收集的条件，保持 unsupported。
  */
 export const EVENT_TYPES: readonly EventTypeEntry[] = [
   {
@@ -49,11 +51,13 @@ export const EVENT_TYPES: readonly EventTypeEntry[] = [
     id: 'relocation',
     displayName: '搬家',
     classicalTerms: ['般移', '移徙'],
-    status: 'reviewing',
-    rulePackId: null,
+    // 卷十一「般移（原注：移徙同）」的宜 14 条、忌 15 条均已录入；天德在四仲月只记四维、无法判到具体日期，故维持 limited。
+    status: 'limited',
+    rulePackId: 'xjbf-relocation',
     maxRangeDays: 90,
-    statusNote: '规则整理中：需完成般移/移徙与入宅、方位的区分校勘。',
-    disclaimer: '',
+    statusNote:
+      '般移条目已全部录入；天德在部分月份无法判到具体日期，冲突例外仍采用保守处理，结果不代表完整的传统结论。',
+    disclaimer: '仅按已收录传统规则提供文化参考，不涉及现实搬迁安排与居住决策。',
   },
   {
     id: 'moving-in',
@@ -62,7 +66,7 @@ export const EVENT_TYPES: readonly EventTypeEntry[] = [
     status: 'reviewing',
     rulePackId: null,
     maxRangeDays: 90,
-    statusNote: '规则整理中：卷十一未检出同名独立条目，不得直接并入搬家。',
+    statusNote: '规则整理中：卷十一全卷未检出同名条目，不得直接并入搬家。',
     disclaimer: '',
   },
   {
@@ -79,12 +83,15 @@ export const EVENT_TYPES: readonly EventTypeEntry[] = [
   {
     id: 'marriage',
     displayName: '婚嫁',
-    classicalTerms: ['嫁娶', '纳采问名', '结婚姻'],
-    status: 'reviewing',
-    rulePackId: null,
+    // 只对应卷十一「嫁娶」一条。同卷另有「结婚姻」「纳采问名」，宜忌与本条不同，不并入。
+    classicalTerms: ['嫁娶'],
+    // 卷十一「嫁娶」的宜 10 条、忌 20 条均已录入；宜忌并见时的原书例外仍未实现，故维持 limited。
+    status: 'limited',
+    rulePackId: 'xjbf-marriage',
     maxRangeDays: 90,
-    statusNote: '规则整理中：原书分列嫁娶、结婚姻、纳采问名，不可笼统合并。',
-    disclaimer: '',
+    statusNote:
+      '嫁娶条目已全部录入；原书另有分列的「结婚姻」「纳采问名」两条，宜忌不同，本版本未收录。',
+    disclaimer: '仅按已收录传统规则提供文化参考，不涉及现实婚姻与家庭决策。',
   },
   {
     id: 'funeral',

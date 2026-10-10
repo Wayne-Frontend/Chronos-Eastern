@@ -127,3 +127,23 @@ export function resolveMonthIndexed(values: readonly string[], monthBranch: stri
 
   return values[monthIndex]
 }
+
+/**
+ * month-indexed-set 的多值分隔符：一月中取多项时，各项以此分隔（如「午|戌」）。
+ * 原因：三合每月取两支、阴阳不将每月取十余个日柱，一表一项的表达不了；
+ * 用可读的分隔符而不是定宽切片，是为了让表在数据文件里仍能逐项读出来。
+ */
+export const MONTH_INDEXED_SET_SEPARATOR = '|'
+
+/**
+ * 从「正月起」的十二项取值表中取出本月应取的多项取值。
+ * 边界：与 resolveMonthIndexed 同一套缺输入判据；空串项按空集合返回，由调用方判为不命中。
+ */
+export function resolveMonthIndexedSet(
+  values: readonly string[],
+  monthBranch: string,
+): readonly string[] | null {
+  const target = resolveMonthIndexed(values, monthBranch)
+
+  return target === null ? null : target.split(MONTH_INDEXED_SET_SEPARATOR)
+}

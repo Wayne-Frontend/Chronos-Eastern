@@ -1,7 +1,10 @@
 import { describe, expect, it } from 'vitest'
 
 import { findVerifiedRulePack, RULE_PACKS } from '../miniprogram/data/rules/manifest'
+import { MARRIAGE_RULE_PACK } from '../miniprogram/data/rules/marriage.v1'
+import { MONTH_GOD_TABLES } from '../miniprogram/data/rules/month-gods'
 import { OPENING_RULE_PACK } from '../miniprogram/data/rules/opening.v1'
+import { RELOCATION_RULE_PACK } from '../miniprogram/data/rules/relocation.v1'
 import { TRAVEL_RULE_PACK } from '../miniprogram/data/rules/travel.v1'
 import { SOURCES } from '../miniprogram/data/sources'
 import { getDateInfo } from '../miniprogram/services/calendar-service'
@@ -57,6 +60,7 @@ describe('buildDateFacts', () => {
 
     expect(facts.jianChu).toBe('破')
     expect(facts.ganzhi.dayCivil).toEqual({ stem: '丙', branch: '辰' })
+    expect(facts.dayPillar).toBe('丙辰')
     expect(facts.ganzhi.monthJieQi).toEqual({ stem: '戊', branch: '戌' })
     expect(facts.solarTerm).toBeNull()
     expect(facts.lunar).toEqual({ month: 8, day: 29, isLeapMonth: false })
@@ -108,6 +112,69 @@ describe('evaluateRule', () => {
     })
 
     expect(evaluateRule(rule, factsOf('2026-10-09'))).toBe('unknown')
+  })
+
+  it('month-indexed-set 按节令月取多项：本月集合内的值命中，集合外不命中', () => {
+    // 表按「正月起」排列，第 8 项（戌月）取「建|破」两项。
+    const table = ['甲', '乙', '丙', '丁', '戊', '己', '庚', '辛', '建|破', '甲', '乙', '丙']
+    const rule = syntheticRule({
+      when: { all: [{ fact: 'jianChu', operator: 'month-indexed-set', value: table }] },
+    })
+
+    expect(evaluateRule(rule, factsOf('2026-10-09'))).toBe('matched')
+    expect(evaluateRule(rule, factsOf('2026-10-02'))).toBe('not_matched')
+  })
+
+  it('month-indexed-set 的日柱条件按两字日柱取值', () => {
+    // 2026-10-09 的日柱为丙辰（见 buildDateFacts 用例）。
+    const table = [
+      '甲子',
+      '甲子',
+      '甲子',
+      '甲子',
+      '甲子',
+      '甲子',
+      '甲子',
+      '甲子',
+      '丙辰|戊午',
+      '甲子',
+      '甲子',
+      '甲子',
+    ]
+    const rule = syntheticRule({
+      when: { all: [{ fact: 'dayPillar', operator: 'month-indexed-set', value: table }] },
+    })
+
+    expect(factsOf('2026-10-09').dayPillar).toBe('丙辰')
+    expect(evaluateRule(rule, factsOf('2026-10-09'))).toBe('matched')
+    expect(evaluateRule(rule, factsOf('2026-10-10'))).toBe('not_matched')
+  })
+
+  it('month-indexed-set 的空串项表示本月无取值，判为不命中而非缺输入', () => {
+    // 与 month-indexed 的既定哨兵一致：天德在四仲月留空串，永不等于任何真实取值。
+    const table = ['甲', '乙', '丙', '丁', '戊', '己', '庚', '辛', '', '甲', '乙', '丙']
+    const rule = syntheticRule({
+      when: { all: [{ fact: 'jianChu', operator: 'month-indexed-set', value: table }] },
+    })
+
+    expect(evaluateRule(rule, factsOf('2026-10-09'))).toBe('not_matched')
+  })
+
+  it('month-indexed-set 表长不是 12 时按缺输入处理', () => {
+    const rule = syntheticRule({
+      when: { all: [{ fact: 'jianChu', operator: 'month-indexed-set', value: ['建|破'] }] },
+    })
+
+    expect(evaluateRule(rule, factsOf('2026-10-09'))).toBe('unknown')
+  })
+
+  it('dayPillar 是按完整日柱取值的入口，供八专这类条款读取', () => {
+    const rule = syntheticRule({
+      when: { all: [{ fact: 'dayPillar', operator: 'in', value: ['丙辰'] }] },
+    })
+
+    expect(evaluateRule(rule, factsOf('2026-10-09'))).toBe('matched')
+    expect(evaluateRule(rule, factsOf('2026-10-10'))).toBe('not_matched')
   })
 
   it('交节当天整日按新月取值', () => {
@@ -402,9 +469,12 @@ describe('出行规则包（第一批）', () => {
     }
   })
 
-  it('只返回 verified 的规则包', () => {
+  it('只返回 verified 的规则包，未登记的包名一律为 null', () => {
     expect(findVerifiedRulePack('travel')?.id).toBe('xjbf-travel')
-    expect(findVerifiedRulePack('relocation')).toBeNull()
+    // 未登记或未开放的包名不得命中；已登记的包逐个在此点名，防漏登记。
+    expect(findVerifiedRulePack('moving-in')).toBeNull()
+    expect(findVerifiedRulePack('funeral')).toBeNull()
+    expect(findVerifiedRulePack('not-a-pack')).toBeNull()
   })
 })
 
@@ -748,11 +818,14 @@ describe('来源精度', () => {
     expect(locator).not.toContain('对七为冲')
   })
 
-  it('所有 month-indexed 条件的表长都必须是 12，否则规则不得入库', () => {
+  it('所有按月取值的条件，表长都必须是 12，否则规则不得入库', () => {
     for (const pack of RULE_PACKS) {
       for (const rule of pack.rules) {
         for (const condition of rule.when.all) {
-          if (condition.operator === 'month-indexed') {
+          if (
+            condition.operator === 'month-indexed' ||
+            condition.operator === 'month-indexed-set'
+          ) {
             expect(condition.value.length, `${rule.id} → ${condition.fact}`).toBe(MONTH_COUNT)
           }
         }
@@ -1032,5 +1105,367 @@ describe('开市规则包', () => {
     expect(OPENING_RULE_PACK.id).not.toBe(TRAVEL_RULE_PACK.id)
     expect(OPENING_RULE_PACK.conflictGroup).not.toBe(TRAVEL_RULE_PACK.conflictGroup)
     expect(OPENING_RULE_PACK.eventType).toBe('opening')
+  })
+})
+
+describe('搬家规则包', () => {
+  const relocationRuleOf = (id: string): RuleDefinition => {
+    const rule = RELOCATION_RULE_PACK.rules.find((item) => item.id === id)
+
+    if (!rule) {
+      throw new Error(`规则不存在：${id}`)
+    }
+
+    return rule
+  }
+
+  it('卷十一「般移（移徙同）」的宜十四项、忌十五项全部落地', () => {
+    const includes = RELOCATION_RULE_PACK.rules.filter((rule) => rule.effect === 'include')
+    const excludes = RELOCATION_RULE_PACK.rules.filter((rule) => rule.effect === 'exclude')
+
+    expect(includes.map((rule) => rule.name)).toEqual([
+      '天德',
+      '月德',
+      '天德合',
+      '月德合',
+      '天赦',
+      '天愿',
+      '月恩',
+      '四相',
+      '时德',
+      '民日',
+      '驿马',
+      '天马',
+      '成日',
+      '开日',
+    ])
+    expect(excludes.map((rule) => rule.name)).toEqual([
+      '月破',
+      '平日',
+      '收日',
+      '闭日',
+      '劫煞',
+      '灾煞',
+      '月煞',
+      '月刑',
+      '月厌',
+      '大时',
+      '天吏',
+      '四废',
+      '五墓',
+      '归忌',
+      '往亡',
+    ])
+
+    expect(findVerifiedRulePack('relocation')?.id).toBe('xjbf-relocation')
+  })
+
+  it('般移与嫁娶同卷相邻两页，忌项并不相同，不得互相套用', () => {
+    // 卷十一第 29 帧（嫁娶）与第 30 帧（般移）逐字比对：般移收「月厌」而不收「月害」，
+    // 嫁娶独有「厌对」「四忌」「八专」「亥日」，般移一概没有。
+    const names = new Set(RELOCATION_RULE_PACK.rules.map((rule) => rule.name))
+
+    expect(names.has('月厌')).toBe(true)
+    expect(names.has('月害')).toBe(false)
+    expect(names.has('厌对')).toBe(false)
+    expect(names.has('四忌')).toBe(false)
+    expect(names.has('八专')).toBe(false)
+    expect(names.has('亥日')).toBe(false)
+  })
+
+  it('归忌逐月等于卷六历例「孟月丑、仲月寅、季月子」', () => {
+    const 孟仲季 = ['丑', '寅', '子']
+
+    for (let month = 0; month < MONTH_COUNT; month++) {
+      const condition = relocationRuleOf('xjbf-relocation-0028').when.all[0]
+
+      expect(condition?.value[month], `归忌第 ${month + 1} 月`).toBe(孟仲季[month % 3])
+    }
+  })
+
+  it('搬家与出行各自成包，冲突组互不相同', () => {
+    expect(RELOCATION_RULE_PACK.conflictGroup).not.toBe(TRAVEL_RULE_PACK.conflictGroup)
+    expect(RELOCATION_RULE_PACK.eventType).toBe('relocation')
+  })
+})
+
+describe('嫁娶规则包', () => {
+  const marriageRuleOf = (id: string): RuleDefinition => {
+    const rule = MARRIAGE_RULE_PACK.rules.find((item) => item.id === id)
+
+    if (!rule) {
+      throw new Error(`规则不存在：${id}`)
+    }
+
+    return rule
+  }
+
+  const conditionTableOf = (id: string, index = 0): readonly string[] => {
+    const condition = marriageRuleOf(id).when.all[index]
+
+    if (!condition) {
+      throw new Error(`规则缺少第 ${index + 1} 个条件：${id}`)
+    }
+
+    return condition.value
+  }
+
+  it('卷十一「嫁娶」的宜十项、忌二十项全部落地', () => {
+    const includes = MARRIAGE_RULE_PACK.rules.filter((rule) => rule.effect === 'include')
+    const excludes = MARRIAGE_RULE_PACK.rules.filter((rule) => rule.effect === 'exclude')
+
+    expect(includes.map((rule) => rule.name)).toEqual([
+      '天德',
+      '月德',
+      '天德合',
+      '月德合',
+      '天赦',
+      '天愿',
+      '三合',
+      '天喜',
+      '六合',
+      '不将',
+    ])
+    expect(excludes.map((rule) => rule.name)).toEqual([
+      '月破',
+      '平日',
+      '收日',
+      '闭日',
+      '劫煞',
+      '灾煞',
+      '月煞',
+      '月刑',
+      '月害',
+      '月厌',
+      '厌对',
+      '大时',
+      '天吏',
+      '四废',
+      '四忌',
+      '四穷',
+      '五墓',
+      '往亡',
+      '八专',
+      '亥日',
+    ])
+
+    expect(findVerifiedRulePack('marriage')?.id).toBe('xjbf-marriage')
+  })
+
+  it('三合逐月等于卷六历例，且每月两项正是月建三合局的另外两支', () => {
+    const 三合局: Record<string, readonly string[]> = {
+      寅: ['寅', '午', '戌'],
+      午: ['寅', '午', '戌'],
+      戌: ['寅', '午', '戌'],
+      亥: ['亥', '卯', '未'],
+      卯: ['亥', '卯', '未'],
+      未: ['亥', '卯', '未'],
+      申: ['申', '子', '辰'],
+      子: ['申', '子', '辰'],
+      辰: ['申', '子', '辰'],
+      巳: ['巳', '酉', '丑'],
+      酉: ['巳', '酉', '丑'],
+      丑: ['巳', '酉', '丑'],
+    }
+    // 卷六《三合》历例（影印本第 10 帧）：「正月在午戌，二月在未亥，三月在子申，四月在丑酉，
+    // 五月在寅戌，六月在卯亥，七月在子辰，八月在丑巳，九月在寅午，十月在卯未，
+    // 十一月在辰申，十二月在丑巳。」
+    const byMonth = [
+      '午|戌',
+      '未|亥',
+      '子|申',
+      '丑|酉',
+      '寅|戌',
+      '卯|亥',
+      '子|辰',
+      '丑|巳',
+      '寅|午',
+      '卯|未',
+      '辰|申',
+      '丑|巳',
+    ]
+    const table = conditionTableOf('xjbf-marriage-0007')
+
+    for (let month = 0; month < MONTH_COUNT; month++) {
+      expect(table[month], `三合第 ${month + 1} 月`).toBe(byMonth[month])
+    }
+
+    // 节令月支：正月起寅，表第 0 项即寅月。逐月核对「月建三合局的另外两支」。
+    // 十二月是例外：历例作「丑巳」，含月建丑日本身而漏酉，与其余十一个月、
+    // 也与同条《考原》「各与其月建会成三合局」不合。本版本照影印本录入，不代为改正，
+    // 差异记在该条 limitations 里，故此处对它单列断言。
+    for (let month = 0; month < MONTH_COUNT; month++) {
+      const 月建 = EARTHLY_BRANCHES[(2 + month) % 12] as string
+      const 另外两支 = (三合局[月建] ?? []).filter((branch) => branch !== 月建)
+      const 实际 = (table[month] ?? '').split('|').sort()
+
+      if (month === MONTH_COUNT - 1) {
+        expect(实际, '十二月照历例原文').toEqual(['丑', '巳'])
+        continue
+      }
+
+      expect(实际, `${月建}月三合局`).toEqual([...另外两支].sort())
+    }
+
+    expect(marriageRuleOf('xjbf-marriage-0007').limitations.join('')).toContain('丑巳')
+  })
+
+  it('六合逐月与月建六合一致', () => {
+    const 六合: Record<string, string> = {
+      寅: '亥',
+      卯: '戌',
+      辰: '酉',
+      巳: '申',
+      午: '未',
+      未: '午',
+      申: '巳',
+      酉: '辰',
+      戌: '卯',
+      亥: '寅',
+      子: '丑',
+      丑: '子',
+    }
+    const table = conditionTableOf('xjbf-marriage-0009')
+
+    for (const branch of EARTHLY_BRANCHES) {
+      const monthIndex = getMonthIndex(branch)
+
+      if (monthIndex === null) {
+        throw new Error(`无法解析月支：${branch}`)
+      }
+
+      expect(table[monthIndex], `${branch}月六合`).toBe(六合[branch])
+    }
+  })
+
+  it('厌对逐月等于月厌所冲之辰，直接由月厌表推出', () => {
+    const 月厌 = MONTH_GOD_TABLES.月厌
+    const 厌对 = conditionTableOf('xjbf-marriage-0021')
+
+    for (let month = 0; month < MONTH_COUNT; month++) {
+      const 厌 = 月厌[month] ?? ''
+      const 冲 = EARTHLY_BRANCHES[(EARTHLY_BRANCHES.indexOf(厌) + 6) % 12]
+
+      expect(厌对[month], `厌对第 ${month + 1} 月`).toBe(冲)
+    }
+  })
+
+  it('阴阳不将的两个结构特征：日支恰在月厌后五辰内，戊己只在夏秋／春冬出现', () => {
+    // 卷四《阴阳不将》历例（影印本第 107 帧）。以下两条是表的自校验，不是新规则：
+    // ① 与同条「必干支与厌全不相涉者始为吉日」「分于卯酉，会于子午」相合；
+    // ② 与同条「经曰春冬己不将，秋夏戊不将」相合。
+    const table = conditionTableOf('xjbf-marriage-0010')
+    const 月厌 = MONTH_GOD_TABLES.月厌
+    const 夏秋 = new Set([3, 4, 5, 6, 7, 8])
+
+    for (let month = 0; month < MONTH_COUNT; month++) {
+      const 厌支 = 月厌[month] ?? ''
+      const 厌下标 = EARTHLY_BRANCHES.indexOf(厌支)
+      const 后五辰 = new Set(
+        Array.from({ length: 5 }, (_, step) => EARTHLY_BRANCHES[(厌下标 + 1 + step) % 12]),
+      )
+      const pillars = (table[month] ?? '').split('|')
+
+      expect(pillars.length, `不将第 ${month + 1} 月条数`).toBeGreaterThan(0)
+
+      for (const pillar of pillars) {
+        const 干 = pillar.slice(0, 1)
+        const 支 = pillar.slice(1)
+
+        expect(pillar, `不将第 ${month + 1} 月「${pillar}」应为两字日柱`).toHaveLength(2)
+        expect(后五辰.has(支), `不将第 ${month + 1} 月「${pillar}」日支应在月厌后五辰内`).toBe(true)
+        expect(支 === 厌支, `不将第 ${month + 1} 月不得含月厌本支`).toBe(false)
+
+        if (干 === '戊') {
+          expect(夏秋.has(month), `戊只应出现在夏秋月：不将第 ${month + 1} 月`).toBe(true)
+        }
+
+        if (干 === '己') {
+          expect(夏秋.has(month), `己只应出现在春冬月：不将第 ${month + 1} 月`).toBe(false)
+        }
+      }
+    }
+  })
+
+  it('不将按卷四按语剔除六月戊午（逐阵不可用），并在限制里写明', () => {
+    const table = conditionTableOf('xjbf-marriage-0010')
+
+    // 六月是表第 6 项（正月起数）。
+    expect(table[5]).not.toContain('戊午')
+    expect(marriageRuleOf('xjbf-marriage-0010').limitations.join('')).toContain('戊午')
+  })
+
+  it('八专取《曾门经》所列的五日，与卷五按语「十干所寄止于八支」相合', () => {
+    const rule = marriageRuleOf('xjbf-marriage-0029')
+
+    expect(rule.when.all).toEqual([
+      { fact: 'dayPillar', operator: 'in', value: ['丁未', '己未', '庚申', '甲寅', '癸丑'] },
+    ])
+
+    // 天干寄宫：甲寅、乙辰、丙巳、丁未、戊巳、己未、庚申、辛戌、壬亥、癸丑。
+    // 「十干所寄止于八支，不居子午卯酉」，且「六甲循环干支相见」，故日柱两字必互为寄宫。
+    const 寄宫: Record<string, string> = {
+      甲: '寅',
+      乙: '辰',
+      丙: '巳',
+      丁: '未',
+      戊: '巳',
+      己: '未',
+      庚: '申',
+      辛: '戌',
+      壬: '亥',
+      癸: '丑',
+    }
+    const 八支 = new Set(['丑', '寅', '辰', '巳', '未', '申', '戌', '亥'])
+    const 阳干 = new Set(['甲', '丙', '戊', '庚', '壬'])
+    const 阳支 = new Set(['子', '寅', '辰', '午', '申', '戌'])
+    const 自算 = HEAVENLY_STEMS.flatMap((stem) => {
+      const branch = 寄宫[stem]
+
+      if (branch === undefined || !八支.has(branch)) {
+        return []
+      }
+
+      // 六十甲子只以阳干配阳支、阴干配阴支；不合此律的组合（乙辰、丙巳、戊巳、辛戌、壬亥）
+      // 本就不在循环内，故「六甲循环干支相见」后只剩五日。
+      return 阳干.has(stem) === 阳支.has(branch) ? [`${stem}${branch}`] : []
+    })
+
+    expect(自算.sort()).toEqual([...(rule.when.all[0]?.value ?? [])].sort())
+  })
+
+  it('四忌取本令阳干临子，与卷五按语「以本令阳干加于辰首」一致', () => {
+    const rule = marriageRuleOf('xjbf-marriage-0025')
+    const 本令阳干 = ['甲', '丙', '庚', '壬']
+
+    expect(rule.when.all[0]?.fact).toBe('ganzhi.dayCivil.stem')
+    expect(rule.when.all[1]).toEqual({
+      fact: 'ganzhi.dayCivil.branch',
+      operator: 'in',
+      value: ['子'],
+    })
+
+    for (let month = 0; month < MONTH_COUNT; month++) {
+      expect(rule.when.all[0]?.value[month], `四忌第 ${month + 1} 月`).toBe(
+        本令阳干[Math.floor(month / 3)],
+      )
+    }
+  })
+
+  it('结婚姻与纳采问名各自成条，不并入嫁娶：五合、五离两处差异都在', () => {
+    // 卷十一第 28 帧（纳采问名）与第 29 帧（嫁娶）逐字比对：
+    // 结婚姻、纳采问名两条例「五合」为宜，且都不收「不将」「往亡」「厌对」「亥日」。
+    const names = new Set(MARRIAGE_RULE_PACK.rules.map((rule) => rule.name))
+
+    expect(names.has('五合')).toBe(false)
+    expect(names.has('五离')).toBe(false)
+    expect(names.has('不将')).toBe(true)
+    expect(MARRIAGE_RULE_PACK.coverage).toContain('结婚姻')
+    expect(MARRIAGE_RULE_PACK.coverage).toContain('纳采问名')
+  })
+
+  it('嫁娶与出行各自成包，冲突组互不相同', () => {
+    expect(MARRIAGE_RULE_PACK.conflictGroup).not.toBe(TRAVEL_RULE_PACK.conflictGroup)
+    expect(MARRIAGE_RULE_PACK.eventType).toBe('marriage')
   })
 })

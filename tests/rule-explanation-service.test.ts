@@ -57,7 +57,7 @@ describe('getDateRuleExplanation', () => {
   })
 
   it('拒绝未开放事项和无效日期', () => {
-    expect(getDateRuleExplanation('2026-10-02', 'relocation')).toMatchObject({
+    expect(getDateRuleExplanation('2026-10-02', 'moving-in')).toMatchObject({
       ok: false,
       code: 'RULE_PACK_MISSING',
     })

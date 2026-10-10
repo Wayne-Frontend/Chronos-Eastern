@@ -40,12 +40,16 @@ describe('canQueryEventType', () => {
     expect(canQueryEventType(null)).toBe(false)
   })
 
-  it('事项表中只有出行与开业可查询，其余全部置灰', () => {
+  it('可查询的四个事项逐个点名，其余（入宅、安葬）全部置灰', () => {
     const queryable = EVENT_TYPES.filter((entry) => canQueryEventType(entry)).map(
       (entry) => entry.id,
     )
+    const blocked = EVENT_TYPES.filter((entry) => !canQueryEventType(entry)).map(
+      (entry) => entry.id,
+    )
 
-    expect(queryable).toEqual(['travel', 'opening'])
+    expect(queryable).toEqual(['travel', 'relocation', 'opening', 'marriage'])
+    expect(blocked).toEqual(['moving-in', 'funeral'])
   })
 })
 

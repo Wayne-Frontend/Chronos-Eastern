@@ -7,8 +7,11 @@ export type RuleEffect = 'include' | 'exclude'
  * `in`：事实值在 value 列表内即命中。
  * `month-indexed`：value 必须是 12 项，按节令月支从寅月（正月）起顺数取值，与事实值相等即命中；
  * 供卷五、卷六「正月起某，顺／逆行十二辰」的月神条款使用。表长不是 12 时按缺输入处理。
+ * `month-indexed-set`：同 `month-indexed`，但每月的取值是多项，以 `|` 分隔，命中条件为
+ * 事实值在本月取值集合内；供「三合」（每月两支）与「阴阳不将」（每月十余个日柱）使用。
+ * 某项为空串表示本月无取值，永不命中；表长不是 12 时同样按缺输入处理。
  */
-export type RuleOperator = 'in' | 'month-indexed'
+export type RuleOperator = 'in' | 'month-indexed' | 'month-indexed-set'
 
 export interface RuleCondition {
   /** 事实字段路径，形如 `ganzhi.monthJieQi.branch`；规则必须声明读取哪个口径。 */

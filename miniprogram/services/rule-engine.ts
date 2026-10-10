@@ -7,6 +7,7 @@ import {
   getBranchElement,
   getStemElement,
   resolveMonthIndexed,
+  resolveMonthIndexedSet,
   type Element,
   type Season,
 } from './rule-facts'
@@ -21,6 +22,8 @@ export interface DateFacts {
   stemElement: Element | null
   /** 日支五行；供「干支俱绝」型条款（如四废）与日干五行合用，日支无法解析时为 null。 */
   branchElement: Element | null
+  /** 日柱（日干＋日支，两字），供「八专」「阴阳不将」这类按完整日柱取值的条款读取。 */
+  dayPillar: string | null
   ganzhi: {
     yearLunarNewYear: GanzhiParts | null
     yearLiChun: GanzhiParts | null
@@ -58,6 +61,7 @@ export function buildDateFacts(info: DateInfo): DateFacts {
     season: monthParts ? getSeason(monthParts.branch) : null,
     stemElement: dayParts ? getStemElement(dayParts.stem) : null,
     branchElement: dayParts ? getBranchElement(dayParts.branch) : null,
+    dayPillar: dayParts ? `${dayParts.stem}${dayParts.branch}` : null,
     ganzhi: {
       yearLunarNewYear: splitGanzhi(info.ganzhi.yearLunarNewYear),
       yearLiChun: splitGanzhi(info.ganzhi.yearLiChun),
@@ -115,6 +119,18 @@ function matchCondition(condition: RuleCondition, value: string, facts: DateFact
       const target = resolveMonthIndexed(condition.value, monthBranch)
 
       return target === null ? null : target === value
+    }
+    case 'month-indexed-set': {
+      const monthBranch = facts.ganzhi.monthJieQi?.branch ?? null
+
+      if (monthBranch === null) {
+        return null
+      }
+
+      const target = resolveMonthIndexedSet(condition.value, monthBranch)
+
+      // 空串项切成 ['']，与任何真实取值都不相等，本月即判为不命中。
+      return target === null ? null : target.includes(value)
     }
     default:
       return null
