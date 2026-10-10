@@ -185,6 +185,29 @@ describe('getDateInfo', () => {
         code: 'INVALID_DATE',
       })
     })
+
+    // 支持范围两端（1901-01 与 2100-12）的首尾补位日会落到 1900 年与 2101 年，
+    // 这些格子算不出历法信息，但必须照常显示日号，否则月历第一行/最后一行会缺格。
+    it('补位日超出支持范围时只显示日号，不给标签', () => {
+      const firstMonth = getGrid(1901, 1)
+      const lastMonth = getGrid(2100, 12)
+
+      expect(firstMonth[0]).toMatchObject({
+        dateKey: '1900-12-31',
+        day: 31,
+        isCurrentMonth: false,
+        labelText: '',
+        labelKind: 'none',
+      })
+      expect(firstMonth[1]).toMatchObject({ dateKey: '1901-01-01', isCurrentMonth: true })
+      expect(lastMonth[41]).toMatchObject({
+        dateKey: '2101-01-09',
+        isCurrentMonth: false,
+        labelText: '',
+        labelKind: 'none',
+      })
+      expect(lastMonth.filter((cell) => cell.labelKind === 'none').length).toBeGreaterThan(0)
+    })
   })
 
   it('世纪闰年规则：2100 年没有 2 月 29 日', () => {

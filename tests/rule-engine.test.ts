@@ -211,6 +211,47 @@ describe('evaluateRule', () => {
       matchedRuleIds: ['verified-rule'],
     })
   })
+
+  it('任一条规则缺输入时整日判 unknown，不得当作通过或未命中', () => {
+    // 2026-10-02 本是建日（宜），再挂一条读不到事实的规则，整日即因缺输入无法判定。
+    const pack = {
+      ...TRAVEL_RULE_PACK,
+      rules: [
+        { ...TRAVEL_RULE_PACK.rules[0], id: 'matched-rule' },
+        syntheticRule({
+          id: 'unknown-rule',
+          when: { all: [{ fact: 'ganzhi.dayCivil.hour', operator: 'in', value: ['子'] }] },
+        }),
+      ],
+    }
+
+    expect(evaluateDay(pack, factsOf('2026-10-02'))).toMatchObject({
+      status: 'unknown',
+      matchedRuleIds: ['matched-rule'],
+      unknownRuleIds: ['unknown-rule'],
+    })
+  })
+
+  it('unknown 的优先级高于冲突：既有宜忌同级命中又有缺输入时，仍判 unknown', () => {
+    // 同日既有纳入（建日）又有排除（月刑），再挂一条缺输入的规则，不能停在 unresolved。
+    const pack = {
+      ...TRAVEL_RULE_PACK,
+      rules: [
+        { ...TRAVEL_RULE_PACK.rules[0], id: 'include-rule' },
+        { ...TRAVEL_RULE_PACK.rules[30], id: 'exclude-rule' },
+        syntheticRule({
+          id: 'unknown-rule',
+          when: { all: [{ fact: 'jianChu', operator: 'month-indexed', value: ['建'] }] },
+        }),
+      ],
+    }
+    const evaluation = evaluateDay(pack, factsOf('2026-10-02'))
+
+    expect(evaluation.status).toBe('unknown')
+    expect(evaluation.matchedRuleIds.length).toBeGreaterThan(0)
+    expect(evaluation.excludeRuleIds.length).toBeGreaterThan(0)
+    expect(evaluation.unknownRuleIds).toEqual(['unknown-rule'])
+  })
 })
 
 describe('出行规则包（第一批）', () => {
