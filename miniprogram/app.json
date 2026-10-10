@@ -3,6 +3,7 @@
     "pages/index/index",
     "pages/calendar/calendar",
     "pages/find-date/find-date",
+    "pages/about/about",
     "pages/day-detail/day-detail"
   ],
   "window": {
@@ -34,6 +35,12 @@
         "text": "找日子",
         "iconPath": "assets/tabbar/find-date.png",
         "selectedIconPath": "assets/tabbar/find-date-active.png"
+      },
+      {
+        "pagePath": "pages/about/about",
+        "text": "关于",
+        "iconPath": "assets/tabbar/about.png",
+        "selectedIconPath": "assets/tabbar/about-active.png"
       }
     ]
   },

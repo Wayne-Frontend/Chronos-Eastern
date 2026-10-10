@@ -1,0 +1,99 @@
+<navigation-bar title="关于" back="{{false}}" color="#24211E" background="#F7F3EA"></navigation-bar>
+
+<scroll-view class="about-scroll" scroll-y enhanced show-scrollbar="{{false}}">
+  <view class="page-shell about-page">
+    <view class="about-hero section-card">
+      <view class="about-hero__heading">
+        <view class="about-hero__seal">
+          <text>良</text>
+          <text>辰</text>
+        </view>
+        <view class="about-hero__title-group">
+          <text class="about-hero__eyebrow">关于岁月良辰</text>
+          <text class="about-hero__title">读懂日子，也看见出处</text>
+        </view>
+      </view>
+      <text class="about-hero__description">岁月良辰是一款传统历法查询与民俗日期规划工具。我们把现代历法事实、传统文献说法和现实生活决策分开呈现，让普通用户既能看懂结果，也能知道依据来自哪里。</text>
+      <view class="about-hero__meta">
+        <text class="about-hero__chip">中国标准时间 UTC+8</text>
+        <text class="about-hero__chip">日期范围 1901—2100</text>
+        <text class="about-hero__chip">资料可追溯</text>
+      </view>
+    </view>
+
+    <view class="about-section">
+      <view class="about-section__heading">
+        <text class="about-section__eyebrow">历法口径</text>
+        <text class="about-section__title">标准与校验资料</text>
+        <text class="about-section__description">它们负责回答“日期怎样计算、结果怎样核对”，不会被用来包装传统择日结论。</text>
+      </view>
+      <view wx:for="{{calendarSources}}" wx:key="title" class="source-card section-card">
+        <view class="source-card__head">
+          <text class="source-card__number">{{item.number}}</text>
+          <text class="source-card__category">{{item.category}}</text>
+        </view>
+        <text class="source-card__title">{{item.title}}</text>
+        <text class="source-card__publisher">{{item.publisher}}</text>
+        <view class="source-card__body">
+          <view class="source-card__paragraph">
+            <text class="source-card__label">资料讲什么</text>
+            <text class="source-card__text">{{item.summary}}</text>
+          </view>
+          <view class="source-card__paragraph">
+            <text class="source-card__label">为什么参考</text>
+            <text class="source-card__text">{{item.reason}}</text>
+          </view>
+          <view class="source-card__boundary">
+            <text class="source-card__boundary-label">使用边界</text>
+            <text class="source-card__boundary-text">{{item.boundary}}</text>
+          </view>
+        </view>
+      </view>
+    </view>
+
+    <view class="about-section">
+      <view class="about-section__heading">
+        <text class="about-section__eyebrow">资料来源</text>
+        <text class="about-section__title">传统文献与文化资料</text>
+        <text class="about-section__description">传统说法先看原文和历史语境，再决定是否能够转换成清楚、有限的现代说明。</text>
+      </view>
+      <view wx:for="{{cultureSources}}" wx:key="title" class="source-card section-card">
+        <view class="source-card__head">
+          <text class="source-card__number">{{item.number}}</text>
+          <text class="source-card__category">{{item.category}}</text>
+        </view>
+        <text class="source-card__title">{{item.title}}</text>
+        <text class="source-card__publisher">{{item.publisher}}</text>
+        <view class="source-card__body">
+          <view class="source-card__paragraph">
+            <text class="source-card__label">资料讲什么</text>
+            <text class="source-card__text">{{item.summary}}</text>
+          </view>
+          <view class="source-card__paragraph">
+            <text class="source-card__label">为什么参考</text>
+            <text class="source-card__text">{{item.reason}}</text>
+          </view>
+          <view class="source-card__boundary">
+            <text class="source-card__boundary-label">使用边界</text>
+            <text class="source-card__boundary-text">{{item.boundary}}</text>
+          </view>
+        </view>
+      </view>
+    </view>
+
+    <view class="disclaimer-card">
+      <view class="disclaimer-card__heading">
+        <view class="disclaimer-card__mark">!</view>
+        <text class="disclaimer-card__title">免责声明</text>
+      </view>
+      <text class="disclaimer-card__text">本应用提供的是历法信息与传统文化参考，不构成对吉凶、结果或命运的预测和保证，也不能替代交通安全、医疗健康、法律、财务、工程施工及其他专业意见。</text>
+      <text class="disclaimer-card__text">传统说法受文献版本、地域习俗和具体情境影响。请结合天气、身体状况、法规要求、家人意见及现实条件独立判断；遇到重要事项，应优先遵循专业机构和主管部门的意见。</text>
+    </view>
+
+    <view class="about-footer">
+      <view class="about-footer__line"></view>
+      <text>岁月良辰 · 传统文化参考</text>
+      <view class="about-footer__line"></view>
+    </view>
+  </view>
+</scroll-view>
