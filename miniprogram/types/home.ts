@@ -33,6 +33,12 @@ export interface HomeViewModel {
   festivalDescription: string
   noticeText: string
   almanacRows: HomeAlmanacRow[]
+  /**
+   * 宜忌区块的收录范围说明。
+   * 原因：本区块只覆盖已收录的少数事项，不给范围说明时，「只有一行忌」会被读成「其余事项都没问题」。
+   * 边界：与 almanacRows 同生共死——没有行时整块隐藏，该说明也就不出现。
+   */
+  almanacScopeText: string
   /** 当前可用于查看来源详情的事项；后续多事项时由具体行携带事项 id。 */
   /**
    * 摘要读到的全部事项，逗号分隔。

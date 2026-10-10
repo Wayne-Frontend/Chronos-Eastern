@@ -109,6 +109,7 @@ function buildSuccessViewModel(info: DateInfo): HomeViewModel {
         : '今日宜忌暂不可用，请稍后再试'
       : '',
     almanacRows: almanacSection.rows,
+    almanacScopeText: almanacSection.scopeText,
     ruleEventTypeIds: almanacSection.eventTypeIds.join(','),
   }
 }
@@ -126,6 +127,7 @@ function buildAlmanacSection(dateKey: string): {
   rows: HomeAlmanacRow[]
   eventTypeIds: string[]
   hasFailure: boolean
+  scopeText: string
 } {
   const queryableEvents = EVENT_TYPES.filter(canQueryEventType)
   const groups = new Map<HomeAlmanacRow['id'], { events: string[]; reasons: string[] }>()
@@ -195,6 +197,10 @@ function buildAlmanacSection(dateKey: string): {
     rows,
     eventTypeIds,
     hasFailure,
+    // 收录范围按事项表动态生成：将来开放新事项时这句话自动跟着变，不需要改文案。
+    scopeText: `本区块只含已收录的 ${queryableEvents.length} 类事项（${queryableEvents
+      .map((entry) => entry.displayName)
+      .join('、')}）；其余事项不作判断。`,
   }
 }
 
@@ -257,6 +263,7 @@ function buildFailureViewModel(dateKey: string, code: CalendarServiceErrorCode):
       : CALENDAR_UNAVAILABLE_HINT,
     // 历法本身算不出来时整块隐藏：原因已由 noticeText 说明，再补一行「—」是重复。
     almanacRows: [],
+    almanacScopeText: '',
     ruleEventTypeIds: '',
   }
 }

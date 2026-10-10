@@ -81,6 +81,8 @@
         </button>
       </view>
 
+      <text wx:if="{{view.almanacScopeText}}" class="almanac-scope">{{view.almanacScopeText}}</text>
+
       <view
         wx:for="{{view.almanacRows}}"
         wx:key="id"

@@ -238,6 +238,16 @@ page {
   margin-bottom: 26rpx;
 }
 
+/* 收录范围说明：紧跟在标题下方，用比依据文字更轻的层级，不抢结论。 */
+.almanac-scope {
+  display: block;
+  margin-top: -14rpx;
+  margin-bottom: 22rpx;
+  color: var(--color-ink-muted);
+  font-size: 22rpx;
+  line-height: 1.5;
+}
+
 .section-title {
   font-family: 'Songti SC', STSong, serif;
   font-size: 34rpx;
