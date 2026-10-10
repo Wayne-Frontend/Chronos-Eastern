@@ -103,6 +103,15 @@
         <text class="detail-rule__source-label">原文出处</text>
         <text class="detail-rule__meta">{{item.locator}}</text>
         <text wx:if="{{item.sourceText}}" class="detail-rule__meta">来源：{{item.sourceText}}</text>
+        <block wx:if="{{item.limitations.length > 0}}">
+          <text class="detail-rule__source-label">适用范围与限制</text>
+          <text
+            wx:for="{{item.limitations}}"
+            wx:for-item="limitation"
+            wx:key="*this"
+            class="detail-rule__meta"
+          >{{limitation}}</text>
+        </block>
       </view>
     </view>
 

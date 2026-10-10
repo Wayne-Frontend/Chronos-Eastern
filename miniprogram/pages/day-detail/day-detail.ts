@@ -44,6 +44,8 @@ interface RuleDisplayItem {
   explanation: string
   locator: string
   sourceText: string
+  /** 该条的适用边界；面向用户的措辞，与出处同屏显示。 */
+  limitations: readonly string[]
 }
 
 interface RuleSectionViewModel {
@@ -316,6 +318,9 @@ function toRuleDisplayItem(
     explanation: rule.explanation,
     locator: rule.locator,
     sourceText: rule.sources.map((source) => `${source.title}（${source.publisher}）`).join('；'),
+    // 各条自带的适用边界（如某神煞在某几个月不判值日）必须与出处同屏，
+    // 否则用户会把「本版本收录的这一条」当成完整结论；文案本身已是面向用户的措辞。
+    limitations: rule.limitations,
   }
 }
 

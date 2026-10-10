@@ -37,6 +37,7 @@ interface RuleSectionShape {
   eventTypeId: string
   eventName: string
   coverageNoticeText: string
+  rules: readonly { id: string; limitations: readonly string[] }[]
 }
 
 function loadDetail(options: Record<string, string>): {
@@ -104,6 +105,19 @@ describe('日期详情页的事项上下文', () => {
   it('没有任何事项时不出卡，由空状态承担', () => {
     expect(loadDetail({ date: '2026-10-02' }).ruleSections).toEqual([])
     expect(loadDetail({ date: '2026-10-02', eventTypes: ' , ' }).ruleSections).toEqual([])
+  })
+
+  it('每条依据都带上适用边界，供详情页与出处同屏展示', () => {
+    // 规则包 1.17.1 起 limitations 就是面向用户的措辞，说明它本该上屏；
+    // 页面若把它丢掉，用户会以为「本版本收录的这一条」就是完整结论。
+    const view = loadDetail({ date: '2026-10-02', eventTypes: 'travel' })
+    const rules = view.ruleSections[0]?.rules ?? []
+
+    expect(rules.length).toBeGreaterThan(0)
+
+    for (const rule of rules) {
+      expect(rule.limitations.length, `${rule.id} 缺少适用边界`).toBeGreaterThan(0)
+    }
   })
 })
 
