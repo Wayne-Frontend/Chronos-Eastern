@@ -29,11 +29,11 @@ Blocked for the same reason. Code inspection confirms that the focused regions n
   - Impact: text wrapping, vertical density, disclosure-button appearance, multi-item homepage tabs, About-page card length and bottom safe area, and tab-bar item balance could still have visual issues.
   - Fix: open the project in WeChat Developer Tools, capture the same homepage and date-detail states plus the About tab, and compare at the same viewport before release.
 
-- [P2] The About page's copy about the corrected edition lists volumes 3–6 and 11 but not volume 10.
+- [P2, resolved] The About page's copy about the corrected edition listed volumes 3–6 and 11 but not volume 10.
   - Location: `miniprogram/pages/about/about.ts`, `CULTURE_SOURCES[0].summary`.
-  - Evidence: `docs/conflict-adjudication-audit.md` derives the unresolved include/exclude semantics from volume 10 "宜忌" and its 铺注条例.
-  - Impact: the source list understates which volumes actually shaped current behaviour; it is not a false statement ("主要涉及"), but it is incomplete.
-  - Fix: decide with the author whether to add volume 10; do not edit user-facing copy unilaterally.
+  - Evidence: `docs/conflict-adjudication-audit.md` derives the unresolved include/exclude semantics from volume 10 "宜忌" and its 常例 ("凡所忌者則不注宜，所宜者亦不注忌").
+  - Impact: the source list understated which volumes actually shaped current behaviour; it was not a false statement ("主要涉及"), but it was incomplete.
+  - Fix applied: the summary now reads "卷三至卷六的义例、卷十「宜忌」的常例，以及卷十一的具体用事条目". The rendered wording still awaits visual review.
 
 ## Comparison history
 

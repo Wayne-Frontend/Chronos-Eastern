@@ -12,7 +12,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 两份文档定义了本项目的硬边界，动手前先读：
 
-- `docs/岁月良辰-V1.0-产品与技术方案.md`——产品/技术方案：四页职责、数据 schema、错误码、规则引擎语义、分阶段计划
+- `docs/岁月良辰-V1.0-产品与技术方案.md`——产品/技术方案：页面职责与信息架构、数据 schema、错误码、规则引擎语义、分阶段计划
 - `docs/calendar-library-evaluation.md`——历法库准入评估：API 白名单、禁止 API、Go/No-Go 条件、待回填的实测表格
 
 ## 常用命令
@@ -43,7 +43,7 @@ pages / components  →  services（calendar-service 已建，其余待建）  �
 - 页面不得直接读写 `wx.setStorage`、不得直接解释规则 JSON、不得自己判断宜忌——只调用稳定的小型 service 函数
 - 页面间只传 `YYYY-MM-DD`（如 `?date=YYYY-MM-DD&from=calendar`），禁止传时间戳
 
-已存在：`pages/`（index、calendar、find-date、day-detail）、`components/`（empty-state、navigation-bar、calendar-grid）、`adapters/`、`services/`（calendar-service、festival-service、favorite-service、rule-engine、find-date-service）、`data/`（festivals、sources、event-types、rules/ 的 manifest 与 travel.v1）、`types/`（calendar、home、result、rule）、`utils/`（date-key、format、ganzhi、util）、`vendor/`。方案 5.3 列出的模块已全部创建，四页均已接入真实数据。
+已存在：`pages/`（index、calendar、find-date、about、day-detail）、`components/`（empty-state、navigation-bar、calendar-grid）、`adapters/`、`services/`（calendar-service、festival-service、favorite-service、rule-engine、rule-facts、rule-explanation-service、find-date-service、upcoming-festival-service）、`data/`（festivals、sources、event-types、rules/ 的 manifest 与 travel.v1）、`types/`（calendar、home、result、rule）、`utils/`（date-key、format、ganzhi、rule-presentation、util）、`vendor/`。方案 5.3 列出的模块已全部创建，各页均已接入真实数据（about 为静态说明页）。
 事项状态有四个：`supported`（规则完整、来源已定位、测试通过）、`limited`（已有 verified 规则可查询，但条目未收全）、`reviewing`（整理中，不可查询）、`unsupported`（本版本不提供）。**`supported` 与 `limited` 可查询，门禁只在 `data/event-types.ts` 的 `canQueryEventType()` 一处**，页面与服务不得各自比较字面量。当前出行是 `limited`（规则包 `xjbf-travel@1.17.1`，条目已收宜 16/16、忌 16/16；因天德在四仲月以四维记位、无值日可判，整包仍为 `partial`，**不升级为 `supported`**，见审计 §8.11）。
 规则包的 `completeness`（`complete`/`partial`）与 `status` 正交：前者说整包是否收全，后者说包内单条规则是否过校勘；事项状态与它必须一一对应（`limited` ⟺ `partial`），有测试守这条不变量。`partial` 时事项入口（chip 标记 + 选中提示）、结果列表上方、详情页规则区**三处都必须显示覆盖范围**，统一用 `data/rules/manifest.ts` 的 `PARTIAL_COVERAGE_NOTICE`，不得让用户以为已收录全部古籍条款；结果卡展示依据时同时展示 `coverage`。
 
