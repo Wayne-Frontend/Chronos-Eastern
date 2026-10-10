@@ -73,7 +73,7 @@
       </view>
     </view>
 
-    <view class="rule-section">
+    <view wx:if="{{view.almanacRows.length > 0}}" class="rule-section">
       <view class="section-heading">
         <text class="section-title">今日宜忌</text>
         <button class="text-action" bindtap="openAlmanac" hover-class="text-action--pressed">

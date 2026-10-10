@@ -58,13 +58,9 @@ Component({
       })
     },
     openAlmanac() {
-      // 当前只有一个开放事项时直接查看当天出处；后续开放多事项后先进入事项选择，避免默认展示某一项。
-      if (EVENT_TYPES.filter(canQueryEventType).length === 1) {
-        this.openDetail()
-        return
-      }
-
-      this.openFindDate()
+      // 「查看详情」按字面进当日详情，与上方摘要读同一事项（ruleEventTypeId）。
+      // 多事项并存时这里只带主事项，其余事项的当日结论仍到找日子逐项查。
+      this.openDetail()
     },
     openCalendar() {
       wx.switchTab({
@@ -108,29 +104,40 @@ function buildSuccessViewModel(info: DateInfo): HomeViewModel {
     solarTermDescription: solarTermText.description,
     festivalTitle: festivalText.title,
     festivalDescription: festivalText.description,
-    noticeText: '',
+    // 读取失败不冒充结论进宜忌行，改用提示条：全失败与部分失败的话术不同。
+    noticeText: almanacSection.hasFailure
+      ? almanacSection.rows.length > 0
+        ? '部分事项的宜忌暂时读取失败'
+        : '今日宜忌暂不可用，请稍后再试'
+      : '',
     almanacRows: almanacSection.rows,
     ruleEventTypeId: almanacSection.primaryEventTypeId,
   }
 }
 
 /**
- * 首页按“宜 / 忌 / 慎 / 暂无”聚合全部已开放事项。
+ * 首页按“宜 / 忌 / 慎”聚合全部已开放事项。
  * 原因：标题必须保持事项中立；未来开放搬家、婚嫁等事项后，应自动加入相应行而不是增加专用页面文案。
- * 边界：传统名称只作为第二层解释，不替代第一层的事项结论。
+ * 边界：
+ * - 只有有结论的事项成行。没有明确说法（not_matched）或无法判定（unknown）的不进本区块，
+ *   否则「今日宜忌」里会混进既非宜也非忌的行，整块读不出结论。
+ * - 读取失败同样不伪装成一条结论，改由首页提示条承担，避免错误被读成结果。
+ * - 传统名称只作为第二层解释，不替代第一层的事项结论。
  */
 function buildAlmanacSection(dateKey: string): {
   rows: HomeAlmanacRow[]
   primaryEventTypeId: string
+  hasFailure: boolean
 } {
   const queryableEvents = EVENT_TYPES.filter(canQueryEventType)
   const groups = new Map<HomeAlmanacRow['id'], { events: string[]; reasons: string[] }>()
+  let hasFailure = false
 
   for (const eventType of queryableEvents) {
     const result = getDateRuleExplanation(dateKey, eventType.id)
 
     if (!result.ok) {
-      addAlmanacItem(groups, 'none', eventType.displayName, '暂时无法读取')
+      hasFailure = true
       continue
     }
 
@@ -157,18 +164,16 @@ function buildAlmanacSection(dateKey: string): {
         value.eventName,
         value.matchedRules.map((rule) => rule.name),
       )
-    } else {
-      addAlmanacItem(groups, 'none', value.eventName, '暂无明确说法')
     }
+    // 其余状态（not_matched／unknown）今天没有结论，不成行。
   }
 
   const rowMeta: Record<HomeAlmanacRow['id'], Pick<HomeAlmanacRow, 'badge' | 'badgeClass'>> = {
     include: { badge: '宜', badgeClass: 'include' },
     exclude: { badge: '忌', badgeClass: 'exclude' },
     caution: { badge: '慎', badgeClass: 'caution' },
-    none: { badge: '—', badgeClass: 'none' },
   }
-  const order: HomeAlmanacRow['id'][] = ['include', 'exclude', 'caution', 'none']
+  const order: HomeAlmanacRow['id'][] = ['include', 'exclude', 'caution']
   const rows = order.flatMap((id) => {
     const group = groups.get(id)
 
@@ -187,19 +192,10 @@ function buildAlmanacSection(dateKey: string): {
   })
 
   return {
-    rows:
-      rows.length > 0
-        ? rows
-        : [
-            {
-              id: 'none',
-              badge: '—',
-              badgeClass: 'none',
-              eventText: '今日宜忌暂不可用',
-              reasonText: '请稍后再试',
-            },
-          ],
+    // 没有一行有结论时返回空数组，由页面隐藏整块，而不是补一行“暂无”充数。
+    rows,
     primaryEventTypeId: queryableEvents[0]?.id ?? '',
+    hasFailure,
   }
 }
 
@@ -260,15 +256,8 @@ function buildFailureViewModel(dateKey: string, code: CalendarServiceErrorCode):
     noticeText: outOfRange
       ? `设备日期超出可查询范围（${SUPPORTED_YEAR_MIN}-01-01 至 ${SUPPORTED_YEAR_MAX}-12-31）`
       : CALENDAR_UNAVAILABLE_HINT,
-    almanacRows: [
-      {
-        id: 'none',
-        badge: '—',
-        badgeClass: 'none',
-        eventText: '今日宜忌暂不可用',
-        reasonText: '请重新计算',
-      },
-    ],
+    // 历法本身算不出来时整块隐藏：原因已由 noticeText 说明，再补一行「—」是重复。
+    almanacRows: [],
     ruleEventTypeId: '',
   }
 }

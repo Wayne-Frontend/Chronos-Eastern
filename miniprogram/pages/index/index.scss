@@ -299,13 +299,6 @@ page {
   background: #a98542;
 }
 
-/* 「不作结论」与「资料整理中」用中性描边，不与宜忌的实心圆标争夺注意力。 */
-.rule-badge--none {
-  color: var(--color-ink-muted);
-  background: transparent;
-  border: 1rpx solid var(--color-border);
-}
-
 .rule-event-text {
   margin-bottom: 6rpx;
   color: var(--color-ink);
