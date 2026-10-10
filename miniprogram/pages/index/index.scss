@@ -295,6 +295,10 @@ page {
   background: #8f877d;
 }
 
+.rule-badge--caution {
+  background: #a98542;
+}
+
 /* 「不作结论」与「资料整理中」用中性描边，不与宜忌的实心圆标争夺注意力。 */
 .rule-badge--none {
   color: var(--color-ink-muted);
@@ -302,26 +306,17 @@ page {
   border: 1rpx solid var(--color-border);
 }
 
-.rule-count {
-  display: block;
-  margin-top: 18rpx;
-  color: var(--color-ink-faint);
-  font-size: 22rpx;
-  line-height: 1.5;
-}
-
-/* 覆盖范围提示：与详情页规则区、找日子结果区同一条文案，这里只做小字呈现。 */
-.rule-coverage {
-  display: block;
-  margin-top: 8rpx;
-  color: var(--color-info-text);
-  font-size: 22rpx;
-  line-height: 1.6;
-}
-
-.rule-title {
+.rule-event-text {
   margin-bottom: 6rpx;
-  font-size: 28rpx;
+  color: var(--color-ink);
+  font-size: 30rpx;
+  font-weight: 500;
+}
+
+.rule-reason-text {
+  color: var(--color-ink-muted);
+  font-size: 24rpx;
+  line-height: 1.5;
 }
 
 .action-row {

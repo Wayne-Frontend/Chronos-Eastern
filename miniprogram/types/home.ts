@@ -3,21 +3,15 @@ import type { DateKey } from './calendar'
 
 export type HomeStatus = 'ok' | 'out_of_range' | 'error'
 
-/**
- * 首页「今日传统规则参考」的一行。
- * 原因：宜、忌、以及「不作结论」三种情况的行结构相同，先在服务侧拼成统一形状，
- * 页面只负责渲染，不在 wxml 里做判断。
- */
-export interface HomeRuleRow {
-  /** 供 wx:key 使用。 */
-  id: 'verdict' | 'include' | 'exclude'
-  badge: '宜' | '忌' | '—'
-  /** 圆标配色类名，页面不自行判断。 */
-  badgeClass: 'include' | 'exclude' | 'none'
-  /** 条目名串（用「 · 」连接）或状态短句。 */
-  title: string
-  /** 补充说明；无内容时为空串。 */
-  detail: string
+/** 首页的一组宜忌结果：第一层是事项，第二层是对应的传统名称。 */
+export interface HomeAlmanacRow {
+  id: 'include' | 'exclude' | 'caution' | 'none'
+  badge: '宜' | '忌' | '慎' | '—'
+  badgeClass: 'include' | 'exclude' | 'caution' | 'none'
+  /** 当前结论对应的事项，用顿号连接。 */
+  eventText: string
+  /** 支撑该结论的传统名称，用间隔点连接。 */
+  reasonText: string
 }
 
 export interface HomeViewModel {
@@ -31,13 +25,10 @@ export interface HomeViewModel {
   ganzhiItems: GanzhiDisplayItem[]
   solarTermTitle: string
   solarTermDescription: string
-  festivalText: string
+  festivalTitle: string
+  festivalDescription: string
   noticeText: string
-  ruleRows: HomeRuleRow[]
-  /** 首页规则摘要对应的事项；规则不可用时为空，进入详情时不附带规则上下文。 */
+  almanacRows: HomeAlmanacRow[]
+  /** 当前可用于查看来源详情的事项；后续多事项时由具体行携带事项 id。 */
   ruleEventTypeId: string
-  /** 命中的已校勘规则条数；无命中或规则不可用时为空串。不含规则包 id@version 这类术语。 */
-  ruleCountText: string
-  /** 规则包仍有未能判定或尚未实现边界时的提示；覆盖完整或规则不可用时为空串。 */
-  ruleCoverageText: string
 }

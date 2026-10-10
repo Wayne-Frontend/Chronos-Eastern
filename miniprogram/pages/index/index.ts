@@ -1,20 +1,15 @@
 import { canQueryEventType, EVENT_TYPES } from '../../data/event-types'
-import { PARTIAL_COVERAGE_NOTICE } from '../../data/rules/manifest'
 import {
   getDateInfo,
   SUPPORTED_YEAR_MAX,
   SUPPORTED_YEAR_MIN,
   type CalendarServiceErrorCode,
 } from '../../services/calendar-service'
-import { matchFestivals } from '../../services/festival-service'
-import {
-  getDateRuleExplanation,
-  type RuleExplanationItem,
-} from '../../services/rule-explanation-service'
-import type { DayStatus } from '../../services/rule-engine'
+import { getDateRuleExplanation } from '../../services/rule-explanation-service'
+import { findUpcomingFestival } from '../../services/upcoming-festival-service'
 import type { DateInfo } from '../../types/calendar'
-import type { HomeRuleRow, HomeViewModel } from '../../types/home'
-import { addDaysToDateKey, getTodayDateKey, parseDateKey } from '../../utils/date-key'
+import type { HomeAlmanacRow, HomeViewModel } from '../../types/home'
+import { getTodayDateKey, parseDateKey } from '../../utils/date-key'
 import {
   formatGanzhiSummary,
   formatLunarText,
@@ -24,9 +19,6 @@ import {
 import { getGregorianWeekday } from '../../utils/util'
 
 const CALENDAR_UNAVAILABLE_HINT = '历法信息暂不可用，请重新计算'
-
-/** 首页规则摘要每行最多列出的条目名个数（方案 2.3：宜忌摘要最多各 4 项）。 */
-const MAX_HOME_RULE_NAMES = 4
 
 Component({
   data: {
@@ -65,6 +57,15 @@ Component({
         url: `/pages/day-detail/day-detail?date=${this.data.view.dateKey}${eventTypeQuery}&from=index`,
       })
     },
+    openAlmanac() {
+      // 当前只有一个开放事项时直接查看当天出处；后续开放多事项后先进入事项选择，避免默认展示某一项。
+      if (EVENT_TYPES.filter(canQueryEventType).length === 1) {
+        this.openDetail()
+        return
+      }
+
+      this.openFindDate()
+    },
     openCalendar() {
       wx.switchTab({
         url: '/pages/calendar/calendar',
@@ -91,12 +92,8 @@ function buildHomeViewModel(): HomeViewModel {
 
 function buildSuccessViewModel(info: DateInfo): HomeViewModel {
   const solarTermText = formatSolarTermSummary(info)
-  const nextDayKey = addDaysToDateKey(info.dateKey, 1)
-  const nextDay = nextDayKey ? getDateInfo(nextDayKey) : null
-  const traditionalFestivals = matchFestivals(info, nextDay?.ok ? nextDay.value : null).filter(
-    (festival) => festival.category === 'traditional',
-  )
-  const ruleSection = buildRuleSection(info.dateKey)
+  const festivalText = buildFestivalSummary(info.dateKey)
+  const almanacSection = buildAlmanacSection(info.dateKey)
 
   return {
     status: 'ok',
@@ -109,136 +106,134 @@ function buildSuccessViewModel(info: DateInfo): HomeViewModel {
     ganzhiItems: formatGanzhiSummary(info.ganzhi),
     solarTermTitle: solarTermText.title,
     solarTermDescription: solarTermText.description,
-    festivalText:
-      traditionalFestivals.length > 0
-        ? traditionalFestivals.map((festival) => festival.name).join('、')
-        : '今日无传统节日',
+    festivalTitle: festivalText.title,
+    festivalDescription: festivalText.description,
     noticeText: '',
-    ruleRows: ruleSection.rows,
-    ruleEventTypeId: ruleSection.eventTypeId,
-    ruleCountText: ruleSection.countText,
-    ruleCoverageText: ruleSection.coverageText,
+    almanacRows: almanacSection.rows,
+    ruleEventTypeId: almanacSection.primaryEventTypeId,
   }
 }
 
 /**
- * 首页的「今日传统规则参考」摘要。
- * 原因：方案 2.3 要求首页显示宜忌摘要，且只来自已验证规则包；摘要行在这里拼好，页面不做判断。
- * 边界：本版本只按「第一个可查询事项」出摘要——目前即出行。宜忌并见时先出一行「不作结论」，
- * 再把双方依据列为佐证，避免用户只看「宜」那行就当成结论。
+ * 首页按“宜 / 忌 / 慎 / 暂无”聚合全部已开放事项。
+ * 原因：标题必须保持事项中立；未来开放搬家、婚嫁等事项后，应自动加入相应行而不是增加专用页面文案。
+ * 边界：传统名称只作为第二层解释，不替代第一层的事项结论。
  */
-function buildRuleSection(dateKey: string): {
-  rows: HomeRuleRow[]
-  eventTypeId: string
-  countText: string
-  coverageText: string
+function buildAlmanacSection(dateKey: string): {
+  rows: HomeAlmanacRow[]
+  primaryEventTypeId: string
 } {
-  const eventType = EVENT_TYPES.find(canQueryEventType)
+  const queryableEvents = EVENT_TYPES.filter(canQueryEventType)
+  const groups = new Map<HomeAlmanacRow['id'], { events: string[]; reasons: string[] }>()
 
-  if (!eventType) {
-    return {
-      rows: [unavailableRow()],
-      eventTypeId: '',
-      countText: '',
-      coverageText: '',
+  for (const eventType of queryableEvents) {
+    const result = getDateRuleExplanation(dateKey, eventType.id)
+
+    if (!result.ok) {
+      addAlmanacItem(groups, 'none', eventType.displayName, '暂时无法读取')
+      continue
+    }
+
+    const value = result.value
+
+    if (value.status === 'pass') {
+      addAlmanacItem(
+        groups,
+        'include',
+        value.eventName,
+        value.matchedRules.filter((rule) => rule.effect === 'include').map((rule) => rule.name),
+      )
+    } else if (value.status === 'excluded') {
+      addAlmanacItem(
+        groups,
+        'exclude',
+        value.eventName,
+        value.matchedRules.filter((rule) => rule.effect === 'exclude').map((rule) => rule.name),
+      )
+    } else if (value.status === 'unresolved') {
+      addAlmanacItem(
+        groups,
+        'caution',
+        value.eventName,
+        value.matchedRules.map((rule) => rule.name),
+      )
+    } else {
+      addAlmanacItem(groups, 'none', value.eventName, '暂无明确说法')
     }
   }
 
-  const result = getDateRuleExplanation(dateKey, eventType.id)
+  const rowMeta: Record<HomeAlmanacRow['id'], Pick<HomeAlmanacRow, 'badge' | 'badgeClass'>> = {
+    include: { badge: '宜', badgeClass: 'include' },
+    exclude: { badge: '忌', badgeClass: 'exclude' },
+    caution: { badge: '慎', badgeClass: 'caution' },
+    none: { badge: '—', badgeClass: 'none' },
+  }
+  const order: HomeAlmanacRow['id'][] = ['include', 'exclude', 'caution', 'none']
+  const rows = order.flatMap((id) => {
+    const group = groups.get(id)
 
-  if (!result.ok) {
-    return {
-      rows: [unavailableRow()],
-      eventTypeId: '',
-      countText: '',
-      coverageText: '',
+    if (!group) {
+      return []
     }
-  }
 
-  const value = result.value
-  const includes = value.matchedRules.filter((rule) => rule.effect === 'include')
-  const excludes = value.matchedRules.filter((rule) => rule.effect === 'exclude')
-  const rows: HomeRuleRow[] = []
-
-  if (
-    value.status === 'unresolved' ||
-    value.status === 'unknown' ||
-    value.status === 'not_matched'
-  ) {
-    const copy = describeHomeRuleStatus(value.status)
-
-    rows.push({
-      id: 'verdict',
-      badge: '—',
-      badgeClass: 'none',
-      title: copy.title,
-      detail: copy.detail,
-    })
-  }
-
-  if (includes.length > 0) {
-    rows.push(toRuleRow('include', '宜', includes))
-  }
-
-  if (excludes.length > 0) {
-    rows.push(toRuleRow('exclude', '忌', excludes))
-  }
+    return [
+      {
+        id,
+        ...rowMeta[id],
+        eventText: unique(group.events).join('、'),
+        reasonText: unique(group.reasons).join(' · '),
+      },
+    ]
+  })
 
   return {
-    rows,
-    eventTypeId: eventType.id,
-    // 不给用户看规则包 id@version 这类术语；版本与来源在日期详情页的覆盖范围块里给。
-    countText:
-      value.matchedRules.length > 0
-        ? `${value.eventName} · 已校勘规则 ${value.matchedRules.length} 条`
-        : '',
-    // 事项为 partial 时首页也必须说明覆盖不全，不能只靠详情页兜底。
-    coverageText: value.rulePack.completeness === 'partial' ? PARTIAL_COVERAGE_NOTICE : '',
+    rows:
+      rows.length > 0
+        ? rows
+        : [
+            {
+              id: 'none',
+              badge: '—',
+              badgeClass: 'none',
+              eventText: '今日宜忌暂不可用',
+              reasonText: '请稍后再试',
+            },
+          ],
+    primaryEventTypeId: queryableEvents[0]?.id ?? '',
   }
 }
 
-function unavailableRow(): HomeRuleRow {
-  return {
-    id: 'verdict',
-    badge: '—',
-    badgeClass: 'none',
-    title: '今日传统规则资料整理中',
-    detail: '规则未加载或未通过验证时不展示结论，也不回退到第三方库宜忌。',
-  }
+function addAlmanacItem(
+  groups: Map<HomeAlmanacRow['id'], { events: string[]; reasons: string[] }>,
+  id: HomeAlmanacRow['id'],
+  eventName: string,
+  reasons: string | readonly string[],
+): void {
+  const group = groups.get(id) ?? { events: [], reasons: [] }
+
+  group.events.push(eventName)
+  group.reasons.push(...(typeof reasons === 'string' ? [reasons] : reasons))
+  groups.set(id, group)
 }
 
-function toRuleRow(
-  id: 'include' | 'exclude',
-  badge: '宜' | '忌',
-  rules: readonly RuleExplanationItem[],
-): HomeRuleRow {
-  const names = rules.slice(0, MAX_HOME_RULE_NAMES).map((rule) => rule.name)
-  const more = rules.length - names.length
-
-  return {
-    id,
-    badge,
-    badgeClass: id,
-    title: names.join(' · '),
-    detail: more > 0 ? `另有 ${more} 条，点「查看说明」看全部依据` : '',
-  }
+function unique(values: readonly string[]): string[] {
+  return [...new Set(values.filter((value) => value.length > 0))]
 }
 
-function describeHomeRuleStatus(status: DayStatus): { title: string; detail: string } {
-  switch (status) {
-    case 'unresolved':
-      return {
-        title: '宜忌并见，本版本不作结论',
-        detail: '原书对宜忌并见且无德神裁决者的常例是两者皆不注，下列双方依据仅供参考。',
-      }
-    case 'unknown':
-      return { title: '资料不足，暂不判断', detail: '部分规则缺少必要事实。' }
-    case 'excluded':
-      return { title: '本日已命中排除规则', detail: '本日不会列入出行查询结果。' }
-    case 'pass':
-      return { title: '本日符合已收录规则', detail: '' }
-    default:
-      return { title: '本日未命中已收录规则', detail: '这不代表现实安排上的不可用。' }
+function buildFestivalSummary(dateKey: string): { title: string; description: string } {
+  const upcoming = findUpcomingFestival(dateKey)
+
+  if (!upcoming) {
+    return { title: '近期暂无节日信息', description: '' }
+  }
+
+  const names = upcoming.festivals.map((festival) => festival.name).join('、')
+  const dateText = `${upcoming.dateInfo.solar.month}月${upcoming.dateInfo.solar.day}日`
+  const description = `${dateText} · ${formatLunarText(upcoming.dateInfo.lunar)}`
+
+  return {
+    title: upcoming.daysUntil === 0 ? `今日${names}` : `距${names}还有 ${upcoming.daysUntil} 天`,
+    description,
   }
 }
 
@@ -260,13 +255,20 @@ function buildFailureViewModel(dateKey: string, code: CalendarServiceErrorCode):
     ganzhiItems: [],
     solarTermTitle: '',
     solarTermDescription: '',
-    festivalText: '',
+    festivalTitle: '',
+    festivalDescription: '',
     noticeText: outOfRange
-      ? `设备日期超出本版本支持范围（${SUPPORTED_YEAR_MIN}-01-01 至 ${SUPPORTED_YEAR_MAX}-12-31）`
+      ? `设备日期超出可查询范围（${SUPPORTED_YEAR_MIN}-01-01 至 ${SUPPORTED_YEAR_MAX}-12-31）`
       : CALENDAR_UNAVAILABLE_HINT,
-    ruleRows: [unavailableRow()],
+    almanacRows: [
+      {
+        id: 'none',
+        badge: '—',
+        badgeClass: 'none',
+        eventText: '今日宜忌暂不可用',
+        reasonText: '请重新计算',
+      },
+    ],
     ruleEventTypeId: '',
-    ruleCountText: '',
-    ruleCoverageText: '',
   }
 }

@@ -1,5 +1,4 @@
-import { canQueryEventType, EVENT_TYPES, getStatusBadgeText } from '../../data/event-types'
-import { PARTIAL_COVERAGE_NOTICE } from '../../data/rules/manifest'
+import { canQueryEventType, EVENT_TYPES } from '../../data/event-types'
 import {
   describeRangeIssue,
   findDates,
@@ -20,9 +19,8 @@ type PageStatus = 'idle' | 'running' | 'ok' | 'empty' | 'partial' | 'blocked'
 interface EventOption {
   id: string
   displayName: string
-  classicalText: string
   disabled: boolean
-  /** chip 上的状态短标记；覆盖完整的 supported 为空串。 */
+  /** 不可用事项的用户提示；可查询事项为空串。 */
   badgeText: string
   statusNote: string
 }
@@ -33,7 +31,6 @@ interface ResultCard {
   weekdayText: string
   lunarText: string
   tagText: string
-  ruleTexts: string[]
   moreText: string
   isFavorite: boolean
 }
@@ -48,17 +45,14 @@ interface FindDateViewModel {
   maxRangeDays: number
   canQuery: boolean
   noticeText: string
-  /** noticeText 的语气：error 表示被拒绝或出错，info 表示覆盖范围等说明性内容。 */
+  /** noticeText 的语气：error 表示被拒绝或出错，info 表示正常的结果说明。 */
   noticeTone: 'error' | 'info'
   expiredNotice: string
   progressText: string
   conditionText: string
-  coverageText: string
-  /** 规则包仍有未能判定或尚未实现边界时的显著提示；覆盖完整时为空串。 */
-  partialNoticeText: string
   summaryText: string
   results: ResultCard[]
-  /** 因规则冲突未列入的日期，逐日列出并可跳详情看双方依据；无冲突时为空。 */
+  /** 因传统说法不一致而未列入的日期；无冲突时为空。 */
   conflictCards: ConflictCard[]
   disclaimerText: string
 }
@@ -93,8 +87,6 @@ Component({
         results: [],
         conflictCards: [],
         summaryText: '',
-        coverageText: '',
-        partialNoticeText: '',
         conditionText: '',
         noticeText: '',
         noticeTone: 'error',
@@ -134,9 +126,8 @@ Component({
       this.resetResults({
         selectedEventId: option.id,
         canQuery: rangeIssue === '',
-        // 范围非法时先说范围；否则 limited 事项在入口处先说明覆盖范围，避免用户把结果当作完整结论。
-        noticeText: rangeIssue || (option.status === 'limited' ? option.statusNote : ''),
-        noticeTone: rangeIssue ? 'error' : 'info',
+        noticeText: rangeIssue,
+        noticeTone: 'error',
         disclaimerText: option.disclaimer,
       })
     },
@@ -165,9 +156,8 @@ Component({
         startDate,
         endDate,
         canQuery: view.selectedEventId !== '' && rangeIssue === '',
-        // 范围非法时先说范围；否则 limited 事项继续说明覆盖范围。
-        noticeText: rangeIssue || (option?.status === 'limited' ? option.statusNote : ''),
-        noticeTone: rangeIssue ? 'error' : 'info',
+        noticeText: rangeIssue,
+        noticeTone: 'error',
         expiredNotice: hadResults ? '条件已修改，结果已过期，请重新查询' : '',
       })
     },
@@ -214,7 +204,10 @@ Component({
       if (!outcome.ok) {
         this.setView({
           status: 'blocked',
-          noticeText: outcome.message,
+          noticeText:
+            outcome.code === 'RULE_PACK_MISSING'
+              ? '该事项暂时无法查询，请稍后再试'
+              : outcome.message,
           noticeTone: 'error',
           progressText: '',
         })
@@ -235,11 +228,7 @@ Component({
         conflictCards: value.conflictDates.map(toConflictCard),
         progressText: '',
         summaryText: buildSummaryText(value),
-        coverageText: `本版本收录范围：${value.rulePack.coverage}`,
-        partialNoticeText: value.rulePack.completeness === 'partial' ? PARTIAL_COVERAGE_NOTICE : '',
-        conditionText: `${option?.displayName ?? ''} · ${this.data.view.startDate} 至 ${
-          this.data.view.endDate
-        } · 规则依据版本 ${value.rulePack.version}`,
+        conditionText: `${option?.displayName ?? ''} · ${this.data.view.startDate} 至 ${this.data.view.endDate}`,
         disclaimerText: option?.disclaimer ?? '',
         // 语气跟提示本身的语义走：计算失败才是 error，查无结果是正常结论。
         // 之前这里不设值，语气会残留自用户点按顺序，同一句话时红时灰。
@@ -247,7 +236,7 @@ Component({
         noticeText: partial
           ? '部分日期计算失败，本次结果不完整，请重试'
           : results.length === 0
-            ? '本范围内没有符合已收录规则的日期。可扩大范围再查；这不代表现实安排上的不可用。'
+            ? '这段时间内暂时没有找到合适的候选日期，可以扩大日期范围再试。'
             : '',
       })
     },
@@ -291,10 +280,11 @@ function buildInitialView(): FindDateViewModel {
     eventOptions: EVENT_TYPES.map((entry) => ({
       id: entry.id,
       displayName: entry.displayName,
-      classicalText: entry.classicalTerms.join('/'),
       disabled: !canQueryEventType(entry),
-      badgeText: getStatusBadgeText(entry.status),
-      statusNote: entry.statusNote,
+      // 可查询事项不向用户暴露内部支持等级；未开放事项只说明用户当前能否使用。
+      badgeText:
+        entry.status === 'unsupported' ? '暂不支持' : canQueryEventType(entry) ? '' : '敬请期待',
+      statusNote: entry.status === 'unsupported' ? '该事项暂不支持' : '该事项暂未开放，敬请期待',
     })),
     selectedEventId: '',
     startDate: today,
@@ -307,8 +297,6 @@ function buildInitialView(): FindDateViewModel {
     expiredNotice: '',
     progressText: '',
     conditionText: '',
-    coverageText: '',
-    partialNoticeText: '',
     summaryText: '',
     results: [],
     conflictCards: [],
@@ -319,16 +307,13 @@ function buildInitialView(): FindDateViewModel {
 function toCard(item: FindDateOutcome['results'][number], favoriteKeys: Set<string>): ResultCard {
   const parsed = parseDateKey(item.dateKey)
   const dateText = parsed.ok ? `${parsed.value.month}月${parsed.value.day}日` : item.dateKey
-  const more = item.matchedCount - item.ruleTexts.length
-
   return {
     dateKey: item.dateKey,
     dateText,
     weekdayText: item.weekdayText,
     lunarText: item.lunarText,
     tagText: item.tagText,
-    ruleTexts: [...item.ruleTexts],
-    moreText: more > 0 ? `另有 ${more} 条依据，查看全部 ›` : '查看全部依据 ›',
+    moreText: '查看当天参考 ›',
     isFavorite: favoriteKeys.has(item.dateKey),
   }
 }
@@ -346,18 +331,20 @@ function toConflictCard(dateKey: string): ConflictCard {
 }
 
 function buildSummaryText(value: FindDateOutcome): string {
-  const parts = [`共核对 ${value.summary.checkedDays} 日，${value.summary.passedDays} 日符合`]
+  const parts = [
+    `共查看 ${value.summary.checkedDays} 天，找到 ${value.summary.passedDays} 个候选日期`,
+  ]
 
   if (value.summary.conflictDays > 0) {
-    parts.push(`${value.summary.conflictDays} 日因规则冲突未列入`)
+    parts.push(`${value.summary.conflictDays} 天说法不一致，未列入候选`)
   }
 
   if (value.summary.unknownDays > 0) {
-    parts.push(`${value.summary.unknownDays} 日因资料不足未判定`)
+    parts.push(`${value.summary.unknownDays} 天暂无明确建议`)
   }
 
   if (value.summary.errorDays > 0) {
-    parts.push(`${value.summary.errorDays} 日计算失败`)
+    parts.push(`${value.summary.errorDays} 天暂未完成`)
   }
 
   return parts.join('；')

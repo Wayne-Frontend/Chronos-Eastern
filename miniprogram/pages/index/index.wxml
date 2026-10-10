@@ -64,38 +64,36 @@
       </view>
     </view>
 
-    <view wx:if="{{view.festivalText}}" class="info-block">
+    <view wx:if="{{view.festivalTitle}}" class="info-block">
       <text class="info-block__label">节日</text>
       <view class="info-block__divider"></view>
       <view class="info-block__copy">
-        <text class="info-block__title">{{view.festivalText}}</text>
+        <text class="info-block__title">{{view.festivalTitle}}</text>
+        <text wx:if="{{view.festivalDescription}}" class="info-block__description">{{view.festivalDescription}}</text>
       </view>
     </view>
 
     <view class="rule-section">
       <view class="section-heading">
-        <text class="section-title">今日传统规则参考</text>
-        <button class="text-action" bindtap="openDetail" hover-class="text-action--pressed">
-          查看说明 ›
+        <text class="section-title">今日宜忌</text>
+        <button class="text-action" bindtap="openAlmanac" hover-class="text-action--pressed">
+          查看详情 ›
         </button>
       </view>
 
       <view
-        wx:for="{{view.ruleRows}}"
+        wx:for="{{view.almanacRows}}"
         wx:key="id"
-        class="rule-row {{index === view.ruleRows.length - 1 ? 'rule-row--last' : ''}}"
+        class="rule-row {{index === view.almanacRows.length - 1 ? 'rule-row--last' : ''}}"
       >
         <view class="rule-badge rule-badge--{{item.badgeClass}}">
           {{item.badge}}
         </view>
         <view class="rule-copy">
-          <text class="rule-title">{{item.title}}</text>
-          <text wx:if="{{item.detail}}" class="rule-description">{{item.detail}}</text>
+          <text class="rule-event-text">{{item.eventText}}</text>
+          <text class="rule-reason-text">{{item.reasonText}}</text>
         </view>
       </view>
-
-      <text wx:if="{{view.ruleCountText}}" class="rule-count">{{view.ruleCountText}}</text>
-      <text wx:if="{{view.ruleCoverageText}}" class="rule-coverage">{{view.ruleCoverageText}}</text>
     </view>
 
     <view class="action-row">

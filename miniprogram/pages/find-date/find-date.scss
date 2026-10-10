@@ -33,7 +33,7 @@
 .event-chip {
   display: flex;
   min-width: 180rpx;
-  min-height: 132rpx;
+  min-height: 104rpx;
   box-sizing: border-box;
   justify-content: center;
   flex-direction: column;
@@ -60,11 +60,6 @@
 .event-chip--active .event-chip__name {
   color: var(--color-cinnabar-deep);
   font-weight: 600;
-}
-
-.event-chip__term {
-  color: var(--color-ink-muted);
-  font-size: 22rpx;
 }
 
 .event-chip__note {
@@ -230,39 +225,11 @@
   font-size: 24rpx;
 }
 
-.result-rules {
-  display: flex;
-  flex-direction: column;
-  gap: 6rpx;
-  margin-top: 16rpx;
-}
-
-.result-rule {
-  color: var(--color-ink-secondary);
-  font-size: 25rpx;
-  line-height: 1.5;
-}
-
 .result-more {
   display: block;
   margin-top: 12rpx;
   color: var(--color-ink-muted);
   font-size: 24rpx;
-}
-
-.coverage-alert {
-  padding: 20rpx 24rpx;
-  margin-bottom: 24rpx;
-  background: var(--color-info-bg);
-  border: 1rpx solid var(--color-info-text);
-  border-radius: var(--radius-card);
-}
-
-.coverage-alert__text {
-  color: var(--color-info-text);
-  font-size: 25rpx;
-  font-weight: 600;
-  line-height: 1.6;
 }
 
 .conflict-card {
@@ -316,27 +283,6 @@
 .conflict-item__weekday {
   color: var(--color-ink-muted);
   font-size: 22rpx;
-}
-
-.coverage-card {
-  padding: 24rpx 28rpx;
-  margin-top: 24rpx;
-  background: var(--color-info-bg);
-  border-radius: var(--radius-card);
-}
-
-.coverage-title {
-  display: block;
-  margin-bottom: 10rpx;
-  color: var(--color-info-text);
-  font-size: 26rpx;
-  font-weight: 600;
-}
-
-.coverage-text {
-  color: var(--color-info-text);
-  font-size: 24rpx;
-  line-height: 1.6;
 }
 
 .disclaimer-text {

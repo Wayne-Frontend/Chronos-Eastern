@@ -22,7 +22,7 @@ interface CalendarViewModel {
   favoriteNotice: string
 }
 
-const BOUNDARY_NOTICE = `本版本支持 ${SUPPORTED_YEAR_MIN}–${SUPPORTED_YEAR_MAX} 年`
+const BOUNDARY_NOTICE = `可查看 ${SUPPORTED_YEAR_MIN}–${SUPPORTED_YEAR_MAX} 年`
 
 Component({
   data: {

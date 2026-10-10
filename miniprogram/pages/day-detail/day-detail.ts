@@ -5,7 +5,6 @@ import {
   type CalendarServiceErrorCode,
 } from '../../services/calendar-service'
 import { FESTIVAL_CATEGORY_LABELS } from '../../data/festivals'
-import { PARTIAL_COVERAGE_NOTICE } from '../../data/rules/manifest'
 import { addFavorite, isFavorite, removeFavorite } from '../../services/favorite-service'
 import { matchFestivals } from '../../services/festival-service'
 import {
@@ -24,6 +23,7 @@ import {
   type GanzhiDisplayItem,
 } from '../../utils/format'
 import { getGregorianWeekday } from '../../utils/util'
+import { describeDateOutcome, describeRuleReason } from '../../utils/rule-presentation'
 
 type DayDetailStatus = 'ok' | 'invalid' | 'out_of_range' | 'error'
 
@@ -35,13 +35,14 @@ interface FestivalDisplayItem {
 
 interface RuleDisplayItem {
   id: string
-  badgeText: '宜' | '忌' | '待'
+  badgeText: '宜' | '忌' | '—'
   effectClass: 'include' | 'exclude' | 'unknown'
-  statusText: string
+  title: string
+  summary: string
+  sourceExpanded: boolean
   explanation: string
   locator: string
   sourceText: string
-  limitations: readonly string[]
 }
 
 interface RuleSectionViewModel {
@@ -50,12 +51,9 @@ interface RuleSectionViewModel {
   eventName: string
   title: string
   description: string
+  suggestion: string
   rules: readonly RuleDisplayItem[]
-  coverageText: string
-  versionText: string
   noticeText: string
-  /** 规则包仍有未能判定或尚未实现边界时的显著提示；覆盖完整时为空串。 */
-  partialNoticeText: string
 }
 
 interface DayDetailViewModel {
@@ -124,6 +122,18 @@ Page({
 
     this.setData({ 'view.isFavorite': isFavoriteNow })
     wx.showToast({ title: isFavoriteNow ? '已收藏' : '已取消', icon: 'none' })
+  },
+  toggleRuleSource(event: WechatMiniprogram.TouchEvent) {
+    const index = Number(event.currentTarget.dataset.index)
+    const item = this.data.view.ruleSection.rules[index]
+
+    if (!Number.isInteger(index) || !item) {
+      return
+    }
+
+    this.setData({
+      [`view.ruleSection.rules[${index}].sourceExpanded`]: !item.sourceExpanded,
+    })
   },
 })
 
@@ -214,30 +224,27 @@ function buildRuleSection(dateKey: string, eventType: string): RuleSectionViewMo
       ...buildEmptyRuleSection(),
       hasContext: true,
       status: 'error',
-      title: '规则依据暂不可用',
-      description: '无法读取本次找日子的规则依据，请返回后重新查询。',
-      noticeText: result.message,
+      title: '暂时无法提供当天参考',
+      description: '相关信息读取失败，请稍后重新进入。',
+      noticeText: '',
     }
   }
 
   const value = result.value
-  const copy = describeRuleStatus(value.status)
+  const copy = describeDateOutcome(value.status, value.eventName)
 
   return {
     hasContext: true,
     status: value.status,
     eventName: value.eventName,
     title: copy.title,
-    description: copy.description,
+    description: copy.summary,
+    suggestion: copy.suggestion,
     rules: [
-      ...value.matchedRules.map((rule) => toRuleDisplayItem(rule, false)),
-      ...value.unknownRules.map((rule) => toRuleDisplayItem(rule, true)),
+      ...value.matchedRules.map((rule) => toRuleDisplayItem(rule, value.eventName, false)),
+      ...value.unknownRules.map((rule) => toRuleDisplayItem(rule, value.eventName, true)),
     ],
-    coverageText: value.rulePack.coverage,
-    // 只给版本号；规则包 id（xjbf-travel）是内部标识，对用户没有意义。
-    versionText: value.rulePack.version,
     noticeText: '',
-    partialNoticeText: value.rulePack.completeness === 'partial' ? PARTIAL_COVERAGE_NOTICE : '',
   }
 }
 
@@ -248,60 +255,29 @@ function buildEmptyRuleSection(): RuleSectionViewModel {
     eventName: '',
     title: '',
     description: '',
+    suggestion: '',
     rules: [],
-    coverageText: '',
-    versionText: '',
     noticeText: '',
-    partialNoticeText: '',
   }
 }
 
-function toRuleDisplayItem(rule: RuleExplanationItem, isUnknown: boolean): RuleDisplayItem {
+function toRuleDisplayItem(
+  rule: RuleExplanationItem,
+  eventName: string,
+  isUnknown: boolean,
+): RuleDisplayItem {
+  const copy = describeRuleReason(rule.name, rule.effect, eventName, isUnknown)
+
   return {
     id: rule.id,
-    badgeText: isUnknown ? '待' : rule.effect === 'include' ? '宜' : '忌',
+    badgeText: isUnknown ? '—' : rule.effect === 'include' ? '宜' : '忌',
     effectClass: isUnknown ? 'unknown' : rule.effect,
-    // 整包已过 verified 门禁，页面上只可能出现已验证规则，故不再对它们标注内部状态词；
-    // 只有「资料不足」这一句对用户有意义。规则 id 属内部标识，不上屏。
-    statusText: isUnknown ? '资料不足，本版本未据此判定' : '',
+    title: copy.title,
+    summary: copy.summary,
+    sourceExpanded: false,
     explanation: rule.explanation,
     locator: rule.locator,
     sourceText: rule.sources.map((source) => `${source.title}（${source.publisher}）`).join('；'),
-    limitations: rule.limitations,
-  }
-}
-
-function describeRuleStatus(status: DateRuleExplanation['status']): {
-  title: string
-  description: string
-} {
-  switch (status) {
-    case 'pass':
-      return {
-        title: '符合本版本已收录规则',
-        description: '以下为本次结果命中的全部纳入依据。',
-      }
-    case 'excluded':
-      return {
-        title: '命中已收录排除规则',
-        description: '本日不会列入当前事项的查询结果。',
-      }
-    case 'unresolved':
-      return {
-        title: '规则依据存在冲突',
-        description:
-          '本日同时命中宜项与忌项。原书对宜忌并见且无德神裁决者的常例是两者皆不注，故本版本不作结论。',
-      }
-    case 'unknown':
-      return {
-        title: '资料不足，暂不判断',
-        description: '部分规则缺少必要事实，本版本不会据此给出结果。',
-      }
-    default:
-      return {
-        title: '未命中已收录纳入规则',
-        description: '这不代表现实安排上的不可用，也不代表完整传统规则结论。',
-      }
   }
 }
 
@@ -311,7 +287,7 @@ function buildFailureNotice(code: CalendarServiceErrorCode): string {
   }
 
   if (code === 'CALENDAR_OUT_OF_RANGE') {
-    return `日期超出本版本支持范围（${SUPPORTED_YEAR_MIN}-01-01 至 ${SUPPORTED_YEAR_MAX}-12-31）`
+    return `日期超出可查询范围（${SUPPORTED_YEAR_MIN}-01-01 至 ${SUPPORTED_YEAR_MAX}-12-31）`
   }
 
   return '历法信息暂不可用，请稍后重新进入'

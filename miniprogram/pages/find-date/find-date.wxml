@@ -1,7 +1,7 @@
 <navigation-bar title="找日子" back="{{false}}" color="#24211E" background="#F7F3EA"></navigation-bar>
 
 <view class="page-shell page-content find-date-page">
-  <text class="page-hint">只列出符合本版本已收录、且标明来源的传统规则的日期</text>
+  <text class="page-hint">选择事项和日期范围，看看哪些日子更适合作为参考</text>
 
   <view class="section-card block">
     <text class="block__title">选择事项</text>
@@ -16,7 +16,6 @@
         aria-label="{{item.displayName}}{{item.disabled ? '（' + item.statusNote + '）' : ''}}"
       >
         <text class="event-chip__name">{{item.displayName}}</text>
-        <text class="event-chip__term">{{item.classicalText}}</text>
         <text wx:if="{{item.badgeText}}" class="event-chip__note">{{item.badgeText}}</text>
       </view>
     </view>
@@ -61,7 +60,7 @@
       bindtap="onQuery"
       hover-class="button-pressed"
     >
-      查询符合规则的日期
+      开始查找
     </button>
     <text wx:if="{{view.progressText}}" class="progress-text">{{view.progressText}}</text>
     <text wx:if="{{view.expiredNotice}}" class="expired-text">{{view.expiredNotice}}</text>
@@ -76,10 +75,6 @@
   <view wx:if="{{view.summaryText}}" class="section-card block">
     <text class="condition-text">{{view.conditionText}}</text>
     <text class="summary-text">{{view.summaryText}}</text>
-  </view>
-
-  <view wx:if="{{view.partialNoticeText}}" class="coverage-alert" aria-role="note">
-    <text class="coverage-alert__text">{{view.partialNoticeText}}</text>
   </view>
 
   <view wx:if="{{view.status === 'ok' && view.results.length > 0}}" class="result-list">
@@ -99,19 +94,14 @@
         <text wx:if="{{item.isFavorite}}" class="result-favorite">★ 已收藏</text>
       </view>
       <text class="result-meta">{{item.lunarText}}{{item.tagText ? ' · ' + item.tagText : ''}}</text>
-      <view class="result-rules">
-        <text wx:for="{{item.ruleTexts}}" wx:for-item="rule" wx:key="*this" class="result-rule">
-          · {{rule}}
-        </text>
-      </view>
       <text wx:if="{{item.moreText}}" class="result-more">{{item.moreText}}</text>
     </view>
   </view>
 
   <view wx:if="{{view.conflictCards.length > 0}}" class="conflict-card">
-    <text class="conflict-card__title">{{view.conflictCards.length}} 日因规则冲突未列入</text>
+    <text class="conflict-card__title">{{view.conflictCards.length}} 天的传统说法不一致</text>
     <text class="conflict-card__hint">
-      这些日子同时命中宜项与忌项。原书对宜忌并见且无德神裁决者的常例是两者皆不注，故本版本不作结论。点开可看双方依据。
+      这些日期没有明确方向，因此没有放进候选结果。点开可以查看具体原因。
     </text>
     <view class="conflict-list">
       <view
@@ -122,17 +112,12 @@
         bindtap="onOpenDetail"
         hover-class="conflict-item--pressed"
         aria-role="button"
-        aria-label="查看 {{item.dateKey}} 的冲突依据"
+        aria-label="查看 {{item.dateKey}} 说法不一致的原因"
       >
         <text class="conflict-item__date">{{item.dateText}}</text>
         <text class="conflict-item__weekday">{{item.weekdayText}}</text>
       </view>
     </view>
-  </view>
-
-  <view wx:if="{{view.coverageText}}" class="coverage-card">
-    <text class="coverage-title">规则依据与覆盖范围</text>
-    <text class="coverage-text">{{view.coverageText}}</text>
   </view>
 
   <text wx:if="{{view.disclaimerText}}" class="disclaimer-text">{{view.disclaimerText}}</text>
