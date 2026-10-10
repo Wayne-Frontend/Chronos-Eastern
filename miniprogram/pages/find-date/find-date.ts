@@ -63,6 +63,9 @@ interface FindDateViewModel {
   expiredNotice: string
   progressText: string
   conditionText: string
+  /** 汇总卡中的核心数字，单独成层级，避免与解释文字挤在同一段里。 */
+  resultCount: number
+  checkedDays: number
   summaryText: string
   /** 选中事项的覆盖范围提示（合规要求的「选中提示」），未开放事项为空。 */
   scopeNoteText: string
@@ -116,6 +119,8 @@ Component({
         status: 'idle',
         results: [],
         conflictCards: [],
+        resultCount: 0,
+        checkedDays: 0,
         summaryText: '',
         conditionText: '',
         noticeText: '',
@@ -196,6 +201,8 @@ Component({
         noticeText: describeRangeNotice(rangeIssue, option),
         noticeTone: 'error',
         expiredNotice: hadResults ? '条件已修改，结果已过期，请重新查询' : '',
+        // 可查询事项改日期后仍要保留覆盖范围提示；它是事项入口披露的一部分，不能随结果一起清空。
+        scopeNoteText: queryable ? (option?.statusNote ?? '') : '',
       })
     },
     async onQuery() {
@@ -214,6 +221,8 @@ Component({
         noticeText: '',
         expiredNotice: '',
         results: [],
+        resultCount: 0,
+        checkedDays: 0,
         summaryText: '',
         progressText: `正在核对 0/${total} 日`,
       })
@@ -264,6 +273,8 @@ Component({
         results,
         conflictCards: value.conflictDates.map(toConflictCard),
         progressText: '',
+        resultCount: value.summary.passedDays,
+        checkedDays: value.summary.checkedDays,
         summaryText: buildSummaryText(value),
         conditionText: `${option?.displayName ?? ''} · ${this.data.view.startDate} 至 ${this.data.view.endDate}`,
         coverageNoticeText: describeCoverage(value.rulePack.completeness, value.rulePack.coverage)
@@ -348,6 +359,8 @@ function buildInitialView(): FindDateViewModel {
     expiredNotice: '',
     progressText: '',
     conditionText: '',
+    resultCount: 0,
+    checkedDays: 0,
     summaryText: '',
     scopeNoteText: '',
     coverageNoticeText: '',
@@ -390,9 +403,7 @@ function toConflictCard(dateKey: string): ConflictCard {
  * 边界：措辞与详情页 describeDateOutcome 保持同一套说法，不出现内部状态名与命中计数。
  */
 function buildSummaryText(value: FindDateOutcome): string {
-  const parts = [
-    `共查看 ${value.summary.checkedDays} 天，找到 ${value.summary.passedDays} 个候选日期`,
-  ]
+  const parts: string[] = []
 
   // 有明确排除：规则给出了方向，只是方向是「不推荐」。
   if (value.summary.excludedDays > 0) {

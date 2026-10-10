@@ -83,16 +83,21 @@ describe('找日子页的事项门禁', () => {
     page.onSelectEvent({ currentTarget: { dataset: { id: 'travel' } } })
 
     expect(page.data.view.canQuery).toBe(true)
+    expect(page.data.view.scopeNoteText).not.toBe('')
+
+    const scopeNote = page.data.view.scopeNoteText
 
     page.applyRange('2026-12-01', '2026-10-01')
 
     expect(page.data.view.canQuery).toBe(false)
     expect(page.data.view.noticeText).toBe('结束日期不能早于开始日期')
+    expect(page.data.view.scopeNoteText).toBe(scopeNote)
 
     page.applyRange('2026-11-01', '2026-11-30')
 
     expect(page.data.view.canQuery).toBe(true)
     expect(page.data.view.noticeText).toBe('')
+    expect(page.data.view.scopeNoteText).toBe(scopeNote)
   })
 
   it('未选事项时改日期不会让按钮提前可用', () => {

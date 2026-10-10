@@ -44,6 +44,8 @@ interface RuleDisplayItem {
   explanation: string
   locator: string
   sourceText: string
+  /** 面向用户的校勘状态，不直接暴露内部状态字面量。 */
+  statusText: string
   /** 该条的适用边界；面向用户的措辞，与出处同屏显示。 */
   limitations: readonly string[]
 }
@@ -56,6 +58,8 @@ interface RuleSectionViewModel {
   title: string
   description: string
   suggestion: string
+  /** 规则包版本用于详情页追溯，与逐条规则编号共同构成依据元信息。 */
+  rulePackText: string
   rules: readonly RuleDisplayItem[]
   noticeText: string
   /** partial 规则包的覆盖范围披露（合规要求的第三处），complete 时为空。 */
@@ -271,6 +275,7 @@ function buildRuleSection(dateKey: string, eventType: string): RuleSectionViewMo
       title: '暂时无法提供当天参考',
       description: '相关信息读取失败，请稍后重新进入。',
       suggestion: '',
+      rulePackText: '',
       rules: [],
       noticeText: '',
       coverageNoticeText: '',
@@ -291,6 +296,7 @@ function buildRuleSection(dateKey: string, eventType: string): RuleSectionViewMo
     title: copy.title,
     description: copy.summary,
     suggestion: copy.suggestion,
+    rulePackText: `${value.rulePack.id}@${value.rulePack.version}`,
     rules: [
       ...value.matchedRules.map((rule) => toRuleDisplayItem(rule, value.eventName, false)),
       ...value.unknownRules.map((rule) => toRuleDisplayItem(rule, value.eventName, true)),
@@ -318,6 +324,8 @@ function toRuleDisplayItem(
     explanation: rule.explanation,
     locator: rule.locator,
     sourceText: rule.sources.map((source) => `${source.title}（${source.publisher}）`).join('；'),
+    // 当前只有 verified 规则会进入解释服务；仍保留分支，避免未来状态扩展时页面误称已校勘。
+    statusText: rule.status === 'verified' ? '已校勘' : '待复核',
     // 各条自带的适用边界（如某神煞在某几个月不判值日）必须与出处同屏，
     // 否则用户会把「本版本收录的这一条」当成完整结论；文案本身已是面向用户的措辞。
     limitations: rule.limitations,

@@ -28,13 +28,28 @@
         <text class="about-section__description">它们负责回答“日期怎样计算、结果怎样核对”，不会被用来包装传统择日结论。</text>
       </view>
       <view wx:for="{{calendarSources}}" wx:key="title" class="source-card section-card">
-        <view class="source-card__head">
-          <text class="source-card__number">{{item.number}}</text>
-          <text class="source-card__category">{{item.category}}</text>
+        <view
+          class="source-card__toggle"
+          hover-class="source-card__toggle--pressed"
+          hover-stay-time="80"
+          data-group="calendarSources"
+          data-index="{{index}}"
+          bindtap="toggleSource"
+          aria-role="button"
+          aria-expanded="{{item.expanded}}"
+          aria-label="{{item.expanded ? '收起' : '展开'}} {{item.title}}"
+        >
+          <view class="source-card__heading-copy">
+            <view class="source-card__head">
+              <text class="source-card__number">{{item.number}}</text>
+              <text class="source-card__category">{{item.category}}</text>
+            </view>
+            <text class="source-card__title">{{item.title}}</text>
+            <text class="source-card__publisher">{{item.publisher}}</text>
+          </view>
+          <text class="source-card__chevron">{{item.expanded ? '−' : '+'}}</text>
         </view>
-        <text class="source-card__title">{{item.title}}</text>
-        <text class="source-card__publisher">{{item.publisher}}</text>
-        <view class="source-card__body">
+        <view wx:if="{{item.expanded}}" class="source-card__body">
           <view class="source-card__paragraph">
             <text class="source-card__label">资料讲什么</text>
             <text class="source-card__text">{{item.summary}}</text>
@@ -58,13 +73,28 @@
         <text class="about-section__description">传统说法先看原文和历史语境，再决定是否能够转换成清楚、有限的现代说明。</text>
       </view>
       <view wx:for="{{cultureSources}}" wx:key="title" class="source-card section-card">
-        <view class="source-card__head">
-          <text class="source-card__number">{{item.number}}</text>
-          <text class="source-card__category">{{item.category}}</text>
+        <view
+          class="source-card__toggle"
+          hover-class="source-card__toggle--pressed"
+          hover-stay-time="80"
+          data-group="cultureSources"
+          data-index="{{index}}"
+          bindtap="toggleSource"
+          aria-role="button"
+          aria-expanded="{{item.expanded}}"
+          aria-label="{{item.expanded ? '收起' : '展开'}} {{item.title}}"
+        >
+          <view class="source-card__heading-copy">
+            <view class="source-card__head">
+              <text class="source-card__number">{{item.number}}</text>
+              <text class="source-card__category">{{item.category}}</text>
+            </view>
+            <text class="source-card__title">{{item.title}}</text>
+            <text class="source-card__publisher">{{item.publisher}}</text>
+          </view>
+          <text class="source-card__chevron">{{item.expanded ? '−' : '+'}}</text>
         </view>
-        <text class="source-card__title">{{item.title}}</text>
-        <text class="source-card__publisher">{{item.publisher}}</text>
-        <view class="source-card__body">
+        <view wx:if="{{item.expanded}}" class="source-card__body">
           <view class="source-card__paragraph">
             <text class="source-card__label">资料讲什么</text>
             <text class="source-card__text">{{item.summary}}</text>

@@ -1,5 +1,17 @@
+page {
+  height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+.calendar-scroll {
+  min-height: 0;
+  flex: 1;
+}
+
 .calendar-page {
   padding-top: 24rpx;
+  padding-bottom: calc(72rpx + env(safe-area-inset-bottom));
 }
 
 .month-bar {
@@ -41,6 +53,8 @@
   justify-content: center;
   gap: 12rpx;
   padding: 12rpx 20rpx;
+  background: rgb(255 253 248 / 54%);
+  border: 1rpx solid rgb(117 108 99 / 12%);
   border-radius: var(--radius-button);
 }
 
@@ -58,6 +72,7 @@
 
 .calendar-card {
   overflow: hidden;
+  box-shadow: var(--shadow-card-raised);
 }
 
 .calendar-notice {
@@ -78,8 +93,12 @@
 }
 
 .calendar-actions__button {
-  width: 100%;
+  width: 360rpx;
   margin: 0;
+}
+
+.calendar-actions {
+  justify-content: center;
 }
 
 .calendar-hint {

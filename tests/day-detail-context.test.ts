@@ -37,7 +37,8 @@ interface RuleSectionShape {
   eventTypeId: string
   eventName: string
   coverageNoticeText: string
-  rules: readonly { id: string; limitations: readonly string[] }[]
+  rulePackText: string
+  rules: readonly { id: string; statusText: string; limitations: readonly string[] }[]
 }
 
 function loadDetail(options: Record<string, string>): {
@@ -117,6 +118,18 @@ describe('日期详情页的事项上下文', () => {
 
     for (const rule of rules) {
       expect(rule.limitations.length, `${rule.id} 缺少适用边界`).toBeGreaterThan(0)
+    }
+  })
+
+  it('规则包版本和逐条校勘状态都进入视图模型，页面能够直接展示追溯信息', () => {
+    const section = loadDetail({ date: '2026-10-02', eventTypes: 'travel' }).ruleSections[0]
+
+    expect(section?.rulePackText).toMatch(/@/)
+    expect(section?.rules.length).toBeGreaterThan(0)
+
+    for (const rule of section?.rules ?? []) {
+      expect(rule.id).not.toBe('')
+      expect(rule.statusText).toBe('已校勘')
     }
   })
 })

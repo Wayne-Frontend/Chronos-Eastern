@@ -1,5 +1,6 @@
 <navigation-bar title="日历" back="{{false}}" color="#24211E" background="#F7F3EA"></navigation-bar>
 
+<scroll-view class="calendar-scroll" scroll-y enhanced show-scrollbar="{{false}}">
 <view class="page-shell page-content calendar-page">
   <view class="month-bar">
     <button
@@ -77,3 +78,4 @@
     {{view.favoriteNotice}}
   </text>
 </view>
+</scroll-view>

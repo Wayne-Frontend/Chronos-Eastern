@@ -8,6 +8,12 @@ interface AboutSource {
   readonly boundary: string
 }
 
+interface AboutSourceViewModel extends AboutSource {
+  readonly expanded: boolean
+}
+
+type AboutSourceGroup = 'calendarSources' | 'cultureSources'
+
 const CALENDAR_SOURCES: readonly AboutSource[] = [
   {
     number: '01',
@@ -81,7 +87,45 @@ const CULTURE_SOURCES: readonly AboutSource[] = [
 
 Component({
   data: {
-    calendarSources: CALENDAR_SOURCES,
-    cultureSources: CULTURE_SOURCES,
+    // 首项默认展开，先让用户看见页面的内容深度；其余条目按需展开，避免资料页变成长墙。
+    calendarSources: toSourceViewModels(CALENDAR_SOURCES, true),
+    cultureSources: toSourceViewModels(CULTURE_SOURCES, false),
+  },
+  methods: {
+    toggleSource(event: WechatMiniprogram.TouchEvent) {
+      const group = String(event.currentTarget.dataset.group ?? '')
+      const index = Number(event.currentTarget.dataset.index)
+
+      if ((group !== 'calendarSources' && group !== 'cultureSources') || !Number.isInteger(index)) {
+        return
+      }
+
+      const sourceGroup = group as AboutSourceGroup
+      const sources = this.data[sourceGroup]
+
+      if (index < 0 || index >= sources.length) {
+        return
+      }
+
+      // 同组只展开一项：资料很多时能保持阅读焦点，也避免连续大段正文把页面节奏拉散。
+      const next = sources.map((item, itemIndex) => ({
+        ...item,
+        expanded: itemIndex === index ? !item.expanded : false,
+      }))
+
+      this.setData({ [sourceGroup]: next })
+    },
   },
 })
+
+function toSourceViewModels(
+  sources: readonly AboutSource[],
+  expandFirst: boolean,
+): AboutSourceViewModel[] {
+  return sources.map((source, index) => ({
+    ...source,
+    expanded: expandFirst && index === 0,
+  }))
+}
+
+export {}

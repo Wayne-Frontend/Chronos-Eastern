@@ -1,42 +1,44 @@
 <navigation-bar title="日期详情" color="#24211E" background="#F7F3EA"></navigation-bar>
 
+<scroll-view class="detail-scroll" scroll-y enhanced show-scrollbar="{{false}}">
 <view class="page-shell page-content detail-page">
-  <view class="detail-date section-card">
-    <text class="detail-date__label">{{view.dateLabel}}</text>
-    <text class="detail-date__value">{{view.dateKey || '日期参数无效'}}</text>
-    <text wx:if="{{view.weekdayText}}" class="detail-date__meta">
-      {{view.weekdayText}}{{view.lunarText ? ' · ' + view.lunarText : ''}}
-    </text>
+  <view class="detail-overview section-card">
+    <view class="detail-date">
+      <text class="detail-date__label">{{view.dateLabel}}</text>
+      <text class="detail-date__value">{{view.dateKey || '日期参数无效'}}</text>
+      <text wx:if="{{view.weekdayText}}" class="detail-date__meta">
+        {{view.weekdayText}}{{view.lunarText ? ' · ' + view.lunarText : ''}}
+      </text>
+    </view>
+
+    <view wx:if="{{view.status === 'ok'}}" class="detail-facts">
+      <text class="detail-facts__title">干支与节气</text>
+      <view wx:for="{{view.ganzhiItems}}" wx:key="label" class="detail-row">
+        <text class="detail-row__label">{{item.label}}</text>
+        <text class="detail-row__value">{{item.value}}</text>
+      </view>
+      <view class="detail-row">
+        <text class="detail-row__label">节气</text>
+        <text class="detail-row__value">{{view.todaySolarTermText}}</text>
+      </view>
+      <view wx:if="{{view.nextSolarTermText}}" class="detail-row">
+        <text class="detail-row__label">下一个节气</text>
+        <text class="detail-row__value">{{view.nextSolarTermText}}</text>
+      </view>
+      <view wx:for="{{view.festivalItems}}" wx:key="id" class="detail-row">
+        <text class="detail-row__label">{{item.categoryLabel}}</text>
+        <text class="detail-row__value">{{item.name}}</text>
+      </view>
+      <view wx:if="{{view.festivalItems.length === 0}}" class="detail-row detail-row--muted">
+        <text class="detail-row__label">节日</text>
+        <text class="detail-row__value">无已收录节日</text>
+      </view>
+      <text class="detail-caption">年、月干支在交节当天整日按新值计算。</text>
+    </view>
   </view>
 
   <view wx:if="{{view.noticeText}}" class="detail-notice" aria-role="note">
     <text>{{view.noticeText}}</text>
-  </view>
-
-  <view wx:if="{{view.status === 'ok'}}" class="detail-facts section-card">
-    <text class="detail-facts__title">干支与节气</text>
-    <view wx:for="{{view.ganzhiItems}}" wx:key="label" class="detail-row">
-      <text class="detail-row__label">{{item.label}}</text>
-      <text class="detail-row__value">{{item.value}}</text>
-    </view>
-    <view class="detail-row">
-      <text class="detail-row__label">节气</text>
-      <text class="detail-row__value">{{view.todaySolarTermText}}</text>
-    </view>
-    <view wx:if="{{view.nextSolarTermText}}" class="detail-row">
-      <text class="detail-row__label">下一个节气</text>
-      <text class="detail-row__value">{{view.nextSolarTermText}}</text>
-    </view>
-    <text class="detail-caption">年、月干支在交节当天整日按新值计算。</text>
-  </view>
-
-  <view wx:if="{{view.status === 'ok'}}" class="detail-facts section-card">
-    <text class="detail-facts__title">节日</text>
-    <view wx:for="{{view.festivalItems}}" wx:key="id" class="detail-row">
-      <text class="detail-row__label">{{item.categoryLabel}}</text>
-      <text class="detail-row__value">{{item.name}}</text>
-    </view>
-    <text wx:if="{{view.festivalItems.length === 0}}" class="detail-caption">无已收录节日</text>
   </view>
 
   <view wx:if="{{view.ruleSections.length === 0}}" class="detail-block section-card">
@@ -56,6 +58,10 @@
   >
     <text class="detail-rules__eyebrow">{{section.eventName}}参考</text>
     <text class="detail-rules__title">{{section.title}}</text>
+    <view wx:if="{{section.rulePackText}}" class="detail-rules__meta-row">
+      <text>{{section.rulePackText}}</text>
+      <text>规则均已校勘</text>
+    </view>
     <text class="detail-rules__description">{{section.description}}</text>
     <text wx:if="{{section.suggestion}}" class="detail-rules__suggestion">{{section.suggestion}}</text>
     <text wx:if="{{section.noticeText}}" class="detail-rules__notice">{{section.noticeText}}</text>
@@ -98,6 +104,10 @@
         <text class="detail-rule__source-toggle-label">{{item.sourceExpanded ? '收起传统说法与出处' : '了解传统说法与出处'}}</text>
       </view>
       <view wx:if="{{item.sourceExpanded}}" class="detail-rule__source">
+        <view class="detail-rule__identity">
+          <text>{{item.id}}</text>
+          <text>{{item.statusText}}</text>
+        </view>
         <text class="detail-rule__source-label">传统说法</text>
         <text class="detail-rule__meta">{{item.explanation}}</text>
         <text class="detail-rule__source-label">原文出处</text>
@@ -144,3 +154,4 @@
     </button>
   </view>
 </view>
+</scroll-view>

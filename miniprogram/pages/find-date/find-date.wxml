@@ -1,5 +1,6 @@
 <navigation-bar title="找日子" back="{{false}}" color="#24211E" background="#F7F3EA"></navigation-bar>
 
+<scroll-view class="find-date-scroll" scroll-y enhanced show-scrollbar="{{false}}">
 <view class="page-shell page-content find-date-page">
   <text class="page-hint">选择事项和日期范围，看看哪些日子更适合作为参考</text>
 
@@ -77,17 +78,24 @@
 
   <!-- 条件行与汇总行只要算出来了就要显示：status 为 empty 时同样有核对总数与冲突计数，
        原先按 status 挡，会让 0 个通过的范围内所有统计凭空消失。 -->
-  <view wx:if="{{view.summaryText}}" class="section-card block">
+  <view wx:if="{{view.conditionText}}" class="section-card block summary-card">
     <text class="condition-text">{{view.conditionText}}</text>
-    <text class="summary-text">{{view.summaryText}}</text>
+    <view class="summary-hero">
+      <text class="summary-hero__number">{{view.resultCount}}</text>
+      <view class="summary-hero__copy">
+        <text class="summary-hero__label">个候选日期</text>
+        <text class="summary-hero__meta">共核对 {{view.checkedDays}} 天</text>
+      </view>
+    </view>
+    <text wx:if="{{view.summaryText}}" class="summary-text">{{view.summaryText}}</text>
     <text wx:if="{{view.coverageNoticeText}}" class="coverage-notice">{{view.coverageNoticeText}}</text>
   </view>
 
-  <view wx:if="{{view.status === 'ok' && view.results.length > 0}}" class="result-list">
+  <view wx:if="{{view.status === 'ok' && view.results.length > 0}}" class="section-card result-list">
     <view
       wx:for="{{view.results}}"
       wx:key="dateKey"
-      class="section-card result-card"
+      class="result-card"
       data-date-key="{{item.dateKey}}"
       bindtap="onOpenDetail"
       hover-class="result-card--pressed"
@@ -128,3 +136,4 @@
 
   <text wx:if="{{view.disclaimerText}}" class="disclaimer-text">{{view.disclaimerText}}</text>
 </view>
+</scroll-view>

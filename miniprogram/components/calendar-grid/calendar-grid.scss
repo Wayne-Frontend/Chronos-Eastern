@@ -1,5 +1,5 @@
 .grid {
-  padding: 20rpx 16rpx 24rpx;
+  padding: 24rpx 18rpx 28rpx;
 }
 
 .grid__weekdays,
@@ -8,14 +8,17 @@
 }
 
 .grid__weekdays {
+  padding-bottom: 8rpx;
   margin-bottom: 4rpx;
+  border-bottom: 1rpx solid rgb(117 108 99 / 12%);
 }
 
 .grid__weekday {
   flex: 1 1 0;
   padding: 10rpx 0;
-  color: var(--color-ink-muted);
-  font-size: 24rpx;
+  color: var(--color-ink-secondary);
+  font-family: 'Songti SC', STSong, serif;
+  font-size: 25rpx;
   line-height: 1;
   text-align: center;
 }
@@ -75,11 +78,15 @@
 
 .cell__badge {
   position: absolute;
-  top: -8rpx;
-  right: -8rpx;
-  color: var(--color-cinnabar);
-  font-size: 20rpx;
+  top: -10rpx;
+  right: -10rpx;
+  padding: 3rpx 5rpx;
+  color: #fff;
+  font-size: 15rpx;
   line-height: 1;
+  background: var(--color-cinnabar-deep);
+  border: 2rpx solid var(--color-surface);
+  border-radius: 999rpx;
 }
 
 .cell__favorite-dot {
@@ -97,7 +104,7 @@
   max-width: 100%;
   margin-top: 6rpx;
   color: var(--color-ink-muted);
-  font-size: 22rpx;
+  font-size: 23rpx;
   line-height: 1.2;
   white-space: nowrap;
 }
