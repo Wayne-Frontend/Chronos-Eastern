@@ -16,7 +16,7 @@
         aria-label="{{item.displayName}}{{item.disabled ? '（' + item.statusNote + '）' : ''}}"
       >
         <text class="event-chip__name">{{item.displayName}}</text>
-        <text wx:if="{{item.badgeText}}" class="event-chip__note">{{item.badgeText}}</text>
+        <text wx:if="{{item.hintText}}" class="event-chip__hint">{{item.hintText}}</text>
       </view>
     </view>
   </view>

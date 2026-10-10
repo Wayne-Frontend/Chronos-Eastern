@@ -2,7 +2,7 @@ import { canQueryEventType, findEventType } from '../data/event-types'
 import { findVerifiedRulePack } from '../data/rules/manifest'
 import type { DateInfo, DateKey } from '../types/calendar'
 import type { AppFailure, AppResult } from '../types/result'
-import type { RulePack, RulePackCompleteness } from '../types/rule'
+import type { RulePackCompleteness } from '../types/rule'
 import { addDaysToDateKey, countDaysBetween, parseDateKey } from '../utils/date-key'
 import { formatLunarText, formatWeekday } from '../utils/format'
 import { getDateInfo, SUPPORTED_YEAR_MAX, SUPPORTED_YEAR_MIN } from './calendar-service'
@@ -18,15 +18,18 @@ export interface FindDateFailureContext {
   endDate: string
 }
 
+/**
+ * 结果卡只承载「哪一天」与「那天是什么日子」，依据本身不进结果卡。
+ * 原因：结果卡上列规则名会让传统术语抢在用户结论之前出现，且与详情页重复；
+ * 产品决定由用户点进详情查看完整依据，方案 2.4 的结果卡依据摘要不再实现。
+ * 边界：因此这里不返回任何规则名、说明或命中计数。
+ */
 export interface FindDateResultItem {
   dateKey: DateKey
   weekdayText: string
   lunarText: string
   /** 节气或节日标签；两者都无时为空串。 */
   tagText: string
-  /** 命中的纳入规则说明，最多两条（方案 2.4 结果卡）。 */
-  ruleTexts: readonly string[]
-  matchedCount: number
 }
 
 export interface FindDateSummary {
@@ -71,7 +74,6 @@ export interface FindDatesOptions {
 }
 
 const BATCH_SIZE = 12
-const MAX_RESULT_RULE_TEXTS = 2
 
 /**
  * 按事项与日期范围逐日筛选。
@@ -170,9 +172,7 @@ export async function findDates(
       switch (evaluation.status) {
         case 'pass':
           summary.passedDays += 1
-          results.push(
-            buildResultItem(pack, info, getInfoAtOffset(index + 1), evaluation.matchedRuleIds),
-          )
+          results.push(buildResultItem(info, getInfoAtOffset(index + 1)))
           break
         case 'excluded':
           summary.excludedDays += 1
@@ -241,20 +241,14 @@ export function describeRangeIssue(
 }
 
 function buildResultItem(
-  pack: RulePack,
   info: DateInfo,
   nextDayInfo: DateInfo | null | undefined,
-  matchedRuleIds: readonly string[],
 ): FindDateResultItem {
-  const matched = pack.rules.filter((rule) => matchedRuleIds.includes(rule.id))
-
   return {
     dateKey: info.dateKey,
     weekdayText: formatWeekday(info.solar.weekday),
     lunarText: formatLunarText(info.lunar),
     tagText: describeTag(info, nextDayInfo ?? null),
-    ruleTexts: matched.slice(0, MAX_RESULT_RULE_TEXTS).map((rule) => rule.explanation),
-    matchedCount: matched.length,
   }
 }
 

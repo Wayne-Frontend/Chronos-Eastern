@@ -62,9 +62,16 @@
   font-weight: 600;
 }
 
-.event-chip__note {
-  color: var(--color-info-text);
-  font-size: 22rpx;
+/* 副行：古籍用语用次要色，灰掉的事项继承父级透明度，不再单独变色，避免与可用项争夺注意力。 */
+.event-chip__hint {
+  color: var(--color-ink-muted);
+  font-size: 21rpx;
+  line-height: 1.3;
+  text-align: center;
+}
+
+.event-chip--disabled .event-chip__hint {
+  color: inherit;
 }
 
 .range-row {

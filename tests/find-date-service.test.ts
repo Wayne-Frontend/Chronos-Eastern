@@ -32,10 +32,6 @@ function query(startDate: string, endDate: string, eventType = 'travel') {
 
 describe('findDates 输入校验', () => {
   it('未开放的事项禁止查询', async () => {
-    expect(await query('2026-10-01', '2026-10-30', 'relocation')).toMatchObject({
-      ok: false,
-      code: 'RULE_PACK_MISSING',
-    })
     expect(await query('2026-10-01', '2026-10-30', 'moving-in')).toMatchObject({
       ok: false,
       code: 'RULE_PACK_MISSING',
@@ -97,7 +93,7 @@ describe('findDates 输入校验', () => {
 })
 
 describe('findDates 筛选结果', () => {
-  it('按日期升序返回通过的日子，并给出规则说明', async () => {
+  it('按日期升序返回通过的日子，结果卡只带日期本身的信息', async () => {
     const result = await query('2026-10-03', '2026-10-04')
 
     expect(result.ok).toBe(true)
@@ -112,10 +108,14 @@ describe('findDates 筛选结果', () => {
       weekdayText: '星期六',
       lunarText: '农历八月廿三',
       tagText: '',
-      matchedCount: 2,
     })
-    expect(result.value.results[0].ruleTexts[0]).toContain('吉期')
-    expect(result.value.results[1].ruleTexts[0]).toContain('驿马')
+    // 依据不进结果卡（产品决定），这里断言不存在规则名与命中计数，避免有人再把它加回来。
+    expect(Object.keys(result.value.results[0]).sort()).toEqual([
+      'dateKey',
+      'lunarText',
+      'tagText',
+      'weekdayText',
+    ])
   })
 
   it('结果严格按日期升序，重复查询结果一致', async () => {

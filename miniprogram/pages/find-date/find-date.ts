@@ -12,6 +12,7 @@ import {
   parseDateKey,
 } from '../../utils/date-key'
 import { formatWeekday } from '../../utils/format'
+import { describeClassicalTerms } from '../../utils/rule-presentation'
 import { getGregorianWeekday } from '../../utils/util'
 
 type PageStatus = 'idle' | 'running' | 'ok' | 'empty' | 'partial' | 'blocked'
@@ -20,8 +21,12 @@ interface EventOption {
   id: string
   displayName: string
   disabled: boolean
-  /** 不可用事项的用户提示；可查询事项为空串。 */
-  badgeText: string
+  /**
+   * 副行提示：优先显示古籍用语（让用户看见要查的是哪一条古籍条目），
+   * 与事项名同名而无可显示时退回状态短标记；两者都没有时为空串。
+   */
+  hintText: string
+  /** 读屏用的事项状态说明；未开放事项直接给出其整理原因。 */
   statusNote: string
 }
 
@@ -236,7 +241,9 @@ Component({
         noticeText: partial
           ? '部分日期计算失败，本次结果不完整，请重试'
           : results.length === 0
-            ? '这段时间内暂时没有找到合适的候选日期，可以扩大日期范围再试。'
+            ? // 方案 2.4 状态处理要求：无结果必须说明这不是现实安排上的不可用，
+              // 否则「规则没推荐」容易被读成「这天不吉利」。措辞与详情页的无匹配结论一致。
+              '这段时间内没有找到符合已收录规则的候选日期，可以扩大日期范围再试；这不代表这些日子在现实安排上不可用。'
             : '',
       })
     },
@@ -277,15 +284,20 @@ function buildInitialView(): FindDateViewModel {
 
   return {
     status: 'idle',
-    eventOptions: EVENT_TYPES.map((entry) => ({
-      id: entry.id,
-      displayName: entry.displayName,
-      disabled: !canQueryEventType(entry),
+    eventOptions: EVENT_TYPES.map((entry) => {
+      const queryable = canQueryEventType(entry)
       // 可查询事项不向用户暴露内部支持等级；未开放事项只说明用户当前能否使用。
-      badgeText:
-        entry.status === 'unsupported' ? '暂不支持' : canQueryEventType(entry) ? '' : '敬请期待',
-      statusNote: entry.status === 'unsupported' ? '该事项暂不支持' : '该事项暂未开放，敬请期待',
-    })),
+      const statusBadge = entry.status === 'unsupported' ? '暂不支持' : queryable ? '' : '敬请期待'
+
+      return {
+        id: entry.id,
+        displayName: entry.displayName,
+        disabled: !queryable,
+        hintText: describeClassicalTerms(entry.displayName, entry.classicalTerms) || statusBadge,
+        // 读屏用的事项说明取事项表里的原文，不再改写成通用句——那里的「整理中」原因本来就是面向用户的。
+        statusNote: entry.statusNote,
+      }
+    }),
     selectedEventId: '',
     startDate: today,
     endDate,
@@ -330,17 +342,33 @@ function toConflictCard(dateKey: string): ConflictCard {
   }
 }
 
+/**
+ * 汇总行的分项说明。
+ * 原因：本项目的合规要求是区分「无数据 / 无匹配 / 有明确排除」三种语义，
+ * 只报「找到 0 个」会让「规则明确说不行」和「规则根本没表态」看起来一样。
+ * 边界：措辞与详情页 describeDateOutcome 保持同一套说法，不出现内部状态名与命中计数。
+ */
 function buildSummaryText(value: FindDateOutcome): string {
   const parts = [
     `共查看 ${value.summary.checkedDays} 天，找到 ${value.summary.passedDays} 个候选日期`,
   ]
+
+  // 有明确排除：规则给出了方向，只是方向是「不推荐」。
+  if (value.summary.excludedDays > 0) {
+    parts.push(`${value.summary.excludedDays} 天有不利说法`)
+  }
+
+  // 无匹配：规则都没有表态，不等于被否定。
+  if (value.summary.notMatchedDays > 0) {
+    parts.push(`${value.summary.notMatchedDays} 天没有明确说法`)
+  }
 
   if (value.summary.conflictDays > 0) {
     parts.push(`${value.summary.conflictDays} 天说法不一致，未列入候选`)
   }
 
   if (value.summary.unknownDays > 0) {
-    parts.push(`${value.summary.unknownDays} 天暂无明确建议`)
+    parts.push(`${value.summary.unknownDays} 天信息不足，暂无法判断`)
   }
 
   if (value.summary.errorDays > 0) {

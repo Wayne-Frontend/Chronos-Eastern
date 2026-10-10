@@ -64,6 +64,30 @@ export function describeDateOutcome(status: DayStatus, eventName: string): DateO
   }
 }
 
+/** 事项副行最多列出的古籍用语条数；超出部分以「等」收束，与来源标题的「等」同一用法。 */
+const CLASSICAL_TERM_HINT_LIMIT = 2
+
+/**
+ * 事项副行的古籍用语提示。
+ * 原因：现代事项名与古籍条目不是一一对应（婚嫁在卷十一分列嫁娶、结婚姻、纳采问名），
+ * 卡片上要让用户看见「要查的是哪一条古籍条目」，但不能把一整串术语铺开。
+ * 边界：剔除与事项名完全相同的用语（「入宅」「安葬」与其古籍用语本就同名，重复显示只是噪音）；
+ * 剔除后为空时返回空串，由调用方决定副行改显示什么，本函数不替它编内容。
+ */
+export function describeClassicalTerms(displayName: string, terms: readonly string[]): string {
+  const distinct = [...new Set(terms)].filter((term) => term !== displayName)
+
+  if (distinct.length === 0) {
+    return ''
+  }
+
+  if (distinct.length <= CLASSICAL_TERM_HINT_LIMIT) {
+    return distinct.join('、')
+  }
+
+  return `${distinct.slice(0, CLASSICAL_TERM_HINT_LIMIT).join('、')}等`
+}
+
 /**
  * 单条依据只解释“它对当前结果意味着什么”；古籍术语、原文定位和适用限制留在折叠区。
  * 这样既保留可追溯性，也不会让专业术语抢在用户结论之前出现。
