@@ -42,7 +42,9 @@ export function describeDateOutcome(status: DayStatus, eventName: string): DateO
         badge: '慎',
         badgeClass: 'caution',
         title: `宜忌不定 · ${eventName}`,
-        summary: '不同传统说法给出了相反的方向，因此今天不作明确推荐。',
+        // 卷十常例为宜忌并见时两不注；德合等例外尚未完整核定，不能把冲突日擅自判宜或判忌。
+        summary:
+          '宜与忌同时出现时，按《协纪辨方书》卷十常例，两者均不作明确注记。本版本尚未核定相关例外，因此今天不作明确推荐。',
         suggestion: '可以看看其他日期，或根据自己的实际安排决定。',
       }
     case 'unknown':

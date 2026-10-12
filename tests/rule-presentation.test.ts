@@ -30,6 +30,8 @@ describe('用户日期结果文案', () => {
     const copy = describeDateOutcome('unresolved', '开业')
 
     expect(copy.title).toBe('宜忌不定 · 开业')
+    expect(copy.summary).toContain('两者均不作明确注记')
+    expect(copy.summary).toContain('例外')
     expect(copy.summary).toContain('不作明确推荐')
     expect(copy.suggestion).toContain('其他日期')
   })
