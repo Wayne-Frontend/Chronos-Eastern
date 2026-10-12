@@ -42,9 +42,9 @@ export function describeDateOutcome(status: DayStatus, eventName: string): DateO
         badge: '慎',
         badgeClass: 'caution',
         title: `宜忌不定 · ${eventName}`,
-        // 卷十常例为宜忌并见时两不注；德合等例外尚未完整核定，不能把冲突日擅自判宜或判忌。
+        // 卷十常例有德神等适用边界，卷十一自带的巳日忌也不在其裁决射程内；这里只介绍背景，不归因本日。
         summary:
-          '宜与忌同时出现时，按《协纪辨方书》卷十常例，两者均不作明确注记。本版本尚未核定相关例外，因此今天不作明确推荐。',
+          '本日宜、忌依据同时出现，暂不作明确推荐。《协纪辨方书》卷十记有无德神裁决时两者均不作明确注记的常例，但本日是否适用及相关例外仍需核对。',
         suggestion: '可以看看其他日期，或根据自己的实际安排决定。',
       }
     case 'unknown':
