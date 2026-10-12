@@ -370,7 +370,10 @@ function toRuleDisplayItem(
     badgeText: isUnknown ? '—' : rule.effect === 'include' ? '宜' : '忌',
     effectClass: isUnknown ? 'unknown' : rule.effect,
     title: copy.title,
-    summary: copy.summary,
+    // 被卷十例外解除的忌项：徽标仍是「忌」（它确实是忌条目），但必须说明本日为何不计较。
+    summary: rule.adjudicated
+      ? '依《协纪辨方书》卷十的例外，本条与当日吉神同临，对其不再作忌。'
+      : copy.summary,
     sourceExpanded: false,
     explanation: rule.explanation,
     locator: rule.locator,

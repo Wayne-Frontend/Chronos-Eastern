@@ -56,8 +56,15 @@ describe('卷十裁决条款', () => {
     for (const facts of [withDeity, withoutDeity]) {
       expect(evaluateRule(ruleOf('九空'), facts)).toBe('matched')
       expect(evaluateRule(ruleOf('满日'), facts)).toBe('matched')
-      expect(evaluateDay(OPENING_RULE_PACK, facts).status).toBe('unresolved')
     }
+
+    // 接入后：遇月德的一日由「慎」改判为「宜」，并把解除的那条忌记进 adjudicatedRuleIds；
+    // 无德神的一日仍按常例不出结论。
+    const lifted = evaluateDay(OPENING_RULE_PACK, withDeity)
+
+    expect(lifted.status).toBe('pass')
+    expect(lifted.adjudicatedRuleIds).toHaveLength(1)
+    expect(evaluateDay(OPENING_RULE_PACK, withoutDeity).status).toBe('unresolved')
 
     expect(isShenshaPresent('月德', withDeity)).toBe(true)
     expect(findApplicableClause('九空', withDeity, 'opening')?.outcome).toBe('lift')

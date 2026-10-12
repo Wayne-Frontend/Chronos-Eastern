@@ -20,6 +20,11 @@ export interface RuleExplanationItem {
   name: string
   effect: RuleEffect
   status: RuleStatus
+  /**
+   * 本条虽命中，但已依卷十的例外条款解除（如「与德合併则不忌」）。
+   * 页面必须说明，不得让用户看到「宜」却不知道那条忌为何不算数。
+   */
+  adjudicated: boolean
   explanation: string
   locator: string
   limitations: readonly string[]
@@ -71,11 +76,13 @@ export function getDateRuleExplanation(
   const evaluation = evaluateDay(pack, buildDateFacts(info.value))
   const matchedRuleIds = new Set([...evaluation.matchedRuleIds, ...evaluation.excludeRuleIds])
   const unknownRuleIds = new Set(evaluation.unknownRuleIds)
+  const adjudicatedRuleIds = new Set(evaluation.adjudicatedRuleIds)
   const toExplanation = (rule: (typeof pack.rules)[number]): RuleExplanationItem => ({
     id: rule.id,
     name: rule.name,
     effect: rule.effect,
     status: rule.status,
+    adjudicated: adjudicatedRuleIds.has(rule.id),
     explanation: rule.explanation,
     locator: rule.locator,
     limitations: rule.limitations,

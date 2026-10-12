@@ -168,10 +168,14 @@ describe('findDates 筛选结果', () => {
       return
     }
 
-    expect(result.value.summary.conflictDays).toBe(12)
+    // 接入卷十裁决后，05-08 与 05-20（巳月大时值除日）、05-17（灾煞遇德神）由「慎」改判为「宜」，
+    // 冲突日由 12 降为 9；05-16 的劫煞虽被解除，但该日另有未解除的忌项，仍留在冲突清单里。
+    expect(result.value.summary.conflictDays).toBe(9)
     expect(result.value.results.map((item) => item.dateKey)).not.toContain('2026-05-07')
+    expect(result.value.results.map((item) => item.dateKey)).toContain('2026-05-08')
     // 冲突日期必须连同计数一起返回，页面才能逐日说明，而不是让日期凭空消失。
-    expect(result.value.conflictDates).toHaveLength(12)
+    expect(result.value.conflictDates).toHaveLength(9)
+    expect(result.value.conflictDates).toContain('2026-05-16')
     expect(result.value.conflictDates).toContain('2026-05-07')
     expect([...result.value.conflictDates].sort()).toEqual(result.value.conflictDates)
   })

@@ -44,7 +44,7 @@ export const EVENT_TYPES: readonly EventTypeEntry[] = [
     rulePackId: 'xjbf-travel',
     maxRangeDays: 90,
     statusNote:
-      '出行条目已全部录入；天德在部分月份无法判到具体日期，冲突例外仍采用保守处理，结果不代表完整的传统结论。',
+      '出行条目已全部录入；天德在部分月份无法判到具体日期，宜忌并见时已按卷十的例外逐条解除一部分，未覆盖的仍从常例。',
     disclaimer: '仅按已收录传统规则提供文化参考，不涉及现实交通与安全判断。',
   },
   {
@@ -56,7 +56,7 @@ export const EVENT_TYPES: readonly EventTypeEntry[] = [
     rulePackId: 'xjbf-relocation',
     maxRangeDays: 90,
     statusNote:
-      '般移条目已全部录入；天德在部分月份无法判到具体日期，冲突例外仍采用保守处理，结果不代表完整的传统结论。',
+      '般移条目已全部录入；天德在部分月份无法判到具体日期，宜忌并见时已按卷十的例外逐条解除一部分，未覆盖的仍从常例。',
     disclaimer: '仅按已收录传统规则提供文化参考，不涉及现实搬迁安排与居住决策。',
   },
   {
@@ -77,7 +77,7 @@ export const EVENT_TYPES: readonly EventTypeEntry[] = [
     status: 'limited',
     rulePackId: 'xjbf-opening',
     maxRangeDays: 90,
-    statusNote: '开市条目已全部录入；宜忌并见时仍按原书常例保守处理，结果不代表完整的传统结论。',
+    statusNote: '开市条目已全部录入；宜忌并见时已按卷十的例外逐条解除一部分，未覆盖的仍从常例。',
     disclaimer: '仅按已收录传统规则提供文化参考，不涉及现实经营决策与投资判断。',
   },
   {
@@ -104,7 +104,7 @@ export const EVENT_TYPES: readonly EventTypeEntry[] = [
     rulePackId: 'xjbf-engagement',
     maxRangeDays: 90,
     statusNote:
-      '结婚姻条目已全部录入；天德在部分月份无法判到具体日期，冲突例外仍采用保守处理，结果不代表完整的传统结论。同卷另有分列的「嫁娶」「纳采问名」两条，宜忌不同，不并入本条。',
+      '结婚姻条目已全部录入；天德在部分月份无法判到具体日期，宜忌并见时已按卷十的例外逐条解除一部分，未覆盖的仍从常例。同卷另有分列的「嫁娶」「纳采问名」两条，宜忌不同，不并入本条。',
     disclaimer: '仅按已收录传统规则提供文化参考，不涉及现实婚姻与家庭决策。',
   },
   {
@@ -117,7 +117,7 @@ export const EVENT_TYPES: readonly EventTypeEntry[] = [
     rulePackId: 'xjbf-proposal',
     maxRangeDays: 90,
     statusNote:
-      '纳采问名条目已全部录入，宜项比「结婚姻」少「六合」「五合」两条；天德在部分月份无法判到具体日期，冲突例外仍采用保守处理，结果不代表完整的传统结论。',
+      '纳采问名条目已全部录入，宜项比「结婚姻」少「六合」「五合」两条；天德在部分月份无法判到具体日期，宜忌并见时已按卷十的例外逐条解除一部分，未覆盖的仍从常例。',
     disclaimer: '仅按已收录传统规则提供文化参考，不涉及现实婚恋与家庭关系判断。',
   },
   {

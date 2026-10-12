@@ -1,5 +1,6 @@
 import type { DateInfo } from '../types/calendar'
 import type { RuleCondition, RuleDefinition, RulePack } from '../types/rule'
+import { applyAdjudication } from './rule-adjudication'
 import { splitGanzhi, type GanzhiParts } from '../utils/ganzhi'
 import {
   getJianChu,
@@ -48,6 +49,12 @@ export interface DayEvaluation {
   excludeRuleIds: readonly string[]
   /** 因缺输入无法判定、从而阻止该日进入结果的规则。 */
   unknownRuleIds: readonly string[]
+  /**
+   * 经卷十条款解除的忌规则：这些排除项仍命中，但原书对「与德神同日」等情形另行
+   * 给出了解除的例外（见 services/rule-adjudication.ts）。页面须说明依据，不得让
+   * 用户看到「宜」却不知道为什么那条忌不算数。
+   */
+  adjudicatedRuleIds: readonly string[]
 }
 
 /** 把日期信息转换成规则可读取的事实；缺字段一律留 null，不填默认值。 */
@@ -172,22 +179,38 @@ export function evaluateDay(pack: RulePack, facts: DateFacts): DayEvaluation {
   const base = { matchedRuleIds, excludeRuleIds, unknownRuleIds }
 
   if (unknownRuleIds.length > 0) {
-    return { status: 'unknown', ...base }
+    return { status: 'unknown', ...base, adjudicatedRuleIds: [] }
   }
 
   if (matchedRuleIds.length > 0 && excludeRuleIds.length > 0) {
-    return { status: 'unresolved', ...base }
+    // 宜忌并见：先按卷十的例外条款裁决，再决定是「解除」还是维持常例。
+    // 条款只做解除、不做加忌；未编码的神煞原样保留，整日仍按常例不出结论。
+    const adjudication = applyAdjudication(pack, facts, excludeRuleIds)
+
+    if (adjudication.remainingExcludeRuleIds.length === 0) {
+      return {
+        status: 'pass',
+        ...base,
+        adjudicatedRuleIds: adjudication.liftedRuleIds,
+      }
+    }
+
+    return {
+      status: 'unresolved',
+      ...base,
+      adjudicatedRuleIds: adjudication.liftedRuleIds,
+    }
   }
 
   if (excludeRuleIds.length > 0) {
-    return { status: 'excluded', ...base }
+    return { status: 'excluded', ...base, adjudicatedRuleIds: [] }
   }
 
   if (matchedRuleIds.length > 0) {
-    return { status: 'pass', ...base }
+    return { status: 'pass', ...base, adjudicatedRuleIds: [] }
   }
 
-  return { status: 'not_matched', ...base }
+  return { status: 'not_matched', ...base, adjudicatedRuleIds: [] }
 }
 
 function readFact(facts: DateFacts, path: string): string | null {
