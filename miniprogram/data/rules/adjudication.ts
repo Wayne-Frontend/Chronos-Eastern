@@ -240,9 +240,11 @@ export const ADJUDICATION_CLAUSES: readonly AdjudicationClause[] = [
   },
 
   // ── 灾煞：值开日（寅申巳亥月）或值满日（辰戌丑未月）与德合并则解除；子午卯酉月从月破论。
+  //    两支路月组合并成一条：原句「寅申巳亥月值開日，辰戌丑未月值滿日」是同一句话的两个月组，
+  //    此前只写了前一组，辰戌丑未月的解除被漏掉（2026-10-12 复核影印第 158 帧后补齐）。
   {
     shensha: '灾煞',
-    monthBranches: ['寅', '申', '巳', '亥'],
+    monthBranches: ['寅', '申', '巳', '亥', '辰', '戌', '丑', '未'],
     requiresAny: ['天德', '月德', '天德合', '月德合'],
     residualEventTypes: [],
     outcome: 'lift',
@@ -597,6 +599,9 @@ export const ADJUDICATION_CLAUSES: readonly AdjudicationClause[] = [
   },
 
   // ── 四耗：辰月与天德月德、寅申月与天德合、巳月与月德合、辰戌丑未月与三合并则解除。
+  //    「辰戌丑未月」是原句的整组，此前漏写辰月（2026-10-12 复核影印第 190 帧后补齐）。
+  //    这是完整性补正、不改结果：春季四耗固定为壬子日，而辰月的天德、月德都在壬，
+  //    故辰月的四耗日必定先命中「与天德月德」支路。
   {
     shensha: '四耗',
     monthBranches: ['辰'],
@@ -625,7 +630,7 @@ export const ADJUDICATION_CLAUSES: readonly AdjudicationClause[] = [
   },
   {
     shensha: '四耗',
-    monthBranches: ['戌', '丑', '未'],
+    monthBranches: ['辰', '戌', '丑', '未'],
     requiresAny: ['三合'],
     residualEventTypes: [],
     outcome: 'lift',
@@ -789,14 +794,46 @@ export const ADJUDICATION_CLAUSES: readonly AdjudicationClause[] = [
       '卷四《月建》「所值之日宜封建視事，不宜興造土功、結親禮」（影印本第 88 帧）；卷十未为月建另立裁决条款',
   },
 
-  // ── 满日：十月中满日与民日、天愿等并见时的处置已由各该条承载，本条不另立解除条件。
+  // ── 满日：寅申月值守日、子午卯酉月值相日，与月德天德合月德合月恩四相并则不忌；
+  //    辰戌丑未月值灾煞、巳亥月值月厌，各从该煞论；其余如常例（影印本第 149 帧，按语续第 150 帧）。
+  //    两处处理记此备查：① 按语作「子午月值月厭」，与判定句「巳亥月值月厭」不一致——
+  //    逐月推算满日（建除之满，日支＝月支前二辰）恰与月厌表在巳、亥两月相同，判定句为准，按语系笔误；
+  //    ② 「申月又為天狗，忌祭祀，與德合併猶忌」说的是天狗，其所忌为祭祀，与已开放六事项无涉，不编码。
+  {
+    shensha: '满日',
+    monthBranches: ['寅', '申', '子', '午', '卯', '酉'],
+    requiresAny: ['月德', '天德合', '月德合', '月恩', '四相'],
+    residualEventTypes: [],
+    outcome: 'lift',
+    locator:
+      '卷十《滿日》「寅申月值守日，子午卯酉月值相日，與月德天德合月德合月恩四相併則不忌」，小注「天赦天願不得與滿日併」（影印本第 149 帧）',
+  },
+  {
+    shensha: '满日',
+    monthBranches: ['辰', '戌', '丑', '未'],
+    requiresAny: [],
+    residualEventTypes: [],
+    outcome: 'delegate',
+    delegateShensha: '灾煞',
+    locator:
+      '卷十《滿日》「辰戌丑未月值災煞，從災煞論」及按语「辰戌丑未月值民日，然值災煞……故各從重論」（影印本第 149–150 帧）',
+  },
+  {
+    shensha: '满日',
+    monthBranches: ['巳', '亥'],
+    requiresAny: [],
+    residualEventTypes: [],
+    outcome: 'delegate',
+    delegateShensha: '月厌',
+    locator: '卷十《滿日》「巳亥月值月厭，從月厭論」（影印本第 149 帧）',
+  },
   {
     shensha: '满日',
     monthBranches: ['寅', '卯', '辰', '巳', '午', '未', '申', '酉', '戌', '亥', '子', '丑'],
     requiresAny: [],
     residualEventTypes: [],
     outcome: 'normal',
-    locator: '卷十《滿日》按语「辰戌丑未月值民日，然值災煞……故各從重論」（影印本第 150 帧）',
+    locator: '卷十《滿日》未列条件下的处置从常例（影印本第 149–150 帧）',
   },
 
   // ── 五离：与德合、天赦、三合、六合并则解除；未列条件下从常例。

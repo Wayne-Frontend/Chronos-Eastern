@@ -19,7 +19,7 @@ describe('getDateRuleExplanation', () => {
       status: 'pass',
       rulePack: {
         id: 'xjbf-travel',
-        version: '1.19.0',
+        version: '1.20.0',
       },
     })
     expect(result.value.rulePack.completeness).toBe('complete')

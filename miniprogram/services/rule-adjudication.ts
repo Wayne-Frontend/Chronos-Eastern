@@ -13,6 +13,8 @@ import type { DateFacts } from './rule-engine'
  */
 type PresenceEntry =
   | { fact: 'stem' | 'branch'; table: readonly string[] }
+  /** 四相一类的成对天干神煞：表里存的是这对天干共同的五行，与派生事实 stemElement 比对。 */
+  | { fact: 'element'; table: readonly string[] }
   /** 天愿一类的完整日柱神煞：干、支两张表都要相等。 */
   | { fact: 'stemBranch'; stemTable: readonly string[]; branchTable: readonly string[] }
   /** 三合一类的每月多值神煞：当月取值是一组地支，日支在其中即为当值。 */
@@ -25,6 +27,9 @@ const PRESENCE_TABLES: Record<string, PresenceEntry> = {
   月德合: { fact: 'stem', table: MONTH_GOD_TABLES.月德合 },
   天德: { fact: 'stem', table: MONTH_GOD_TABLES.天德 },
   天德合: { fact: 'stem', table: MONTH_GOD_TABLES.天德合 },
+  // 满日条的解除条件含月恩与四相；四相同 四相规则一样读日干五行。
+  月恩: { fact: 'stem', table: MONTH_GOD_TABLES.月恩 },
+  四相: { fact: 'element', table: MONTH_GOD_TABLES.四相 },
   // 卷十劫煞寅申月一条的条件是「值六合」，六合按月建取地支（正月在亥、逆行十二辰）。
   六合: { fact: 'branch', table: MONTH_GOD_TABLES.六合 },
   // 平日亥月一条要「時德六合」并临；時德按季节取辰（春午夏辰秋子冬寅）。
@@ -81,6 +86,12 @@ export function isShenshaPresent(name: string, facts: DateFacts): boolean | null
 
   if (entry.fact === 'jianchu') {
     return facts.jianChu === entry.value
+  }
+
+  if (entry.fact === 'element') {
+    const target = resolveMonthIndexed(entry.table, monthBranch)
+
+    return target === null || facts.stemElement === null ? null : target === facts.stemElement
   }
 
   const target = resolveMonthIndexed(entry.table, monthBranch)

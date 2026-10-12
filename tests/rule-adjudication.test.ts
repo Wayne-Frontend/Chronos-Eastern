@@ -166,6 +166,28 @@ describe('卷十裁决条款', () => {
     expect(resolveShenshaOutcome('四忌', factsOf('2026-03-02'), 'marriage')).toBe('normal')
   })
 
+  it('灾煞与满日在辰戌丑未月（值满日）的处置：与德合并则解除，再由满日转致', () => {
+    // 灾煞条原句是「寅申巳亥月值開日，辰戌丑未月值滿日，與德神併」，此前只写了前一个月组。
+    // 2026-08-03 为未月己酉：灾煞日（满日），月德合在己 → 解除；07-10 同是未月灾煞日，无德神，如常例。
+    expect(resolveShenshaOutcome('灾煞', factsOf('2026-08-03'), 'opening')).toBe('lift')
+    expect(resolveShenshaOutcome('灾煞', factsOf('2026-07-10'), 'opening')).toBe('normal')
+
+    // 满日（第 149 帧）：辰戌丑未月值灾煞，从灾煞论——同一日满日与灾煞同结论。
+    expect(resolveShenshaOutcome('满日', factsOf('2026-08-03'), 'engagement')).toBe('lift')
+    expect(resolveShenshaOutcome('满日', factsOf('2026-07-10'), 'engagement')).toBe('normal')
+
+    // 巳亥月值月厌，从月厌论；月厌在这两个月的处置是如常例。
+    expect(resolveShenshaOutcome('满日', factsOf('2026-05-21'), 'proposal')).toBe('normal')
+
+    // 寅申月值守日、子午卯酉月值相日，与月德天德合月德合月恩四相并则不忌（第 149 帧）。
+    // 2026-08-16 为申月壬戌：满日；申子辰月的月德与七月的月恩都在壬，两条德神并临 → 解除。
+    // 同日日干壬属水、秋月四相在壬癸，故四相当值也成立——满日条新接入的两个德神之一即由此覆盖。
+    expect(resolveShenshaOutcome('满日', factsOf('2026-08-16'), 'engagement')).toBe('lift')
+    expect(isShenshaPresent('月德', factsOf('2026-08-16'))).toBe(true)
+    expect(isShenshaPresent('月恩', factsOf('2026-08-16'))).toBe(true)
+    expect(isShenshaPresent('四相', factsOf('2026-08-16'))).toBe(true)
+  })
+
   it('条款表的字段自洽：结论合法、转致有目标、残余清单是已开放事项的子集', () => {
     const matterIds = ['travel', 'relocation', 'opening', 'marriage', 'engagement', 'proposal']
 
