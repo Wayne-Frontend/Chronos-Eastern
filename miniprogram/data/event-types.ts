@@ -83,15 +83,42 @@ export const EVENT_TYPES: readonly EventTypeEntry[] = [
   {
     id: 'marriage',
     displayName: '婚嫁',
-    // 只对应卷十一「嫁娶」一条。同卷另有「结婚姻」「纳采问名」，宜忌与本条不同，不并入。
+    // 只对应卷十一「嫁娶」一条。同卷另有「结婚姻」「纳采问名」，宜忌与本条不同，不并入，
+    // 三条各自成事项（见 engagement、proposal）。
     classicalTerms: ['嫁娶'],
     // 卷十一「嫁娶」的宜 10 条、忌 20 条均已录入；宜忌并见时的原书例外仍未实现，故维持 limited。
     status: 'limited',
     rulePackId: 'xjbf-marriage',
     maxRangeDays: 90,
     statusNote:
-      '嫁娶条目已全部录入；原书另有分列的「结婚姻」「纳采问名」两条，宜忌不同，本版本未收录。',
+      '嫁娶条目已全部录入；原书另有分列的「结婚姻」「纳采问名」两条，宜忌不同，已各自单独成事项，不并入本条。',
     disclaimer: '仅按已收录传统规则提供文化参考，不涉及现实婚姻与家庭决策。',
+  },
+  {
+    id: 'engagement',
+    displayName: '订婚',
+    // 只对应卷十一「结婚姻」一条。与「嫁娶」分列，现代词只是界面别名。
+    classicalTerms: ['结婚姻'],
+    // 卷十一「结婚姻」的宜 14 条、忌 20 条均已录入；天德四仲月不判值日、宜忌并见的原书例外未实现，故维持 limited。
+    status: 'limited',
+    rulePackId: 'xjbf-engagement',
+    maxRangeDays: 90,
+    statusNote:
+      '结婚姻条目已全部录入；天德在部分月份无法判到具体日期，冲突例外仍采用保守处理，结果不代表完整的传统结论。同卷另有分列的「嫁娶」「纳采问名」两条，宜忌不同，不并入本条。',
+    disclaimer: '仅按已收录传统规则提供文化参考，不涉及现实婚姻与家庭决策。',
+  },
+  {
+    id: 'proposal',
+    displayName: '提亲',
+    // 只对应卷十一「纳采问名」一条；其宜项比「结婚姻」少「六合」「五合」两条，二者不互相顶替。
+    classicalTerms: ['纳采问名'],
+    // 卷十一「纳采问名」的宜 12 条、忌 20 条均已录入；边界同上，维持 limited。
+    status: 'limited',
+    rulePackId: 'xjbf-proposal',
+    maxRangeDays: 90,
+    statusNote:
+      '纳采问名条目已全部录入，宜项比「结婚姻」少「六合」「五合」两条；天德在部分月份无法判到具体日期，冲突例外仍采用保守处理，结果不代表完整的传统结论。',
+    disclaimer: '仅按已收录传统规则提供文化参考，不涉及现实婚恋与家庭关系判断。',
   },
   {
     id: 'funeral',

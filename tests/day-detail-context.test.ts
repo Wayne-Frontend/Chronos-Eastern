@@ -141,11 +141,13 @@ describe('日期详情页的事项上下文', () => {
         'relocation',
         'opening',
         'marriage',
+        'engagement',
+        'proposal',
       ])
     }
   })
 
-  it('四项概览默认收起逐条依据，单事项详情默认展开', () => {
+  it('六项概览默认收起逐条依据，单事项详情默认展开', () => {
     const overview = loadDetail({ date: '2026-10-02', from: 'calendar' })
     const focused = loadDetail({ date: '2026-10-02', eventType: 'travel', from: 'find-date' })
 
@@ -258,6 +260,6 @@ describe('首页跳详情时带上的事项', () => {
     })
 
     expect(navigation).toEqual(['/pages/day-detail/day-detail?date=2026-10-02&from=index'])
-    expect(loadDetail({ date: '2026-10-02', from: 'index' }).ruleSections).toHaveLength(4)
+    expect(loadDetail({ date: '2026-10-02', from: 'index' }).ruleSections).toHaveLength(6)
   })
 })

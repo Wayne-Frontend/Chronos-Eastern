@@ -47,7 +47,7 @@ describe('canQueryEventType', () => {
     expect(canQueryEventType(null)).toBe(false)
   })
 
-  it('可查询的四个事项逐个点名，其余（入宅、安葬）全部置灰', () => {
+  it('可查询的六个事项逐个点名，其余（入宅、安葬）全部置灰', () => {
     const queryable = EVENT_TYPES.filter((entry) => canQueryEventType(entry)).map(
       (entry) => entry.id,
     )
@@ -55,7 +55,14 @@ describe('canQueryEventType', () => {
       (entry) => entry.id,
     )
 
-    expect(queryable).toEqual(['travel', 'relocation', 'opening', 'marriage'])
+    expect(queryable).toEqual([
+      'travel',
+      'relocation',
+      'opening',
+      'marriage',
+      'engagement',
+      'proposal',
+    ])
     expect(blocked).toEqual(['moving-in', 'funeral'])
   })
 })
@@ -173,11 +180,13 @@ describe('覆盖范围披露', () => {
     const options = definitions[0]?.data?.view?.eventOptions ?? []
     const badgeOf = (id: string) => options.find((option) => option.id === id)?.badgeText
 
-    // 可查询的四个事项都必须是「有限收录」，未开放的仍只说能否使用。
+    // 可查询的六个事项都必须是「有限收录」，未开放的仍只说能否使用。
     expect(badgeOf('travel')).toBe('有限收录')
     expect(badgeOf('relocation')).toBe('有限收录')
     expect(badgeOf('opening')).toBe('有限收录')
     expect(badgeOf('marriage')).toBe('有限收录')
+    expect(badgeOf('engagement')).toBe('有限收录')
+    expect(badgeOf('proposal')).toBe('有限收录')
     expect(badgeOf('moving-in')).toBe('敬请期待')
     expect(badgeOf('funeral')).toBe('暂不支持')
 

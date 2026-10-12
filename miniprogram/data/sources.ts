@@ -56,14 +56,15 @@ export const SOURCES: readonly SourceEntry[] = [
   },
   {
     id: 'src-xjbf-vol4-scan',
-    title: '钦定协纪辨方书·卷四（影印本，义例二：建除十二神、建除同位异名、月厌、厌对、阴阳不将）',
+    title:
+      '钦定协纪辨方书·卷四（影印本，义例二：建除十二神、建除同位异名、月建、月厌、厌对、阴阳不将）',
     publisher: 'Wikimedia Commons · CADAL 浙江大学图书馆藏本',
     url: 'https://commons.wikimedia.org/wiki/File:CADAL06056505_欽定協紀辨方書·卷四.djvu',
     kind: 'classic-scan',
   },
   {
     id: 'src-xjbf-vol5-scan',
-    title: '钦定协纪辨方书·卷五（影印本，义例三：天德、月德、天德合、月德合、天赦等）',
+    title: '钦定协纪辨方书·卷五（影印本，义例三：天德、月德、天德合、月德合、天赦、五合、五离等）',
     publisher: 'Wikimedia Commons · CADAL 浙江大学图书馆藏本',
     url: 'https://commons.wikimedia.org/wiki/File:CADAL06056506_欽定協紀辨方書·卷五.djvu',
     kind: 'classic-scan',

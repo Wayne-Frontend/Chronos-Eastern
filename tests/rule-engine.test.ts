@@ -1,7 +1,9 @@
 import { describe, expect, it } from 'vitest'
 
+import { ENGAGEMENT_RULE_PACK } from '../miniprogram/data/rules/engagement.v1'
 import { findVerifiedRulePack, RULE_PACKS } from '../miniprogram/data/rules/manifest'
 import { MARRIAGE_RULE_PACK } from '../miniprogram/data/rules/marriage.v1'
+import { PROPOSAL_RULE_PACK } from '../miniprogram/data/rules/proposal.v1'
 import { MONTH_GOD_TABLES } from '../miniprogram/data/rules/month-gods'
 import { OPENING_RULE_PACK } from '../miniprogram/data/rules/opening.v1'
 import { RELOCATION_RULE_PACK } from '../miniprogram/data/rules/relocation.v1'
@@ -1490,9 +1492,10 @@ describe('嫁娶规则包', () => {
     }
   })
 
-  it('结婚姻与纳采问名各自成条，不并入嫁娶：五合、五离两处差异都在', () => {
-    // 卷十一第 28 帧（纳采问名）与第 29 帧（嫁娶）逐字比对：
-    // 结婚姻、纳采问名两条例「五合」为宜，且都不收「不将」「往亡」「厌对」「亥日」。
+  it('结婚姻与纳采问名各自成包，不并入嫁娶：本包既无「五合」也无「五离」', () => {
+    // 卷十一第 27、28、29 帧逐字比对：嫁娶条目自有「不将」「厌对」「往亡」「亥日」，
+    // 而「结婚姻」宜项多出「六合」「五合」、「纳采问名」的宜项又比结婚姻少这两条，
+    // 三条宜忌各不相同，故各自成包，本包不收录另外两条的条款。
     const names = new Set(MARRIAGE_RULE_PACK.rules.map((rule) => rule.name))
 
     expect(names.has('五合')).toBe(false)
@@ -1505,5 +1508,206 @@ describe('嫁娶规则包', () => {
   it('嫁娶与出行各自成包，冲突组互不相同', () => {
     expect(MARRIAGE_RULE_PACK.conflictGroup).not.toBe(TRAVEL_RULE_PACK.conflictGroup)
     expect(MARRIAGE_RULE_PACK.eventType).toBe('marriage')
+  })
+})
+
+describe('结婚姻规则包', () => {
+  const engagementRuleOf = (id: string): RuleDefinition => {
+    const rule = ENGAGEMENT_RULE_PACK.rules.find((item) => item.id === id)
+
+    if (!rule) {
+      throw new Error(`规则不存在：${id}`)
+    }
+
+    return rule
+  }
+
+  /** 2026-10 的三十个日期，供按日遍历的用例取值（不必逐日硬编码）。 */
+  const MONTH_DAYS = Array.from(
+    { length: 30 },
+    (_, index) => `2026-10-${String(index + 1).padStart(2, '0')}`,
+  )
+
+  it('卷十一「结婚姻」的宜十四项、忌二十项全部落地', () => {
+    const includes = ENGAGEMENT_RULE_PACK.rules.filter((rule) => rule.effect === 'include')
+    const excludes = ENGAGEMENT_RULE_PACK.rules.filter((rule) => rule.effect === 'exclude')
+
+    expect(includes.map((rule) => rule.name)).toEqual([
+      '天德',
+      '月德',
+      '天德合',
+      '月德合',
+      '天赦',
+      '天愿',
+      '月恩',
+      '四相',
+      '时德',
+      '民日',
+      '三合',
+      '天喜',
+      '六合',
+      '五合',
+    ])
+    expect(excludes.map((rule) => rule.name)).toEqual([
+      '月建',
+      '月破',
+      '平日',
+      '收日',
+      '满日',
+      '闭日',
+      '劫煞',
+      '灾煞',
+      '月煞',
+      '月刑',
+      '月害',
+      '月厌',
+      '大时',
+      '天吏',
+      '四废',
+      '四忌',
+      '四穷',
+      '五墓',
+      '五离',
+      '八专',
+    ])
+
+    expect(findVerifiedRulePack('engagement')?.id).toBe('xjbf-engagement')
+  })
+
+  it('五合取寅卯日、五离取申酉日，都是不随月建变化的固定日支', () => {
+    // 卷五《五合》「历例曰五合者寅卯日也」、《五离》「历例曰五离者申酉日是也」（影印本第 114、116 帧）。
+    expect(engagementRuleOf('xjbf-engagement-0014').when.all).toEqual([
+      { fact: 'ganzhi.dayCivil.branch', operator: 'in', value: ['寅', '卯'] },
+    ])
+    expect(engagementRuleOf('xjbf-engagement-0033').when.all).toEqual([
+      { fact: 'ganzhi.dayCivil.branch', operator: 'in', value: ['申', '酉'] },
+    ])
+  })
+
+  it('五合、五离按日支判：逢寅卯即五合、逢申酉即五离，全月都能取到值', () => {
+    const 五合 = engagementRuleOf('xjbf-engagement-0014')
+    const 五离 = engagementRuleOf('xjbf-engagement-0033')
+    let 五合日数 = 0
+    let 五离日数 = 0
+
+    for (const dateKey of MONTH_DAYS) {
+      const facts = factsOf(dateKey)
+      const branch = facts.ganzhi.dayCivil?.branch ?? null
+
+      expect(evaluateRule(五合, facts), `${dateKey} 五合`).toBe(
+        branch === '寅' || branch === '卯' ? 'matched' : 'not_matched',
+      )
+      expect(evaluateRule(五离, facts), `${dateKey} 五离`).toBe(
+        branch === '申' || branch === '酉' ? 'matched' : 'not_matched',
+      )
+
+      五合日数 += branch === '寅' || branch === '卯' ? 1 : 0
+      五离日数 += branch === '申' || branch === '酉' ? 1 : 0
+    }
+
+    expect(五合日数).toBeGreaterThan(0)
+    expect(五离日数).toBeGreaterThan(0)
+  })
+
+  it('月建与建除之建日同值一日', () => {
+    // 卷四《月建》「历例曰正月建寅，顺行十二辰」（影印本第 88 帧），取值与建除的建日一致。
+    const 月建 = engagementRuleOf('xjbf-engagement-0015')
+    let 建日数 = 0
+
+    for (const dateKey of MONTH_DAYS) {
+      const facts = factsOf(dateKey)
+
+      expect(evaluateRule(月建, facts), `${dateKey} 月建`).toBe(
+        facts.jianChu === '建' ? 'matched' : 'not_matched',
+      )
+
+      建日数 += facts.jianChu === '建' ? 1 : 0
+    }
+
+    expect(建日数).toBeGreaterThan(0)
+  })
+
+  it('与嫁娶包共有的原语取值逐条一致，两包不各写一套', () => {
+    const marriageByName = new Map(MARRIAGE_RULE_PACK.rules.map((rule) => [rule.name, rule]))
+    const shared = ENGAGEMENT_RULE_PACK.rules.filter((rule) => marriageByName.has(rule.name))
+
+    expect(shared.length).toBeGreaterThan(0)
+
+    for (const rule of shared) {
+      const counterpart = marriageByName.get(rule.name)
+
+      expect(rule.when, rule.name).toEqual(counterpart?.when)
+      expect(rule.sourceIds, rule.name).toEqual(counterpart?.sourceIds)
+    }
+  })
+
+  it('结婚姻与出行各自成包，冲突组互不相同', () => {
+    expect(ENGAGEMENT_RULE_PACK.conflictGroup).not.toBe(TRAVEL_RULE_PACK.conflictGroup)
+    expect(ENGAGEMENT_RULE_PACK.eventType).toBe('engagement')
+  })
+})
+
+describe('纳采问名规则包', () => {
+  const proposalRuleOf = (id: string): RuleDefinition => {
+    const rule = PROPOSAL_RULE_PACK.rules.find((item) => item.id === id)
+
+    if (!rule) {
+      throw new Error(`规则不存在：${id}`)
+    }
+
+    return rule
+  }
+
+  it('卷十一「纳采问名」的宜十二项、忌二十项全部落地，宜项不含六合、五合', () => {
+    const includes = PROPOSAL_RULE_PACK.rules.filter((rule) => rule.effect === 'include')
+    const excludes = PROPOSAL_RULE_PACK.rules.filter((rule) => rule.effect === 'exclude')
+
+    expect(includes.map((rule) => rule.name)).toEqual([
+      '天德',
+      '月德',
+      '天德合',
+      '月德合',
+      '天赦',
+      '天愿',
+      '月恩',
+      '四相',
+      '时德',
+      '民日',
+      '三合',
+      '天喜',
+    ])
+    expect(excludes).toHaveLength(20)
+    expect(PROPOSAL_RULE_PACK.rules.map((rule) => rule.name)).not.toContain('六合')
+    expect(PROPOSAL_RULE_PACK.rules.map((rule) => rule.name)).not.toContain('五合')
+
+    expect(findVerifiedRulePack('proposal')?.id).toBe('xjbf-proposal')
+  })
+
+  it('忌项与同卷「结婚姻」逐条相同，宜项只少「六合」「五合」两条', () => {
+    // 卷十一第 28 帧：两条目忌项逐字相同，纳采问名的宜项比结婚姻少六合、五合。
+    const namesOf = (effect: 'include' | 'exclude') =>
+      PROPOSAL_RULE_PACK.rules.filter((rule) => rule.effect === effect).map((rule) => rule.name)
+    const engagementNamesOf = (effect: 'include' | 'exclude') =>
+      ENGAGEMENT_RULE_PACK.rules.filter((rule) => rule.effect === effect).map((rule) => rule.name)
+
+    expect(namesOf('exclude')).toEqual(engagementNamesOf('exclude'))
+    expect(
+      engagementNamesOf('include').filter((name) => !namesOf('include').includes(name)),
+    ).toEqual(['六合', '五合'])
+  })
+
+  it('纳采问名的月建与五离取值与结婚姻一致', () => {
+    expect(proposalRuleOf('xjbf-proposal-0013').when).toEqual(
+      ENGAGEMENT_RULE_PACK.rules.find((rule) => rule.name === '月建')?.when,
+    )
+    expect(proposalRuleOf('xjbf-proposal-0031').when).toEqual(
+      ENGAGEMENT_RULE_PACK.rules.find((rule) => rule.name === '五离')?.when,
+    )
+  })
+
+  it('纳采问名、结婚姻、出行三包冲突组互不相同', () => {
+    expect(PROPOSAL_RULE_PACK.conflictGroup).not.toBe(ENGAGEMENT_RULE_PACK.conflictGroup)
+    expect(PROPOSAL_RULE_PACK.conflictGroup).not.toBe(TRAVEL_RULE_PACK.conflictGroup)
+    expect(PROPOSAL_RULE_PACK.eventType).toBe('proposal')
   })
 })

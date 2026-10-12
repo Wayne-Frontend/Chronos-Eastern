@@ -1,7 +1,9 @@
 import { findSource } from '../sources'
 import type { RulePack, RulePackCompleteness } from '../../types/rule'
+import { ENGAGEMENT_RULE_PACK } from './engagement.v1'
 import { MARRIAGE_RULE_PACK } from './marriage.v1'
 import { OPENING_RULE_PACK } from './opening.v1'
+import { PROPOSAL_RULE_PACK } from './proposal.v1'
 import { RELOCATION_RULE_PACK } from './relocation.v1'
 import { TRAVEL_RULE_PACK } from './travel.v1'
 
@@ -11,6 +13,8 @@ export const RULE_PACKS: readonly RulePack[] = [
   OPENING_RULE_PACK,
   RELOCATION_RULE_PACK,
   MARRIAGE_RULE_PACK,
+  ENGAGEMENT_RULE_PACK,
+  PROPOSAL_RULE_PACK,
 ]
 
 /**
