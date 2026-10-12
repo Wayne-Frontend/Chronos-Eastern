@@ -134,15 +134,22 @@ describe('卷十裁决条款', () => {
     expect(findApplicableClause('月厌', facts, 'proposal')).toBeNull()
   })
 
-  it('条款表只收「解除」结论，残余清单只允许出现在有原文清单的条款上', () => {
-    // 每一条都必须是 lift；residualEventTypes 只在原书写了「止忌」清单的条款上非空，
-    // 且必须是六类已开放事项中的子集——防止把清单当成摆设或写错 id。
+  it('条款表的字段自洽：结论合法、转致有目标、残余清单是已开放事项的子集', () => {
     const matterIds = ['travel', 'relocation', 'opening', 'marriage', 'engagement', 'proposal']
 
     for (const clause of ADJUDICATION_CLAUSES) {
       const label = `${clause.shensha} ${clause.monthBranches.join('')}`
 
-      expect(clause.outcome, label).toBe('lift')
+      expect(['lift', 'exclude', 'normal', 'delegate'], label).toContain(clause.outcome)
+
+      if (clause.outcome === 'delegate') {
+        expect(clause.delegateShensha, label).toBeTruthy()
+      }
+
+      // 残余清单只在「止忌…余皆不忌」的条款上出现，且必须是已开放事项的 id。
+      if (clause.outcome !== 'lift') {
+        expect(clause.residualEventTypes, label).toEqual([])
+      }
 
       for (const eventType of clause.residualEventTypes) {
         expect(matterIds, `${label} → ${eventType}`).toContain(eventType)

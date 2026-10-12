@@ -187,6 +187,15 @@ export function evaluateDay(pack: RulePack, facts: DateFacts): DayEvaluation {
     // 条款只做解除、不做加忌；未编码的神煞原样保留，整日仍按常例不出结论。
     const adjudication = applyAdjudication(pack, facts, excludeRuleIds)
 
+    // 原书明言「诸事皆忌／虽与德合并犹忌」的：该日定为忌，不因同日有宜项而改判。
+    if (adjudication.excludedRuleIds.length > 0) {
+      return {
+        status: 'excluded',
+        ...base,
+        adjudicatedRuleIds: [],
+      }
+    }
+
     if (adjudication.remainingExcludeRuleIds.length === 0) {
       return {
         status: 'pass',

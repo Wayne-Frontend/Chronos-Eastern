@@ -286,8 +286,8 @@ describe('出行规则包（第一批）', () => {
     ],
     [
       '2026-09-26',
-      '月破兼灾煞兼月恩兼四相遇月厌',
-      'unresolved',
+      '月破兼灾煞兼月恩兼四相遇月厌（月破诸事皆忌）',
+      'excluded',
       [
         'xjbf-travel-0013',
         'xjbf-travel-0023',
@@ -369,8 +369,8 @@ describe('出行规则包（第一批）', () => {
     ],
     [
       '2026-03-02',
-      '天愿（正月乙亥）遇收日与劫煞',
-      'unresolved',
+      '天愿（正月乙亥）遇收日与劫煞（收日从劫煞、寅月劫煞值六合而解除）',
+      'pass',
       ['xjbf-travel-0024', 'xjbf-travel-0004', 'xjbf-travel-0015'],
     ],
   ])('%s（%s）判定为 %s', (dateKey, _label, status, ruleIds) => {
@@ -411,17 +411,19 @@ describe('出行规则包（第一批）', () => {
     expect(result.excludeRuleIds).toEqual(['xjbf-travel-0007'])
   })
 
-  it('月德与月德合同级命中排除规则时返回 unresolved', () => {
+  it('同级命中时按卷十裁决：遇月破者定为忌，遇劫煞者解除', () => {
     // 2026-10-09 为戌月丙辰：月德在丙（宜），同日又是月破与往亡（忌）。
+    // 月破是「诸事皆忌」之凶，德神临此失力（卷十第 136 帧），故该日定为忌。
     expect(evaluate('2026-10-09')).toMatchObject({
-      status: 'unresolved',
+      status: 'excluded',
       matchedRuleIds: ['xjbf-travel-0010', 'xjbf-travel-0032'],
       excludeRuleIds: ['xjbf-travel-0006', 'xjbf-travel-0021'],
     })
 
     // 2026-02-06 为寅月辛亥：月德合在辛（宜），同日又是收日与劫煞（忌）。
+    // 收日在寅申巳亥月「从劫煞论」，劫煞在寅申月值六合即「余皆不忌」（卷十第 146、154 帧）。
     expect(evaluate('2026-02-06')).toMatchObject({
-      status: 'unresolved',
+      status: 'pass',
       matchedRuleIds: ['xjbf-travel-0011'],
       excludeRuleIds: ['xjbf-travel-0004', 'xjbf-travel-0015'],
     })

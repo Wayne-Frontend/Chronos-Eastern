@@ -86,8 +86,16 @@ export interface AdjudicationClause {
    * 故为空；将来若开出「安葬」等事项，必须回头重核这些清单。
    */
   residualEventTypes: readonly string[]
-  /** 条款结论。目前只收录 lift＝原书明言「併則不忌」或「止忌…餘皆不忌」。 */
-  outcome: 'lift'
+  /**
+   * 条款结论：
+   * - `lift`＝原书明言「併則不忌」或「止忌…餘皆不忌」，对该事项解除忌项；
+   * - `exclude`＝原书明言「諸事皆忌」或「雖與德合併猶忌」，该日定为忌；
+   * - `normal`＝原书写「如常例」「不註宜亦不註忌」，两不注（也是无条款时的默认）；
+   * - `delegate`＝原书写「從某煞論」，按 `delegateShensha` 的结论处置。
+   */
+  outcome: 'lift' | 'exclude' | 'normal' | 'delegate'
+  /** outcome 为 delegate 时的被转致神煞名（如「從月破論」）。 */
+  delegateShensha?: string
   /** 来源定位：卷次、条目与帧号。 */
   locator: string
 }
