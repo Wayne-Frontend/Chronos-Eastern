@@ -1,4 +1,4 @@
-import { ADJUDICATION_CLAUSES } from '../data/rules/adjudication'
+import { ADJUDICATION_CLAUSES, DAY_WIDE_EXCLUSION_PILLARS } from '../data/rules/adjudication'
 import { MONTH_GOD_TABLES } from '../data/rules/month-gods'
 import type { AdjudicationClause, RulePack } from '../types/rule'
 import { resolveMonthIndexed, resolveMonthIndexedSet } from './rule-facts'
@@ -90,6 +90,22 @@ export function isShenshaPresent(name: string, facts: DateFacts): boolean | null
   }
 
   return target === (entry.fact === 'branch' ? dayBranch : dayStem)
+}
+
+/**
+ * 该日是否落在卷十《月厭》的整日「诸事皆忌」清单里（陰陽大會、小會、陰位、交破、
+ * 擊衝、陽破陰衝、陰道衝陽、三陰、絕陰、絕陽）。
+ * 边界：缺输入（月支或日柱解析不出）按 false 处理——宁可维持常例，不得凭空定为忌。
+ */
+export function isDayWideExcluded(facts: DateFacts): boolean {
+  const monthBranch = facts.ganzhi.monthJieQi?.branch ?? null
+  const dayPillar = facts.dayPillar
+
+  if (monthBranch === null || dayPillar === null) {
+    return false
+  }
+
+  return (DAY_WIDE_EXCLUSION_PILLARS[monthBranch] ?? []).includes(dayPillar)
 }
 
 /** 单个忌神煞当日的结论：解除、定为忌、或按常例（两不注）。 */

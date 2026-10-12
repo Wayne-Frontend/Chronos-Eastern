@@ -1,6 +1,6 @@
 import type { DateInfo } from '../types/calendar'
 import type { RuleCondition, RuleDefinition, RulePack } from '../types/rule'
-import { applyAdjudication } from './rule-adjudication'
+import { applyAdjudication, isDayWideExcluded } from './rule-adjudication'
 import { splitGanzhi, type GanzhiParts } from '../utils/ganzhi'
 import {
   getJianChu,
@@ -184,6 +184,11 @@ export function evaluateDay(pack: RulePack, facts: DateFacts): DayEvaluation {
 
   if (matchedRuleIds.length > 0 && excludeRuleIds.length > 0) {
     // 宜忌并见：先按卷十的例外条款裁决，再决定是「解除」还是维持常例。
+    // 卷十《月厭》条下的陰陽大會、小會、陰位等日「諸事皆忌」，优先于一切解除条款。
+    if (isDayWideExcluded(facts)) {
+      return { status: 'excluded', ...base, adjudicatedRuleIds: [] }
+    }
+
     // 条款只做解除、不做加忌；未编码的神煞原样保留，整日仍按常例不出结论。
     const adjudication = applyAdjudication(pack, facts, excludeRuleIds)
 
