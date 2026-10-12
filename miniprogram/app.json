@@ -4,6 +4,7 @@
     "pages/calendar/calendar",
     "pages/find-date/find-date",
     "pages/about/about",
+    "pages/favorites/favorites",
     "pages/day-detail/day-detail"
   ],
   "window": {

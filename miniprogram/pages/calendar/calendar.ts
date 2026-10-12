@@ -43,6 +43,9 @@ Component({
     backToToday() {
       this.setData({ view: buildInitialView() })
     },
+    openFavorites() {
+      wx.navigateTo({ url: '/pages/favorites/favorites' })
+    },
     onMonthPicked(event: { detail: { value: string } }) {
       const parsed = parseDateKey(`${String(event.detail.value)}-01`)
 

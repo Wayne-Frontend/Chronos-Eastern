@@ -68,6 +68,13 @@
     >
       回到今天
     </button>
+    <button
+      class="secondary-button calendar-actions__button"
+      bindtap="openFavorites"
+      hover-class="button-pressed"
+    >
+      我的收藏
+    </button>
   </view>
 
   <text wx:if="{{view.status === 'ok' && view.noticeText}}" class="calendar-hint">

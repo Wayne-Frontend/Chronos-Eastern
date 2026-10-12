@@ -93,11 +93,12 @@ page {
 }
 
 .calendar-actions__button {
-  width: 360rpx;
+  width: 300rpx;
   margin: 0;
 }
 
 .calendar-actions {
+  gap: 20rpx;
   justify-content: center;
 }
 

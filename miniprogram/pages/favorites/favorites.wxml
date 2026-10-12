@@ -1,0 +1,72 @@
+<navigation-bar title="我的收藏" color="#24211E" background="#F7F3EA"></navigation-bar>
+
+<scroll-view class="favorites-scroll" scroll-y enhanced show-scrollbar="{{false}}">
+  <view class="page-shell page-content favorites-page">
+    <view class="favorites-intro">
+      <text class="favorites-intro__title">记下的日子，随时找回</text>
+      <text class="favorites-intro__description">收藏仅保存在当前设备，不会自动同步到其他设备。</text>
+    </view>
+
+    <view wx:if="{{view.status === 'error'}}" class="section-card favorites-notice">
+      <text>{{view.noticeText}}</text>
+      <button class="secondary-button favorites-retry" bindtap="refresh" hover-class="button-pressed">重试</button>
+    </view>
+
+    <block wx:else>
+      <view class="favorites-heading">
+        <text>接下来的日子</text>
+        <text class="favorites-heading__count">{{view.upcoming.length}} 个</text>
+      </view>
+
+      <empty-state
+        wx:if="{{view.upcoming.length === 0}}"
+        title="还没有即将到来的收藏"
+        description="在日期详情页点“收藏”，就能在这里快速找回。"
+      ></empty-state>
+
+      <view wx:else class="section-card favorites-list">
+        <view
+          wx:for="{{view.upcoming}}"
+          wx:key="dateKey"
+          class="favorites-item"
+          data-date-key="{{item.dateKey}}"
+          bindtap="openDetail"
+          hover-class="favorites-item--pressed"
+          aria-role="button"
+          aria-label="查看 {{item.dateKey}} 详情"
+        >
+          <view class="favorites-item__text">
+            <text class="favorites-item__date">{{item.dateText}}</text>
+            <text class="favorites-item__weekday">{{item.weekdayText}}</text>
+          </view>
+          <text class="favorites-item__arrow">›</text>
+        </view>
+      </view>
+
+      <view wx:if="{{view.past.length > 0}}" class="favorites-past">
+        <button class="favorites-past__toggle" bindtap="togglePast" hover-class="button-pressed" aria-label="{{view.showPast ? '收起' : '查看'}}过去的收藏">
+          <text>过去的收藏 · {{view.past.length}} 个</text>
+          <text>{{view.showPast ? '收起' : '查看'}}</text>
+        </button>
+        <view wx:if="{{view.showPast}}" class="section-card favorites-list">
+          <view
+            wx:for="{{view.past}}"
+            wx:key="dateKey"
+            class="favorites-item"
+            data-date-key="{{item.dateKey}}"
+            bindtap="openDetail"
+            hover-class="favorites-item--pressed"
+            aria-role="button"
+            aria-label="查看 {{item.dateKey}} 详情"
+          >
+            <view class="favorites-item__text">
+              <text class="favorites-item__date">{{item.dateText}}</text>
+              <text class="favorites-item__weekday">{{item.weekdayText}}</text>
+            </view>
+            <text class="favorites-item__arrow">›</text>
+          </view>
+        </view>
+      </view>
+    </block>
+  </view>
+</scroll-view>
