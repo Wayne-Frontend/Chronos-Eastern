@@ -44,18 +44,29 @@ interface RuleSectionShape {
 
 function loadDetail(options: Record<string, string>): {
   status: string
+  isOverview: boolean
   dateKey: string
   ruleSections: RuleSectionShape[]
 } {
   const page = pageDefinitions[0] as {
     onLoad: (options: Record<string, string>) => void
   }
-  let view: { status: string; dateKey: string; ruleSections: RuleSectionShape[] } | null = null
+  let view: {
+    status: string
+    isOverview: boolean
+    dateKey: string
+    ruleSections: RuleSectionShape[]
+  } | null = null
 
   page.onLoad.call(
     {
       setData: (patch: {
-        view: { status: string; dateKey: string; ruleSections: RuleSectionShape[] }
+        view: {
+          status: string
+          isOverview: boolean
+          dateKey: string
+          ruleSections: RuleSectionShape[]
+        }
       }) => {
         view = patch.view
       },
@@ -107,6 +118,14 @@ describe('日期详情页的事项上下文', () => {
     expect(view.ruleSections.map((section) => section.eventTypeId)).toEqual(['travel'])
   })
 
+  it('显式指定不可查询的事项，不误认为全部事项均未开放', () => {
+    const view = loadDetail({ date: '2026-10-02', eventType: 'moving-in' })
+
+    expect(view.status).toBe('ok')
+    expect(view.isOverview).toBe(false)
+    expect(view.ruleSections).toEqual([])
+  })
+
   it('只有日期时展示全部已开放事项，不展示整理中或不提供的事项', () => {
     const entries: Record<string, string>[] = [
       { date: '2026-10-02', from: 'calendar' },
@@ -115,7 +134,9 @@ describe('日期详情页的事项上下文', () => {
     ]
 
     for (const options of entries) {
-      expect(loadDetail(options).ruleSections.map((section) => section.eventTypeId)).toEqual([
+      const view = loadDetail(options)
+      expect(view.isOverview).toBe(true)
+      expect(view.ruleSections.map((section) => section.eventTypeId)).toEqual([
         'travel',
         'relocation',
         'opening',

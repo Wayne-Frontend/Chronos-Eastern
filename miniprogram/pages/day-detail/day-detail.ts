@@ -72,6 +72,7 @@ interface RuleSectionViewModel {
 
 interface DayDetailViewModel {
   status: DayDetailStatus
+  isOverview: boolean
   dateLabel: string
   dateKey: string
   weekdayText: string
@@ -92,6 +93,7 @@ Page({
   data: {
     view: {
       status: 'invalid',
+      isOverview: false,
       dateLabel: '日期参数',
       dateKey: '',
       weekdayText: '',
@@ -217,7 +219,7 @@ function buildDayDetailViewModel(
     return buildSuccessViewModel(info.value, eventTypeIds, isOverview)
   }
 
-  return buildFailureViewModel(input, info.code)
+  return buildFailureViewModel(input, info.code, isOverview)
 }
 
 function buildSuccessViewModel(
@@ -231,6 +233,7 @@ function buildSuccessViewModel(
 
   return {
     status: 'ok',
+    isOverview,
     dateLabel: '公历',
     dateKey: info.dateKey,
     weekdayText: formatWeekday(info.solar.weekday),
@@ -260,7 +263,11 @@ function buildSuccessViewModel(
   }
 }
 
-function buildFailureViewModel(input: string, code: CalendarServiceErrorCode): DayDetailViewModel {
+function buildFailureViewModel(
+  input: string,
+  code: CalendarServiceErrorCode,
+  isOverview: boolean,
+): DayDetailViewModel {
   const parsed = parseDateKey(input)
   const civil = parsed.ok ? parsed.value : null
   const status: DayDetailStatus =
@@ -272,6 +279,7 @@ function buildFailureViewModel(input: string, code: CalendarServiceErrorCode): D
 
   return {
     status,
+    isOverview,
     dateLabel: status === 'invalid' ? '日期参数' : '日期',
     dateKey: civil ? civil.dateKey : '',
     weekdayText: civil

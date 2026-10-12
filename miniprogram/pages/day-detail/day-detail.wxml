@@ -43,8 +43,8 @@
 
   <view wx:if="{{view.status === 'ok' && view.ruleSections.length === 0}}" class="detail-block section-card">
     <empty-state
-      title="本版本暂无开放的择日事项"
-      description="日期信息仍可查看，传统择日参考将在事项开放后显示。"
+      title="{{view.isOverview ? '本版本暂无开放的择日事项' : '该事项暂不可查询'}}"
+      description="{{view.isOverview ? '日期信息仍可查看，传统择日参考将在事项开放后显示。' : '请从找日子选择已开放事项；日期信息仍可查看。'}}"
     ></empty-state>
   </view>
 
