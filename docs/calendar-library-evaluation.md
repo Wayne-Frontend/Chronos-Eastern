@@ -1,14 +1,14 @@
 # `lunar-javascript@1.7.7` 技术评估
 
 > 评估日期：2026-10-09
-> 当前状态：**资料审查、Node/TypeScript 隔离、微信构建、包体积、开发者工具与 iOS 真机验证已完成；Android 真机验证待完成，当前为部分 Go。**
+> 当前状态：**资料审查、Node/TypeScript 隔离、微信构建、包体积、开发者工具与 iOS/Android 真机验证均已完成，当前为 Go。**
 > 目标范围：微信小程序内的公历、农历、星期、干支基础字段与二十四节气；不评估也不采用库内宜忌、吉凶或命理能力。
 
 ## 1. 初步结论
 
-建议对 `lunar-javascript@1.7.7` 作**部分 Go**：它无运行时第三方依赖，提供 CommonJS/UMD 入口，基础公农历和节气 API 能覆盖 V1.0 需求；微信小程序构建、主包体积、UTC+8 一致性、权威样本准确性和 iOS 真机已经过本项目实测。Android 真机仍是生产采用前的最后一项环境门禁。
+对 `lunar-javascript@1.7.7` 作 **Go**：它无运行时第三方依赖，提供 CommonJS/UMD 入口，基础公农历和节气 API 能覆盖 V1.0 需求；微信小程序构建、主包体积、UTC+8 一致性、权威样本准确性及 iOS/Android 真机均已完成验证。该结论只覆盖适配器白名单内的基础历法 API，不扩展到库内宜忌、吉神凶煞、八字或法定节假日能力。
 
-生产结论必须保持为“待定”，原因包括：
+以下风险继续通过适配器隔离、固定版本与回归测试控制：
 
 - 该包是单体 CommonJS 入口，未声明 ESM、`exports` 或 TypeScript 类型，裁剪效果与微信构建行为必须实测。[v1.7.7 `package.json`](https://github.com/6tail/lunar-javascript/blob/v1.7.7/package.json)、[v1.7.7 文件列表](https://github.com/6tail/lunar-javascript/tree/v1.7.7)
 - 源码的 `fromDate` 读取宿主环境的本地年月日时分秒，没有显式时区参数；公开 issue 也有跨时区结果不一致的未解决报告。适配器必须以 UTC+8 先归一化，再调用 `Solar.fromYmd`/`Solar.fromYmdHms`，不得直接传入业务 `Date`。[源码 `Solar.fromDate`](https://github.com/6tail/lunar-javascript/blob/v1.7.7/lunar.js#L13-L15)、[Issue #65](https://github.com/6tail/lunar-javascript/issues/65)
@@ -36,7 +36,7 @@
 
 - [x] 微信开发者工具可完成“构建 npm”并正常编译：TS 模板结构（`miniprogramRoot: "miniprogram/"` 与根目录 `package.json` 分离）必须配置 `packNpmManually: true` 与 `packNpmRelationList`，否则报 `NPM packages not found`。
 - [x] Skyline 与 WebView 两种渲染路径中，适配器运行结果一致：基础库 3.17.2 + 「开启 Skyline 渲染调试」，首页与日期详情显示与 WebView 一致。
-- [ ] 开发者工具、iOS 真机、Android 真机对相同 UTC+8 输入输出一致：开发者工具与 iOS 真机通过，Android 真机待补。
+- [x] 开发者工具、iOS 真机、Android 真机运行验证完成；2026-10-12 用户确认当前 `v1.0.0` 已完成双端测试并提交审核。详细设备型号和微信版本未在仓库中归档。
 - [x] 记录安装前后 `miniprogram_npm`、主包及上传包体积变化；确认未突破项目预算。
 - [x] 确认构建产物没有动态执行、Node 核心模块或浏览器 DOM 依赖：产物为开发者工具的 CommonJS 包装，无 `eval`、`new Function`、Node 核心模块或 DOM 引用。
 
@@ -214,18 +214,18 @@ v1.7.6 修复过闰月及后续月份干支错误，因此不能只验证闰月�
 | 安装版本与完整性 | 通过 | `package.json` 精确固定 `1.7.7`；`package-lock.json` 已写入完整性；`npm ls lunar-javascript --json` 确认为 `1.7.7`，无运行时子依赖 |
 | 微信开发者工具版本 | 通过 | Stable 2.02.2608080（win32）；构建 npm 成功，配置见第 2 节 |
 | Skyline 编译/运行 | 通过（开发者工具） | 基础库 3.17.2 + Skyline 渲染调试；首页与日期详情显示与 WebView 一致，控制台无异常 |
-| WebView 编译/运行 | 通过（开发者工具 + iOS 真机） | 首页与日期详情显示农历、三柱干支、节气倒计时，与 Node 端输出一致；Android 真机待补 |
+| WebView 编译/运行 | 通过（开发者工具 + iOS/Android 真机） | 首页与日期详情显示农历、三柱干支、节气倒计时；2026-10-12 用户确认当前提交版本已完成双端测试 |
 | 主包体积增量 | 通过 | 原始 `index.js + lunar.js` 共 `436,728` 字节 → 构建后 `miniprogram_npm/lunar-javascript/index.js` 为 `438,382` 字节（+`1,654`，+0.38%）；另有 `index.js.map` `488,256` 字节（源码定位用，不计入体积判断）。页面代码 `52,448` 字节，含产物共约 `479 KB`，远低于 2 MB 主包上限 |
 | 产物依赖扫描 | 通过 | 构建产物无 `eval` / `new Function` / Node 核心模块 / DOM / 网络 API；未做 tree-shaking，库内禁用能力仍在产物中，靠适配器白名单与代码审查约束调用面 |
 | TypeScript 隔离 | 通过 | 项目自有最小 `.d.ts` 只暴露白名单 API；`npm run typecheck` 通过 |
-| UTC+8 跨时区测试 | Node 环境通过 | 同一日期在 `Asia/Shanghai`、`UTC`、`America/Los_Angeles` 三个宿主时区结果一致；开发者工具与真机待验证 |
+| UTC+8 跨时区测试 | Node 环境通过，双端运行通过 | 同一日期在 `Asia/Shanghai`、`UTC`、`America/Los_Angeles` 三个宿主时区结果一致；当前版本已完成 iOS/Android 真机测试，但详细逐设备输入输出记录未归档 |
 | 权威日期夹具 | 初始集通过 | 11 组 HKO 公农历样本覆盖 1901/2100 边界、春节和 7 组闰月 |
 | 二十四节气回归 | 通过（10 年主源 + 4 年交叉源） | 2017—2026 年逐年 24 节气与紫金山天文台《日历资料》（GB/T 33661—2017 编制）逐条比对：`240/240` 日期一致，交节时刻差值 `−30s ~ +31s`（来源只公布到分钟，最大 31 秒为取整效应）；2027—2030 年与香港天文台对照表比对 `96/96` 一致。两源在 2021—2026 重叠年份的 `144` 条日期完全一致。夹具：`tests/fixtures/solar-terms-authority.ts`，测试：`tests/solar-terms.test.ts`（全年逐日扫描，覆盖 5110 个日期） |
 | 代码边界扫描 | 通过 | 只有 `adapters/lunar-adapter.ts` 引用第三方包（他处仅版本号字符串）；调用面全部落在白名单；`getDayYi`/`getDayJi`/`getJiShen`/`getEightChar`/`HolidayUtil`/`getFestivals`/`fromDate`/`toFullString` 在业务路径零命中；`vendor/THIRD_PARTY_NOTICES.md` 保留 MIT 全文 |
 | 干支口径 | 已定案：年/月统一按日 | 见 4.2；`yearLiChun` 用 `getYearInGanZhiByLiChun`、`monthJieQi` 用 `getMonthInGanZhi`，交节日整日切换；`tests/lunar-adapter.test.ts` 覆盖立春（2026-02-04）与惊蛰（2026-03-05）当日边界 |
 | Issue #66/#70 复现 | 日期级路径通过 | `2025-12-21` 为冬至、`2026-01-02` 无当日节气、`2026-01-05` 为小寒；秒级精度和立春临界仍待权威时刻核验 |
-| 自动化结果 | 通过 | 2026-10-10 全量质量门禁共 15 个测试文件、263 项测试通过；除历法、节气、日期、格式、节日、最近节日和收藏外，已覆盖规则事实层、完整出行条目、有限支持门禁、找日子分批查询、冲突日期清单、单日规则解释与结果表述层。后续以 `npm run check` 的最新输出为准。 |
-| 最终决定 | 部分 Go（仅剩 Android 真机） | 微信构建、包体积、产物扫描、Skyline + WebView 双路径、iOS 真机、10 年 24 节气回归、代码边界扫描均已通过；生产采用前还需 Android 真机复验 |
+| 自动化结果 | 通过 | 2026-10-12 全量质量门禁共 19 个测试文件、319 项测试通过；覆盖历法、节气、日期、格式、节日、收藏、规则事实层、四个规则包、事项门禁、找日子服务与页面状态、单日规则解释、详情上下文和关于页交互。 |
+| 最终决定 | Go | 微信构建、包体积、产物扫描、Skyline + WebView、iOS/Android 真机、10 年 24 节气回归和代码边界扫描均已通过；`v1.0.0` 已提交审核 |
 
 ## 9. 升级规则
 
