@@ -348,11 +348,14 @@ page {
 
 .detail-action {
   display: flex;
+  gap: 16rpx;
   margin-top: 36rpx;
 }
 
 .detail-action__button {
   width: 100%;
+  min-width: 0;
+  flex: 1;
   margin: 0;
 }
 

@@ -111,6 +111,22 @@ Page({
       view: buildDayDetailViewModel(options.date ?? '', parseEventTypeIds(options)),
     })
   },
+  onShareAppMessage() {
+    const view = this.data.view
+    const parsed = view.status === 'ok' ? parseDateKey(view.dateKey) : null
+
+    // 分享入口可能来自页面按钮或微信菜单；仅从已验证的日期生成路径，绝不带上收藏和查询上下文。
+    if (!parsed?.ok) {
+      return { title: '岁月良辰 · 传统历法日期参考', path: '/pages/index/index' }
+    }
+
+    const { year, month, day, dateKey } = parsed.value
+
+    return {
+      title: `${year}年${month}月${day}日 · 岁月良辰`,
+      path: `/pages/day-detail/day-detail?date=${dateKey}`,
+    }
+  },
   goToday() {
     wx.redirectTo({
       url: `/pages/day-detail/day-detail?date=${getTodayDateKey()}`,

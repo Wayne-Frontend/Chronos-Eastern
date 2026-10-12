@@ -138,6 +138,14 @@
       <text class="detail-favorite__icon">{{view.isFavorite ? '★' : '☆'}}</text>
       <text>{{view.isFavorite ? '已收藏' : '收藏'}}</text>
     </button>
+    <button
+      class="secondary-button detail-action__button"
+      open-type="share"
+      hover-class="button-pressed"
+      aria-label="分享当前日期"
+    >
+      分享日期
+    </button>
   </view>
 
   <text wx:if="{{view.favoriteNotice}}" class="detail-favorite__notice">

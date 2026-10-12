@@ -43,16 +43,19 @@ interface RuleSectionShape {
 
 function loadDetail(options: Record<string, string>): {
   status: string
+  dateKey: string
   ruleSections: RuleSectionShape[]
 } {
   const page = pageDefinitions[0] as {
     onLoad: (options: Record<string, string>) => void
   }
-  let view: { status: string; ruleSections: RuleSectionShape[] } | null = null
+  let view: { status: string; dateKey: string; ruleSections: RuleSectionShape[] } | null = null
 
   page.onLoad.call(
     {
-      setData: (patch: { view: { status: string; ruleSections: RuleSectionShape[] } }) => {
+      setData: (patch: {
+        view: { status: string; dateKey: string; ruleSections: RuleSectionShape[] }
+      }) => {
         view = patch.view
       },
     },
@@ -131,6 +134,35 @@ describe('日期详情页的事项上下文', () => {
       expect(rule.id).not.toBe('')
       expect(rule.statusText).toBe('已校勘')
     }
+  })
+})
+
+describe('日期详情分享', () => {
+  it('只分享公开日期，不携带事项、收藏或页面来源', () => {
+    const page = pageDefinitions[0] as {
+      onShareAppMessage: (this: { data: { view: ReturnType<typeof loadDetail> } }) => {
+        title: string
+        path: string
+      }
+    }
+    const view = loadDetail({ date: '2026-10-15', eventType: 'travel', from: 'favorites' })
+
+    expect(page.onShareAppMessage.call({ data: { view } })).toEqual({
+      title: '2026年10月15日 · 岁月良辰',
+      path: '/pages/day-detail/day-detail?date=2026-10-15',
+    })
+  })
+
+  it('无效日期只分享首页，不传播错误参数', () => {
+    const page = pageDefinitions[0] as {
+      onShareAppMessage: (this: { data: { view: ReturnType<typeof loadDetail> } }) => {
+        title: string
+        path: string
+      }
+    }
+    const view = loadDetail({ date: 'invalid-date' })
+
+    expect(page.onShareAppMessage.call({ data: { view } }).path).toBe('/pages/index/index')
   })
 })
 
