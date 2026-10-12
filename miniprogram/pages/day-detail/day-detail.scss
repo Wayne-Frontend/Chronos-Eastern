@@ -194,6 +194,21 @@ page {
   line-height: 1.75;
 }
 
+.detail-rules__details-toggle {
+  width: 100%;
+  min-height: 72rpx;
+  margin: 20rpx 0 0;
+  color: var(--color-info-text);
+  font-size: 25rpx;
+  background: var(--color-surface-soft);
+  border: 1rpx solid var(--color-border);
+  border-radius: var(--radius-button);
+}
+
+.detail-rules__details-toggle--pressed {
+  opacity: 0.75;
+}
+
 .detail-rules__reason-title {
   display: block;
   margin-top: 32rpx;

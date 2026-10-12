@@ -55,6 +55,14 @@ export function describeDateOutcome(status: DayStatus, eventName: string): DateO
         summary: '现有信息不足，暂时无法给出清晰的传统择日参考。',
         suggestion: '请以现实安排和实际条件为准。',
       }
+    case 'not_matched':
+      return {
+        badge: '—',
+        badgeClass: 'none',
+        title: `未匹配已收录规则 · ${eventName}`,
+        summary: `这一天未匹配到本版本已收录的${eventName}规则；不代表宜或忌。`,
+        suggestion: '请结合现实安排和实际条件决定。',
+      }
     default:
       return {
         badge: '—',

@@ -5,6 +5,7 @@ import {
   type CalendarServiceErrorCode,
 } from '../../services/calendar-service'
 import { FESTIVAL_CATEGORY_LABELS } from '../../data/festivals'
+import { canQueryEventType, EVENT_TYPES } from '../../data/event-types'
 import { describeCoverage } from '../../data/rules/manifest'
 import { addFavorite, isFavorite, removeFavorite } from '../../services/favorite-service'
 import { matchFestivals } from '../../services/festival-service'
@@ -61,6 +62,7 @@ interface RuleSectionViewModel {
   /** 规则包版本用于详情页追溯，与逐条规则编号共同构成依据元信息。 */
   rulePackText: string
   rules: readonly RuleDisplayItem[]
+  detailsExpanded: boolean
   noticeText: string
   /** partial 规则包的覆盖范围披露（合规要求的第三处），complete 时为空。 */
   coverageNoticeText: string
@@ -107,8 +109,15 @@ Page({
     } as DayDetailViewModel,
   },
   onLoad(options) {
+    const requestedEventTypeIds = parseEventTypeIds(options)
+    const isOverview = requestedEventTypeIds.length === 0
+    // 只有日期的入口（如日历、收藏与分享）展示全部已开放事项；明确传入事项时仍保持聚焦。
+    const eventTypeIds = !isOverview
+      ? requestedEventTypeIds
+      : EVENT_TYPES.filter(canQueryEventType).map((entry) => entry.id)
+
     this.setData({
-      view: buildDayDetailViewModel(options.date ?? '', parseEventTypeIds(options)),
+      view: buildDayDetailViewModel(options.date ?? '', eventTypeIds, isOverview),
     })
   },
   onShareAppMessage() {
@@ -166,13 +175,23 @@ Page({
       [`view.ruleSections[${sectionIndex}].rules[${index}].sourceExpanded`]: !item.sourceExpanded,
     })
   },
+  toggleRuleDetails(event: WechatMiniprogram.TouchEvent) {
+    const index = Number(event.currentTarget.dataset.index)
+    const section = this.data.view.ruleSections[index]
+
+    if (!Number.isInteger(index) || !section) {
+      return
+    }
+
+    this.setData({ [`view.ruleSections[${index}].detailsExpanded`]: !section.detailsExpanded })
+  },
 })
 
 /**
  * 从页面参数里取出要展示的事项。
  * 原因：首页的今日宜忌可能同时给出几个事项的结论，详情页必须把它们一并展示，
  * 否则用户看到「宜出行、忌开业」却只读到出行一个说法。
- * 边界：兼容旧的单数 `eventType` 参数；两者都缺时返回空数组，页面显示空状态而不是猜一个事项。
+ * 边界：兼容旧的单数 `eventType` 参数；两者都缺时返回空数组，由页面切换到全部已开放事项概览。
  */
 function parseEventTypeIds(options: Record<string, string | undefined>): string[] {
   const raw = options.eventTypes ?? options.eventType ?? ''
@@ -190,11 +209,12 @@ function parseEventTypeIds(options: Record<string, string | undefined>): string[
 function buildDayDetailViewModel(
   input: string,
   eventTypeIds: readonly string[],
+  isOverview: boolean,
 ): DayDetailViewModel {
   const info = getDateInfo(input)
 
   if (info.ok) {
-    return buildSuccessViewModel(info.value, eventTypeIds)
+    return buildSuccessViewModel(info.value, eventTypeIds, isOverview)
   }
 
   return buildFailureViewModel(input, info.code)
@@ -203,6 +223,7 @@ function buildDayDetailViewModel(
 function buildSuccessViewModel(
   info: DateInfo,
   eventTypeIds: readonly string[],
+  isOverview: boolean,
 ): DayDetailViewModel {
   const nextDayKey = addDaysToDateKey(info.dateKey, 1)
   const nextDay = nextDayKey ? getDateInfo(nextDayKey) : null
@@ -234,7 +255,7 @@ function buildSuccessViewModel(
     favoriteNotice: favorite.ok ? '' : favorite.message,
     noticeText: '',
     ruleSections: eventTypeIds
-      .map((eventTypeId) => buildRuleSection(info.dateKey, eventTypeId))
+      .map((eventTypeId) => buildRuleSection(info.dateKey, eventTypeId, isOverview))
       .filter((section) => section !== null),
   }
 }
@@ -271,7 +292,11 @@ function buildFailureViewModel(input: string, code: CalendarServiceErrorCode): D
 }
 
 /** 读不出结论的事项返回 null，由调用方跳过，不补一张空卡充数。 */
-function buildRuleSection(dateKey: string, eventType: string): RuleSectionViewModel | null {
+function buildRuleSection(
+  dateKey: string,
+  eventType: string,
+  isOverview: boolean,
+): RuleSectionViewModel | null {
   if (eventType === '') {
     return null
   }
@@ -293,6 +318,7 @@ function buildRuleSection(dateKey: string, eventType: string): RuleSectionViewMo
       suggestion: '',
       rulePackText: '',
       rules: [],
+      detailsExpanded: !isOverview,
       noticeText: '',
       coverageNoticeText: '',
       coverageText: '',
@@ -317,6 +343,7 @@ function buildRuleSection(dateKey: string, eventType: string): RuleSectionViewMo
       ...value.matchedRules.map((rule) => toRuleDisplayItem(rule, value.eventName, false)),
       ...value.unknownRules.map((rule) => toRuleDisplayItem(rule, value.eventName, true)),
     ],
+    detailsExpanded: !isOverview,
     noticeText: '',
     coverageNoticeText: coverage.noticeText,
     coverageText: coverage.coverageText,

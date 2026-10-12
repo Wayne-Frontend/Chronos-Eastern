@@ -41,10 +41,10 @@
     <text>{{view.noticeText}}</text>
   </view>
 
-  <view wx:if="{{view.ruleSections.length === 0}}" class="detail-block section-card">
+  <view wx:if="{{view.status === 'ok' && view.ruleSections.length === 0}}" class="detail-block section-card">
     <empty-state
-      title="今天暂无传统择日建议"
-      description="从“找日子”或首页的当天参考进入，可以查看对应事项的结果。"
+      title="本版本暂无开放的择日事项"
+      description="日期信息仍可查看，传统择日参考将在事项开放后显示。"
     ></empty-state>
   </view>
 
@@ -58,10 +58,6 @@
   >
     <text class="detail-rules__eyebrow">{{section.eventName}}参考</text>
     <text class="detail-rules__title">{{section.title}}</text>
-    <view wx:if="{{section.rulePackText}}" class="detail-rules__meta-row">
-      <text>{{section.rulePackText}}</text>
-      <text>规则均已校勘</text>
-    </view>
     <text class="detail-rules__description">{{section.description}}</text>
     <text wx:if="{{section.suggestion}}" class="detail-rules__suggestion">{{section.suggestion}}</text>
     <text wx:if="{{section.noticeText}}" class="detail-rules__notice">{{section.noticeText}}</text>
@@ -69,61 +65,78 @@
     <text wx:if="{{section.coverageNoticeText}}" class="detail-rules__coverage-notice">
       {{section.coverageNoticeText}}
     </text>
-    <text wx:if="{{section.coverageText}}" class="detail-rules__coverage-text">
-      {{section.coverageText}}
-    </text>
+    <button
+      wx:if="{{section.coverageText || section.rules.length > 0}}"
+      class="detail-rules__details-toggle"
+      data-index="{{sectionIndex}}"
+      bindtap="toggleRuleDetails"
+      hover-class="detail-rules__details-toggle--pressed"
+      aria-expanded="{{section.detailsExpanded}}"
+    >
+      {{section.detailsExpanded ? '收起依据与限制' : '查看依据与限制'}}
+    </button>
 
-    <text wx:if="{{section.rules.length > 0}}" class="detail-rules__reason-title">为什么这样说</text>
+    <block wx:if="{{section.detailsExpanded}}">
+      <view wx:if="{{section.rulePackText}}" class="detail-rules__meta-row">
+        <text>{{section.rulePackText}}</text>
+        <text>规则均已校勘</text>
+      </view>
+      <text wx:if="{{section.coverageText}}" class="detail-rules__coverage-text">
+        {{section.coverageText}}
+      </text>
 
-    <view wx:for="{{section.rules}}" wx:key="id" class="detail-rule">
-      <view class="detail-rule__head">
-        <view class="detail-rule__badge detail-rule__badge--{{item.effectClass}}">
-          {{item.badgeText}}
+      <text wx:if="{{section.rules.length > 0}}" class="detail-rules__reason-title">为什么这样说</text>
+
+      <view wx:for="{{section.rules}}" wx:key="id" class="detail-rule">
+        <view class="detail-rule__head">
+          <view class="detail-rule__badge detail-rule__badge--{{item.effectClass}}">
+            {{item.badgeText}}
+          </view>
+          <view class="detail-rule__copy">
+            <text class="detail-rule__title">{{item.title}}</text>
+            <text class="detail-rule__summary">{{item.summary}}</text>
+          </view>
         </view>
-        <view class="detail-rule__copy">
-          <text class="detail-rule__title">{{item.title}}</text>
-          <text class="detail-rule__summary">{{item.summary}}</text>
+        <view
+          class="detail-rule__source-toggle"
+          data-section-index="{{sectionIndex}}"
+          data-index="{{index}}"
+          bindtap="toggleRuleSource"
+          hover-class="detail-rule__source-toggle--pressed"
+          aria-role="button"
+          aria-label="{{item.sourceExpanded ? '收起传统说法与出处' : '了解传统说法与出处'}}"
+          aria-expanded="{{item.sourceExpanded}}"
+        >
+          <image
+            class="detail-rule__source-icon"
+            src="{{item.sourceExpanded ? '/assets/icons/chevron-up-blue.svg' : '/assets/icons/chevron-down-blue.svg'}}"
+            mode="aspectFit"
+            aria-hidden="true"
+          ></image>
+          <text class="detail-rule__source-toggle-label">{{item.sourceExpanded ? '收起传统说法与出处' : '了解传统说法与出处'}}</text>
+        </view>
+        <view wx:if="{{item.sourceExpanded}}" class="detail-rule__source">
+          <view class="detail-rule__identity">
+            <text>{{item.id}}</text>
+            <text>{{item.statusText}}</text>
+          </view>
+          <text class="detail-rule__source-label">传统说法</text>
+          <text class="detail-rule__meta">{{item.explanation}}</text>
+          <text class="detail-rule__source-label">原文出处</text>
+          <text class="detail-rule__meta">{{item.locator}}</text>
+          <text wx:if="{{item.sourceText}}" class="detail-rule__meta">来源：{{item.sourceText}}</text>
+          <block wx:if="{{item.limitations.length > 0}}">
+            <text class="detail-rule__source-label">适用范围与限制</text>
+            <text
+              wx:for="{{item.limitations}}"
+              wx:for-item="limitation"
+              wx:key="*this"
+              class="detail-rule__meta"
+            >{{limitation}}</text>
+          </block>
         </view>
       </view>
-      <view
-        class="detail-rule__source-toggle"
-        data-section-index="{{sectionIndex}}"
-        data-index="{{index}}"
-        bindtap="toggleRuleSource"
-        hover-class="detail-rule__source-toggle--pressed"
-        aria-role="button"
-        aria-label="{{item.sourceExpanded ? '收起传统说法与出处' : '了解传统说法与出处'}}"
-        aria-expanded="{{item.sourceExpanded}}"
-      >
-        <image
-          class="detail-rule__source-icon"
-          src="{{item.sourceExpanded ? '/assets/icons/chevron-up-blue.svg' : '/assets/icons/chevron-down-blue.svg'}}"
-          mode="aspectFit"
-          aria-hidden="true"
-        ></image>
-        <text class="detail-rule__source-toggle-label">{{item.sourceExpanded ? '收起传统说法与出处' : '了解传统说法与出处'}}</text>
-      </view>
-      <view wx:if="{{item.sourceExpanded}}" class="detail-rule__source">
-        <view class="detail-rule__identity">
-          <text>{{item.id}}</text>
-          <text>{{item.statusText}}</text>
-        </view>
-        <text class="detail-rule__source-label">传统说法</text>
-        <text class="detail-rule__meta">{{item.explanation}}</text>
-        <text class="detail-rule__source-label">原文出处</text>
-        <text class="detail-rule__meta">{{item.locator}}</text>
-        <text wx:if="{{item.sourceText}}" class="detail-rule__meta">来源：{{item.sourceText}}</text>
-        <block wx:if="{{item.limitations.length > 0}}">
-          <text class="detail-rule__source-label">适用范围与限制</text>
-          <text
-            wx:for="{{item.limitations}}"
-            wx:for-item="limitation"
-            wx:key="*this"
-            class="detail-rule__meta"
-          >{{limitation}}</text>
-        </block>
-      </view>
-    </view>
+    </block>
 
     <text class="detail-rules__culture-note">传统文化参考，请结合现实安排与实际条件决定。</text>
   </view>

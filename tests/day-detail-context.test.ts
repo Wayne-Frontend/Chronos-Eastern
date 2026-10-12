@@ -36,6 +36,7 @@ await import('../miniprogram/pages/index/index')
 interface RuleSectionShape {
   eventTypeId: string
   eventName: string
+  detailsExpanded: boolean
   coverageNoticeText: string
   rulePackText: string
   rules: readonly { id: string; statusText: string; limitations: readonly string[] }[]
@@ -106,9 +107,52 @@ describe('日期详情页的事项上下文', () => {
     expect(view.ruleSections.map((section) => section.eventTypeId)).toEqual(['travel'])
   })
 
-  it('没有任何事项时不出卡，由空状态承担', () => {
-    expect(loadDetail({ date: '2026-10-02' }).ruleSections).toEqual([])
-    expect(loadDetail({ date: '2026-10-02', eventTypes: ' , ' }).ruleSections).toEqual([])
+  it('只有日期时展示全部已开放事项，不展示整理中或不提供的事项', () => {
+    const entries: Record<string, string>[] = [
+      { date: '2026-10-02', from: 'calendar' },
+      { date: '2026-10-02', from: 'favorites' },
+      { date: '2026-10-02' },
+    ]
+
+    for (const options of entries) {
+      expect(loadDetail(options).ruleSections.map((section) => section.eventTypeId)).toEqual([
+        'travel',
+        'relocation',
+        'opening',
+        'marriage',
+      ])
+    }
+  })
+
+  it('四项概览默认收起逐条依据，单事项详情默认展开', () => {
+    const overview = loadDetail({ date: '2026-10-02', from: 'calendar' })
+    const focused = loadDetail({ date: '2026-10-02', eventType: 'travel', from: 'find-date' })
+
+    expect(overview.ruleSections.every((section) => !section.detailsExpanded)).toBe(true)
+    expect(focused.ruleSections).toHaveLength(1)
+    expect(focused.ruleSections[0]?.detailsExpanded).toBe(true)
+  })
+
+  it('点击某项概览只展开该事项的依据与限制', () => {
+    const view = loadDetail({ date: '2026-10-02', from: 'calendar' })
+    const page = pageDefinitions[0] as {
+      toggleRuleDetails: (this: unknown, event: unknown) => void
+    }
+
+    page.toggleRuleDetails.call(
+      {
+        data: { view },
+        setData: (patch: Record<string, boolean>) => {
+          expect(patch).toEqual({ 'view.ruleSections[1].detailsExpanded': true })
+          view.ruleSections[1]!.detailsExpanded = true
+        },
+      },
+      { currentTarget: { dataset: { index: 1 } } },
+    )
+
+    expect(view.ruleSections[0]?.detailsExpanded).toBe(false)
+    expect(view.ruleSections[1]?.detailsExpanded).toBe(true)
+    expect(view.ruleSections[2]?.detailsExpanded).toBe(false)
   })
 
   it('每条依据都带上适用边界，供详情页与出处同屏展示', () => {
@@ -182,7 +226,7 @@ describe('首页跳详情时带上的事项', () => {
     ])
   })
 
-  it('今天没有结论时不带 eventTypes，详情页显示空状态而不是猜一个事项', () => {
+  it('首页今天没有结论时不带 eventTypes，详情页仍展示全事项概览', () => {
     const indexPage = componentDefinitions[0] as {
       methods: { openDetail: () => void }
     }
@@ -193,5 +237,6 @@ describe('首页跳详情时带上的事项', () => {
     })
 
     expect(navigation).toEqual(['/pages/day-detail/day-detail?date=2026-10-02&from=index'])
+    expect(loadDetail({ date: '2026-10-02', from: 'index' }).ruleSections).toHaveLength(4)
   })
 })

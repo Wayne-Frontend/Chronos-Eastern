@@ -37,6 +37,14 @@ describe('用户日期结果文案', () => {
     expect(copy.suggestion).toContain('其他日期')
   })
 
+  it('未命中已收录规则时不误称没有传统建议数据或诸事皆宜', () => {
+    const copy = describeDateOutcome('not_matched', '婚嫁')
+
+    expect(copy.title).toBe('未匹配已收录规则 · 婚嫁')
+    expect(copy.summary).toContain('本版本已收录的婚嫁规则')
+    expect(copy.summary).toContain('不代表宜或忌')
+  })
+
   it('单条原因先解释对结果的含义，专业原文留给出处区', () => {
     expect(describeRuleReason('天贼', 'exclude', '出行', false)).toEqual({
       title: '今天遇到“天贼”的传统说法',
