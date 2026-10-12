@@ -9,15 +9,20 @@ import type { AdjudicationClause } from '../../types/rule'
  * - `normal`：原书写「如常例」「不註宜亦不註忌」——两不注，维持 unresolved（也是无条款时的默认）；
  * - `delegate`：原书写「從某煞論」——按被转致神煞的结论处置。
  *
+ * 「猶忌」定为忌（而非两不注）的影印依据：铺注条例「如遇德猶忌之日則仍註忌」（影印本第 228 帧）
+ * ——德神压不住的犹忌之日照旧注忌；各该条的按语也都说明德神不能化解（四废、四忌四穷、
+ * 天贼、往亡等同此）。**德神不在场时仍是常例**：「與德合併猶忌」的前提是并临，第 140 帧
+ * 「不與德合併，如常例」，故每条犹忌支路都写明 requiresAny；未列条件下的兜底支路仍是 `normal`。
+ *
  * 匹配规则：**按顺序取第一条命中的支路**（月份命中、所需神煞满足）。因此每条神煞下
  * 先写带条件的支路、再写不带条件的兜底支路。未登记的月份与未编码的神煞一律走 `normal`，
  * 偏保守。**每条支路编码前都必须回看影印件**；帧号记在各条 locator 里。
  *
- * 覆盖说明（六事项忌项的 22 个神煞）：已核并编码 21 个——月建、月破、平日、收日、满日、
- * 闭日、劫煞、灾煞、月煞、月刑、月害、月厌、厌对、大时、天吏、小耗、四耗、四废、四穷、
- * 五墓、九空；其中月建、满日两条经核对无解除条款（月建忌「结亲礼」而条目自身不给例外，
- * 满日与民日并时按天愿条计），厌对条唯「忌嫁娶」一句、无裁决语。**月厌的特定日柱清单
- * （阴阳大会、小会、阴位、三阴等，影印本第 172–173 帧）尚未编码**，见审计 §6.1.1。
+ * 覆盖说明（六事项忌项的 25 个神煞）：已逐一核对并编码——月建、月破、平日、收日、满日、闭日、
+ * 劫煞、灾煞、月煞、月刑、月害、月厌、厌对、大时、天吏、小耗、四耗、四废、四忌、四穷、五墓、
+ * 九空、天贼、往亡、归忌。**只有「巳日」「亥日」不在卷十体系内**：二者是卷十一「行幸遣使」
+ * 「嫁娶」条目自带的日支忌，卷十的忌项清单里没有对应条目，故无裁决条款、永远走常例（见审计 §5.1）。
+ * 月厌名下的整日「諸事皆忌」日柱清单已单列成 DAY_WIDE_EXCLUSION_PILLARS（影印本第 172–173 帧）。
  */
 /**
  * 卷十《月厭》条下的「整日诸事皆忌」清单（影印本第 172–173 帧）：
@@ -427,7 +432,8 @@ export const ADJUDICATION_CLAUSES: readonly AdjudicationClause[] = [
 
   // ── 月厌：寅申丑未月与德合并则对清单外的事项解除（清单含出行、搬家、婚嫁、订婚、提亲）；
   //    卯酉月值月破灾煞仍诸事皆忌；子午月厌建会非天赦日诸事皆忌。
-  //    边界：阴阳大会、小会、阴位、三阴等特定日柱清单尚未编码（影印本第 172–173 帧）。
+  //    阴阳大会、小会、阴位、三阴等特定日柱的「诸事皆忌」清单已单列为
+  //    DAY_WIDE_EXCLUSION_PILLARS（影印本第 172–173 帧），由引擎先于一切条款判定。
   {
     shensha: '月厌',
     monthBranches: ['寅', '申', '丑', '未'],
@@ -563,7 +569,7 @@ export const ADJUDICATION_CLAUSES: readonly AdjudicationClause[] = [
       '卷十《天吏》「辰戌丑未月值閉日，與德合赦願併，凡所忌者則不註宜，所宜者亦不註忌；不與德合赦願併，如常例」（影印本第 185 帧）',
   },
 
-  // ── 小耗：八个月与五德神任一同日即不忌；子午卯酉月值劫煞，虽与德合并犹忌。
+  // ── 小耗：八个月与五德神任一同日即不忌；子午卯酉月值劫煞，虽与德合并犹忌（定为忌）。
   {
     shensha: '小耗',
     monthBranches: ['寅', '申', '巳', '亥', '辰', '戌', '丑', '未'],
@@ -575,11 +581,19 @@ export const ADJUDICATION_CLAUSES: readonly AdjudicationClause[] = [
   },
   {
     shensha: '小耗',
+    monthBranches: ['子', '午', '卯', '酉'],
+    requiresAny: ['天德', '月德', '天德合', '月德合'],
+    residualEventTypes: [],
+    outcome: 'exclude',
+    locator: '卷十《小耗》「子午卯酉月值劫煞，雖與德合併猶忌」（影印本第 188 帧）',
+  },
+  {
+    shensha: '小耗',
     monthBranches: ['寅', '申', '巳', '亥', '辰', '戌', '丑', '未', '子', '午', '卯', '酉'],
     requiresAny: [],
     residualEventTypes: [],
     outcome: 'normal',
-    locator: '卷十《小耗》「子午卯酉月值劫煞，雖與德合併猶忌」（影印本第 188 帧）',
+    locator: '卷十《小耗》未列条件下的处置从常例（影印本第 188 帧）',
   },
 
   // ── 四耗：辰月与天德月德、寅申月与天德合、巳月与月德合、辰戌丑未月与三合并则解除。
@@ -639,13 +653,22 @@ export const ADJUDICATION_CLAUSES: readonly AdjudicationClause[] = [
   {
     shensha: '四废',
     monthBranches: ['寅', '卯', '辰', '巳', '午', '未', '申', '酉', '戌', '亥', '子', '丑'],
+    requiresAny: ['天德', '月德', '天德合', '月德合'],
+    residualEventTypes: [],
+    outcome: 'exclude',
+    locator: '卷十《四廢》「與德合併猶忌」（影印本第 192 帧）',
+  },
+  {
+    shensha: '四废',
+    monthBranches: ['寅', '卯', '辰', '巳', '午', '未', '申', '酉', '戌', '亥', '子', '丑'],
     requiresAny: [],
     residualEventTypes: [],
     outcome: 'normal',
-    locator: '卷十《四廢》「與德合併猶忌」（影印本第 192 帧）',
+    locator: '卷十《四廢》未列条件下的处置从常例（影印本第 192 帧）',
   },
 
-  // ── 四穷：与德合并犹忌，惟正月（寅月）乙亥日与天愿同日则解除。
+  // ── 四穷：惟正月（寅月）乙亥日与天愿同日则解除；与月德、天德合、月德合并则犹忌（定为忌）。
+  //    该条原句只列月德、天德合、月德合三神，未列天德，故只用这三神作条件。
   {
     shensha: '四穷',
     monthBranches: ['寅'],
@@ -658,10 +681,37 @@ export const ADJUDICATION_CLAUSES: readonly AdjudicationClause[] = [
   {
     shensha: '四穷',
     monthBranches: ['寅', '卯', '辰', '巳', '午', '未', '申', '酉', '戌', '亥', '子', '丑'],
+    requiresAny: ['月德', '天德合', '月德合'],
+    residualEventTypes: [],
+    outcome: 'exclude',
+    locator:
+      '卷十《四忌四窮》「與月德天德合月德合併猶忌」及按语「此八日皆以極旺為凶，故德神不能化解」（影印本第 194 帧）',
+  },
+  {
+    shensha: '四穷',
+    monthBranches: ['寅', '卯', '辰', '巳', '午', '未', '申', '酉', '戌', '亥', '子', '丑'],
     requiresAny: [],
     residualEventTypes: [],
     outcome: 'normal',
+    locator: '卷十《四忌四窮》未列条件下的处置从常例（影印本第 194 帧）',
+  },
+
+  // ── 四忌：与四穷同条（《四忌四窮》），犹忌句同；「惟正月乙亥」是四穷日，故四忌没有解除支路。
+  {
+    shensha: '四忌',
+    monthBranches: ['寅', '卯', '辰', '巳', '午', '未', '申', '酉', '戌', '亥', '子', '丑'],
+    requiresAny: ['月德', '天德合', '月德合'],
+    residualEventTypes: [],
+    outcome: 'exclude',
     locator: '卷十《四忌四窮》「與月德天德合月德合併猶忌」（影印本第 194 帧）',
+  },
+  {
+    shensha: '四忌',
+    monthBranches: ['寅', '卯', '辰', '巳', '午', '未', '申', '酉', '戌', '亥', '子', '丑'],
+    requiresAny: [],
+    residualEventTypes: [],
+    outcome: 'normal',
+    locator: '卷十《四忌四窮》未列条件下的处置从常例（影印本第 194 帧）',
   },
 
   // ── 五墓：五月、十一月与月德同日则不忌。
@@ -782,21 +832,46 @@ export const ADJUDICATION_CLAUSES: readonly AdjudicationClause[] = [
   {
     shensha: '八专',
     monthBranches: ['寅', '卯', '辰', '巳', '午', '未', '申', '酉', '戌', '亥', '子', '丑'],
+    requiresAny: ['天德', '月德', '天德合', '月德合'],
+    residualEventTypes: [],
+    outcome: 'exclude',
+    locator: '卷十《八專》「與德合併猶忌」（影印本第 208 帧）',
+  },
+  {
+    shensha: '八专',
+    monthBranches: ['寅', '卯', '辰', '巳', '午', '未', '申', '酉', '戌', '亥', '子', '丑'],
     requiresAny: [],
     residualEventTypes: [],
     outcome: 'normal',
-    locator: '卷十《八專》「與德合併猶忌」（影印本第 208 帧）',
+    locator: '卷十《八專》未列条件下的处置从常例（影印本第 208 帧）',
   },
 
-  // ── 天贼、往亡：与德合并犹忌，无解除条款（影印已核，记此备查）。
+  // ── 天贼、往亡、归忌：与德合（往亡、归忌并含赦、願）併犹忌，无解除条款，犹忌即定为忌。
+  {
+    shensha: '天贼',
+    monthBranches: ['寅', '卯', '辰', '巳', '午', '未', '申', '酉', '戌', '亥', '子', '丑'],
+    requiresAny: ['天德', '月德', '天德合', '月德合'],
+    residualEventTypes: [],
+    outcome: 'exclude',
+    locator:
+      '卷十《天賊》「與德合併猶忌」，小注「赦願不得與天賊併」、按语「天賊為月厭之收日……與德合義不相屬，故與併猶忌」（影印本第 189 帧）',
+  },
   {
     shensha: '天贼',
     monthBranches: ['寅', '卯', '辰', '巳', '午', '未', '申', '酉', '戌', '亥', '子', '丑'],
     requiresAny: [],
     residualEventTypes: [],
     outcome: 'normal',
+    locator: '卷十《天賊》未列条件下的处置从常例（影印本第 189 帧）',
+  },
+  {
+    shensha: '往亡',
+    monthBranches: ['寅', '卯', '辰', '巳', '午', '未', '申', '酉', '戌', '亥', '子', '丑'],
+    requiresAny: ['天德', '月德', '天德合', '月德合', '天赦', '天願'],
+    residualEventTypes: [],
+    outcome: 'exclude',
     locator:
-      '卷十《天賊》「忌行幸遣使修倉庫開倉庫出貨財」及「與德合併猶忌」、按语「天賊為月厭之收日……與德合義不相屬，故與併猶忌」（影印本第 189 帧）',
+      '卷十《往亡》「與德合赦願併猶忌」及按语「雖值德合赦願不能無疑，故與併猶忌」（影印本第 203 帧）',
   },
   {
     shensha: '往亡',
@@ -804,8 +879,23 @@ export const ADJUDICATION_CLAUSES: readonly AdjudicationClause[] = [
     requiresAny: [],
     residualEventTypes: [],
     outcome: 'normal',
-    locator:
-      '卷十《往亡》「與德合赦願併猶忌」及按语「雖值德合赦願不能無疑，故與併猶忌」（影印本第 203 帧）',
+    locator: '卷十《往亡》未列条件下的处置从常例（影印本第 203 帧）',
+  },
+  {
+    shensha: '归忌',
+    monthBranches: ['寅', '卯', '辰', '巳', '午', '未', '申', '酉', '戌', '亥', '子', '丑'],
+    requiresAny: ['天德', '月德', '天德合', '月德合', '天赦', '天願'],
+    residualEventTypes: [],
+    outcome: 'exclude',
+    locator: '卷十《歸忌》「與德合赦願併猶忌」（影印本第 202 帧）',
+  },
+  {
+    shensha: '归忌',
+    monthBranches: ['寅', '卯', '辰', '巳', '午', '未', '申', '酉', '戌', '亥', '子', '丑'],
+    requiresAny: [],
+    residualEventTypes: [],
+    outcome: 'normal',
+    locator: '卷十《歸忌》未列条件下的处置从常例（影印本第 202 帧）',
   },
 
   // ── 厌对：卷十只记「忌嫁娶」一句，无裁决语；冲突时按常例处理。

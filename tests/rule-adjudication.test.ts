@@ -1,12 +1,14 @@
 import { describe, expect, it } from 'vitest'
 
 import { ADJUDICATION_CLAUSES } from '../miniprogram/data/rules/adjudication'
+import { RULE_PACKS } from '../miniprogram/data/rules/manifest'
 import { OPENING_RULE_PACK } from '../miniprogram/data/rules/opening.v1'
 import { getDateInfo } from '../miniprogram/services/calendar-service'
 import {
   applyAdjudication,
   findApplicableClause,
   isShenshaPresent,
+  resolveShenshaOutcome,
 } from '../miniprogram/services/rule-adjudication'
 import { buildDateFacts, evaluateDay, evaluateRule } from '../miniprogram/services/rule-engine'
 import type { DateFacts } from '../miniprogram/services/rule-engine'
@@ -134,6 +136,36 @@ describe('卷十裁决条款', () => {
     expect(findApplicableClause('月厌', facts, 'proposal')).toBeNull()
   })
 
+  it('猶忌类条款定为忌：只在本条点名的德神并临时生效', () => {
+    // 往亡（第 203 帧）：「與德合赦願併猶忌」。2026-11-17 为亥月乙未，天德并临 → 定为忌；
+    // 十二日后的丁未日（11-29）同是往亡日，无德神，仍按常例。
+    expect(resolveShenshaOutcome('往亡', factsOf('2026-11-17'), 'travel')).toBe('exclude')
+    expect(resolveShenshaOutcome('往亡', factsOf('2026-11-29'), 'travel')).toBe('normal')
+
+    // 归忌（第 202 帧）：同样的措辞。2026-04-08 为辰月壬子，天德、月德并临 → 定为忌；
+    // 同月的甲子日（04-20）无德神，仍按常例。
+    expect(resolveShenshaOutcome('归忌', factsOf('2026-04-08'), 'relocation')).toBe('exclude')
+    expect(resolveShenshaOutcome('归忌', factsOf('2026-04-20'), 'relocation')).toBe('normal')
+
+    // 四废（第 192 帧）：「與德合併猶忌」；与月破同日则诸事皆忌。
+    // 06-07 壬子既是四废又是午月月破（走月破支路），02-16 辛酉在寅月与月德合并临（走猶忌支路）。
+    expect(resolveShenshaOutcome('四废', factsOf('2026-06-07'), 'travel')).toBe('exclude')
+    expect(resolveShenshaOutcome('四废', factsOf('2026-02-16'), 'travel')).toBe('exclude')
+    // 辰月庚申（04-16）既非月破也无德神，按常例。
+    expect(resolveShenshaOutcome('四废', factsOf('2026-04-16'), 'travel')).toBe('normal')
+  })
+
+  it('四忌与四穷同条：犹忌句同样管四忌，解除支路只属四穷', () => {
+    // 《四忌四窮》是合条。酉月庚子（09-23）为四忌日，月德在庚 → 定为忌；
+    // 寅月甲子（02-19）无德神，仍按常例。
+    expect(resolveShenshaOutcome('四忌', factsOf('2026-09-23'), 'marriage')).toBe('exclude')
+    expect(resolveShenshaOutcome('四忌', factsOf('2026-02-19'), 'marriage')).toBe('normal')
+
+    // 「惟正月乙亥與天願併……餘皆不忌」是四穷之日：同日四穷解除、四忌仍按常例（它没有解除支路）。
+    expect(resolveShenshaOutcome('四穷', factsOf('2026-03-02'), 'marriage')).toBe('lift')
+    expect(resolveShenshaOutcome('四忌', factsOf('2026-03-02'), 'marriage')).toBe('normal')
+  })
+
   it('条款表的字段自洽：结论合法、转致有目标、残余清单是已开放事项的子集', () => {
     const matterIds = ['travel', 'relocation', 'opening', 'marriage', 'engagement', 'proposal']
 
@@ -155,6 +187,21 @@ describe('卷十裁决条款', () => {
         expect(matterIds, `${label} → ${eventType}`).toContain(eventType)
       }
     }
+  })
+
+  it('六事项忌项的神煞除「巳日」「亥日」外都有条款覆盖', () => {
+    // 巳日、亥日是用事自带的日支忌，卷十的忌项清单里没有对应条目（审计 §5.1），
+    // 其余神煞必须各有条款——否则「complete」的说法与被静默按常例处理的神煞不一致。
+    const all = new Set(
+      RULE_PACKS.flatMap((pack) =>
+        pack.rules.filter((rule) => rule.effect === 'exclude').map((rule) => rule.name),
+      ),
+    )
+    const uncovered = [...all]
+      .filter((name) => !ADJUDICATION_CLAUSES.some((clause) => clause.shensha === name))
+      .sort()
+
+    expect(uncovered).toEqual(['亥日', '巳日'])
   })
 
   it('applyAdjudication 只解除条款覆盖的忌项，其余原样保留', () => {

@@ -148,6 +148,7 @@ function matchCondition(condition: RuleCondition, value: string, facts: DateFact
  * 合并一日的规则求值结果。
  * 语义（方案 6.7）：只有 verified 规则参与；同级纳入与排除同时命中且无来源裁决时返回 unresolved；
  * 缺输入返回 unknown；命中排除为 excluded；命中纳入为 pass；一条未中为 not_matched。
+ * 卷十的整日「诸事皆忌」日优先于以上各条（先判）。
  * 边界：priority 目前全部为 null，来源未记录优先关系时不实现裁决，程序不得自行补值。
  */
 export function evaluateDay(pack: RulePack, facts: DateFacts): DayEvaluation {
@@ -178,17 +179,18 @@ export function evaluateDay(pack: RulePack, facts: DateFacts): DayEvaluation {
 
   const base = { matchedRuleIds, excludeRuleIds, unknownRuleIds }
 
+  // 卷十《月厭》条下的陰陽大會、小會、陰位等日是「日」自身的属性，原书一律作「諸事皆忌」，
+  // 并注明「與月德併仍諸事皆忌」——故先于缺输入与宜忌并见两条分支判定：吉神与缺输入都不能翻。
+  if (isDayWideExcluded(facts)) {
+    return { status: 'excluded', ...base, adjudicatedRuleIds: [] }
+  }
+
   if (unknownRuleIds.length > 0) {
     return { status: 'unknown', ...base, adjudicatedRuleIds: [] }
   }
 
   if (matchedRuleIds.length > 0 && excludeRuleIds.length > 0) {
-    // 宜忌并见：先按卷十的例外条款裁决，再决定是「解除」还是维持常例。
-    // 卷十《月厭》条下的陰陽大會、小會、陰位等日「諸事皆忌」，优先于一切解除条款。
-    if (isDayWideExcluded(facts)) {
-      return { status: 'excluded', ...base, adjudicatedRuleIds: [] }
-    }
-
+    // 宜忌并见：按卷十的例外条款裁决，再决定是「解除」还是维持常例。
     // 条款只做解除、不做加忌；未编码的神煞原样保留，整日仍按常例不出结论。
     const adjudication = applyAdjudication(pack, facts, excludeRuleIds)
 

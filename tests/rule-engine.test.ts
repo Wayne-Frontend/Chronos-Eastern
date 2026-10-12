@@ -208,14 +208,15 @@ describe('evaluateRule', () => {
       ],
     }
 
-    expect(evaluateDay(pack, factsOf('2026-10-02'))).toMatchObject({
+    // 2026-09-20 为酉月丁酉建日；此处只用来观察规则合并，故避开了整日诸事皆忌的日子。
+    expect(evaluateDay(pack, factsOf('2026-09-20'))).toMatchObject({
       status: 'pass',
       matchedRuleIds: ['verified-rule'],
     })
   })
 
   it('任一条规则缺输入时整日判 unknown，不得当作通过或未命中', () => {
-    // 2026-10-02 本是建日（宜），再挂一条读不到事实的规则，整日即因缺输入无法判定。
+    // 2026-09-20 本是建日（宜），再挂一条读不到事实的规则，整日即因缺输入无法判定。
     const pack = {
       ...TRAVEL_RULE_PACK,
       rules: [
@@ -227,7 +228,7 @@ describe('evaluateRule', () => {
       ],
     }
 
-    expect(evaluateDay(pack, factsOf('2026-10-02'))).toMatchObject({
+    expect(evaluateDay(pack, factsOf('2026-09-20'))).toMatchObject({
       status: 'unknown',
       matchedRuleIds: ['matched-rule'],
       unknownRuleIds: ['unknown-rule'],
@@ -247,12 +248,44 @@ describe('evaluateRule', () => {
         }),
       ],
     }
-    const evaluation = evaluateDay(pack, factsOf('2026-10-02'))
+    const evaluation = evaluateDay(pack, factsOf('2026-09-20'))
 
     expect(evaluation.status).toBe('unknown')
     expect(evaluation.matchedRuleIds.length).toBeGreaterThan(0)
     expect(evaluation.excludeRuleIds.length).toBeGreaterThan(0)
     expect(evaluation.unknownRuleIds).toEqual(['unknown-rule'])
+  })
+
+  it('整日诸事皆忌的日子先于一切判定：无忌项命中、有缺输入规则，都仍判忌', () => {
+    // 2026-10-02 是卯酉月的「陰道衝陽」，卷十《月厭》作「諸事皆忌」。
+    // 只留一条建日规则时没有忌项命中，但该日仍不得判为 pass。
+    const includeOnly = {
+      ...TRAVEL_RULE_PACK,
+      rules: [{ ...TRAVEL_RULE_PACK.rules[0], id: 'include-rule' }],
+    }
+
+    expect(evaluateDay(includeOnly, factsOf('2026-10-02'))).toMatchObject({
+      status: 'excluded',
+      matchedRuleIds: ['include-rule'],
+      excludeRuleIds: [],
+    })
+
+    // 再挂一条缺输入的规则，也一样定忌——原书明言「與月德併仍諸事皆忌」，缺输入不能翻。
+    const withUnknown = {
+      ...TRAVEL_RULE_PACK,
+      rules: [
+        { ...TRAVEL_RULE_PACK.rules[0], id: 'include-rule' },
+        syntheticRule({
+          id: 'unknown-rule',
+          when: { all: [{ fact: 'ganzhi.dayCivil.hour', operator: 'in', value: ['子'] }] },
+        }),
+      ],
+    }
+
+    expect(evaluateDay(withUnknown, factsOf('2026-10-02'))).toMatchObject({
+      status: 'excluded',
+      unknownRuleIds: ['unknown-rule'],
+    })
   })
 })
 
@@ -383,6 +416,24 @@ describe('出行规则包（第一批）', () => {
     expect(hit).toEqual(ruleIds)
   })
 
+  it('整日诸事皆忌的日子即使没有忌项命中，也不进入结果', () => {
+    // 2026-10-27 为戌月甲戌：卷十《月厭》的「陰位」，诸事皆忌。
+    // 本日出行只命中建日与天马（宜），一条忌项都没有；引擎仍须先判整日排除——
+    // 该判定原先只在「宜忌并见」分支里做，这天曾漏判为「宜」。
+    expect(evaluate('2026-10-27')).toMatchObject({
+      status: 'excluded',
+      matchedRuleIds: ['xjbf-travel-0001', 'xjbf-travel-0030'],
+      excludeRuleIds: [],
+    })
+    expect(evaluateDay(RELOCATION_RULE_PACK, factsOf('2026-10-27')).status).toBe('excluded')
+
+    // 2026-03-06 为卯月己卯（陰道衝陽）：出行命中建日、月德合、王日三条宜项，同样不得判为宜。
+    expect(evaluate('2026-03-06')).toMatchObject({
+      status: 'excluded',
+      matchedRuleIds: ['xjbf-travel-0001', 'xjbf-travel-0011', 'xjbf-travel-0026'],
+    })
+  })
+
   it('未命中任何已收录条款的日子不进入结果，也不算异常', () => {
     // 11-13 为亥月辛卯定日，已收录的宜忌条款均未命中。
     expect(evaluate('2026-11-13')).toMatchObject({
@@ -426,6 +477,47 @@ describe('出行规则包（第一批）', () => {
       status: 'pass',
       matchedRuleIds: ['xjbf-travel-0011'],
       excludeRuleIds: ['xjbf-travel-0004', 'xjbf-travel-0015'],
+    })
+  })
+
+  it('卷十的「猶忌」定为忌：同日虽有德神也不解除，只把忌项维持为忌', () => {
+    // 2026-11-17 为亥月乙未：往亡（忌）与天德、月恩、四相、天喜（宜）同日。
+    // 往亡条「與德合赦願併猶忌」，铺注条例「如遇德猶忌之日則仍註忌」（卷十第 203、228 帧）。
+    expect(evaluate('2026-11-17')).toMatchObject({
+      status: 'excluded',
+      matchedRuleIds: [
+        'xjbf-travel-0009',
+        'xjbf-travel-0013',
+        'xjbf-travel-0023',
+        'xjbf-travel-0032',
+      ],
+      excludeRuleIds: ['xjbf-travel-0021'],
+      adjudicatedRuleIds: [],
+    })
+
+    // 2026-05-12 为巳月丙戌：天贼（忌）与天德合（宜）同日，天贼条同样「與德合併猶忌」。
+    // 同日搬家包不含天贼，五墓与天德合并时按其自身的常例支路处置，仍为 unresolved——
+    // 同一天的两个事项各自按本包的忌项裁决，不互相借用。
+    expect(evaluate('2026-05-12')).toMatchObject({
+      status: 'excluded',
+      matchedRuleIds: ['xjbf-travel-0022'],
+      excludeRuleIds: ['xjbf-travel-0020', 'xjbf-travel-0027'],
+    })
+    expect(evaluateDay(RELOCATION_RULE_PACK, factsOf('2026-05-12')).status).toBe('unresolved')
+  })
+
+  it('「猶忌」只在所列德神并临时生效，德神不在场仍走常例', () => {
+    // 2026-04-08 为辰月壬子：归忌（忌）与天德、月德、成日（宜）同日。
+    // 归忌条「與德合赦願併猶忌」（卷十第 202 帧），本日天德、月德并临，故定为忌。
+    expect(evaluateDay(RELOCATION_RULE_PACK, factsOf('2026-04-08'))).toMatchObject({
+      status: 'excluded',
+    })
+
+    // 2026-09-20 为酉月丁酉：月刑（忌）与建日、王日（宜）同日。月刑在这一月没有德神条件，
+    // 原书只说「如常例」，故维持 unresolved，不因本轮的猶忌条款连带改判。
+    expect(evaluate('2026-09-20')).toMatchObject({
+      status: 'unresolved',
+      excludeRuleIds: ['xjbf-travel-0031'],
     })
   })
 

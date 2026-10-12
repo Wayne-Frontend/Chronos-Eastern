@@ -83,6 +83,12 @@ const BU_JIANG_BY_MONTH: readonly string[] = [
  * 天德合按语「四仲之月天德居四維故無合也」亦经影印复核（卷五第 26 帧）。
  * 只改「天德」「天德合」两条限制语，取值与筛选结果不变。
  *
+ * 1.4.0 变更原因：接入卷十「猶忌」类条款（2026-10-12，影印核对第 192、194、203 帧）。
+ * 原书写「與德合併猶忌」者，依铺注条例「如遇德猶忌之日則仍註忌」（第 228 帧）定为忌，
+ * 不再两不注；本包涉及 四废（第 192 帧）、四忌与四穷（同《四忌四窮》条，第 194 帧）、
+ * 往亡（第 203 帧）四条。所列德神不在场时仍从常例。
+ * 同日引擎改为先判卷十《月厭》下整日「諸事皆忌」的日子，取值与筛选结果随之收严。
+ *
  * 1.3.0 变更原因：整包改判 complete、事项升 supported（2026-10-12）。
  * 判据：条目收全 ＋ 卷十裁决例外逐条落实 ＋ 未给依据者如实标注；见审计 §6.1.1。
  *
@@ -96,7 +102,7 @@ const BU_JIANG_BY_MONTH: readonly string[] = [
  */
 export const MARRIAGE_RULE_PACK: RulePack = {
   id: 'xjbf-marriage',
-  version: '1.3.0',
+  version: '1.4.0',
   eventType: 'marriage',
   traditionId: TRADITION,
   status: 'verified',

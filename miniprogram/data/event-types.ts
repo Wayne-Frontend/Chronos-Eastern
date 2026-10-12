@@ -42,7 +42,7 @@ export const EVENT_TYPES: readonly EventTypeEntry[] = [
     id: 'travel',
     displayName: '出行',
     classicalTerms: ['出行', '行幸遣使'],
-    // 卷十一的宜 16 条、忌 16 条均已录入；但天德在四仲月只记四维、无法判到具体日期，故维持 limited。
+    // 卷十一的宜 16 条、忌 16 条均已录入；天德在四仲月只记四维、不判值日，属该条自身的适用边界，不改事项状态。
     status: 'supported',
     rulePackId: 'xjbf-travel',
     maxRangeDays: 90,
@@ -54,7 +54,7 @@ export const EVENT_TYPES: readonly EventTypeEntry[] = [
     id: 'relocation',
     displayName: '搬家',
     classicalTerms: ['般移', '移徙'],
-    // 卷十一「般移（原注：移徙同）」的宜 14 条、忌 15 条均已录入；天德在四仲月只记四维、无法判到具体日期，故维持 limited。
+    // 卷十一「般移（原注：移徙同）」的宜 14 条、忌 15 条均已录入；天德、天德合在四仲月不判值日，属该条自身的适用边界。
     status: 'supported',
     rulePackId: 'xjbf-relocation',
     maxRangeDays: 90,
@@ -76,7 +76,7 @@ export const EVENT_TYPES: readonly EventTypeEntry[] = [
     id: 'opening',
     displayName: '开业',
     classicalTerms: ['开市'],
-    // 卷十一「开市」条目的宜 6 条、忌 19 条均已录入；宜忌并见时的原书例外仍未实现，故维持 limited。
+    // 卷十一「开市」条目的宜 6 条、忌 19 条均已录入；宜忌并见时的原书例外（解除、定忌、转致、犹忌）已逐条接入。
     status: 'supported',
     rulePackId: 'xjbf-opening',
     maxRangeDays: 90,
@@ -89,7 +89,7 @@ export const EVENT_TYPES: readonly EventTypeEntry[] = [
     // 只对应卷十一「嫁娶」一条。同卷另有「结婚姻」「纳采问名」，宜忌与本条不同，不并入，
     // 三条各自成事项（见 engagement、proposal）。
     classicalTerms: ['嫁娶'],
-    // 卷十一「嫁娶」的宜 10 条、忌 20 条均已录入；宜忌并见时的原书例外仍未实现，故维持 limited。
+    // 卷十一「嫁娶」的宜 10 条、忌 20 条均已录入；宜忌并见时的原书例外（解除、定忌、转致、犹忌）已逐条接入。
     status: 'supported',
     rulePackId: 'xjbf-marriage',
     maxRangeDays: 90,
@@ -102,12 +102,12 @@ export const EVENT_TYPES: readonly EventTypeEntry[] = [
     displayName: '订婚',
     // 只对应卷十一「结婚姻」一条。与「嫁娶」分列，现代词只是界面别名。
     classicalTerms: ['结婚姻'],
-    // 卷十一「结婚姻」的宜 14 条、忌 20 条均已录入；天德四仲月不判值日、宜忌并见的原书例外未实现，故维持 limited。
+    // 卷十一「结婚姻」的宜 14 条、忌 20 条均已录入；天德四仲月不判值日属该条自身的适用边界。
     status: 'supported',
     rulePackId: 'xjbf-engagement',
     maxRangeDays: 90,
     statusNote:
-      '结婚姻条目宜忌已全部录入；天德、天德合在四仲月按底本不判值日。同卷另有分列的「嫁娶」「纳采问名」两条，宜忌不同，不并入本条。',
+      '结婚姻条目宜忌已全部录入；比「纳采问名」多「六合」「五合」两条宜项。天德、天德合在四仲月按底本不判值日。同卷另有分列的「嫁娶」「纳采问名」两条，宜忌不同，不并入本条。',
     disclaimer: '仅按已收录传统规则提供文化参考，不涉及现实婚姻与家庭决策。',
   },
   {
@@ -115,12 +115,12 @@ export const EVENT_TYPES: readonly EventTypeEntry[] = [
     displayName: '提亲',
     // 只对应卷十一「纳采问名」一条；其宜项比「结婚姻」少「六合」「五合」两条，二者不互相顶替。
     classicalTerms: ['纳采问名'],
-    // 卷十一「纳采问名」的宜 12 条、忌 20 条均已录入；边界同上，维持 limited。
+    // 卷十一「纳采问名」的宜 12 条、忌 20 条均已录入；边界同上。
     status: 'supported',
     rulePackId: 'xjbf-proposal',
     maxRangeDays: 90,
     statusNote:
-      '纳采问名条目宜忌已全部录入，宜项比「结婚姻」少「六合」「五合」两条；天德、天德合在四仲月按底本不判值日。',
+      '纳采问名条目宜忌已全部录入；与「结婚姻」相比宜项只少「六合」「五合」两条（日支与月建相合之日、寅卯日），忌项相同，两条目在原书分列、不互相顶替；天德、天德合在四仲月按底本不判值日。',
     disclaimer: '仅按已收录传统规则提供文化参考，不涉及现实婚恋与家庭关系判断。',
   },
   {
