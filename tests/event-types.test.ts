@@ -114,21 +114,21 @@ describe('事项状态与规则包完整性的一致性', () => {
     }
   })
 
-  it('出行降为 limited 并保留既有规则包绑定', () => {
+  it('出行升为 supported 并保留既有规则包绑定', () => {
     expect(findEventType('travel')).toMatchObject({
-      status: 'limited',
+      status: 'supported',
       rulePackId: 'xjbf-travel',
       maxRangeDays: 90,
     })
   })
 
-  it('出行有限支持说明与当前 32/32 覆盖一致，不再声称仍有条款未收录', () => {
+  it('出行说明与 32/32 覆盖一致：不再自称有限，仍如实标注天德边界', () => {
     const travel = findEventType('travel')
 
-    expect(travel?.statusNote).toContain('出行条目已全部录入')
+    expect(travel?.statusNote).toContain('出行条目宜忌已全部录入')
     expect(travel?.statusNote).toContain('天德')
+    expect(travel?.statusNote).not.toContain('有限')
     expect(travel?.statusNote).not.toContain('其余条款尚在校勘')
-    expect(PARTIAL_COVERAGE_NOTICE).not.toContain('未收录条款')
   })
 })
 
@@ -142,7 +142,7 @@ describe('覆盖范围披露', () => {
     expect(describeCoverage('complete', '已收全')).toEqual({ noticeText: '', coverageText: '' })
   })
 
-  it('当前每个可查询事项都是 partial，因此都必须拿到披露语', () => {
+  it('当前每个可查询事项都是 complete，因此都不再出披露语', () => {
     for (const entry of EVENT_TYPES) {
       if (!canQueryEventType(entry)) {
         continue
@@ -151,10 +151,11 @@ describe('覆盖范围披露', () => {
       const pack = findVerifiedRulePack(entry.id)
 
       expect(pack, entry.id).not.toBeNull()
+      expect(pack?.completeness, entry.id).toBe('complete')
       expect(
         describeCoverage(pack?.completeness ?? 'complete', pack?.coverage ?? '').noticeText,
         entry.id,
-      ).toBe(PARTIAL_COVERAGE_NOTICE)
+      ).toBe('')
     }
   })
 
@@ -180,13 +181,14 @@ describe('覆盖范围披露', () => {
     const options = definitions[0]?.data?.view?.eventOptions ?? []
     const badgeOf = (id: string) => options.find((option) => option.id === id)?.badgeText
 
-    // 可查询的六个事项都必须是「有限收录」，未开放的仍只说能否使用。
-    expect(badgeOf('travel')).toBe('有限收录')
-    expect(badgeOf('relocation')).toBe('有限收录')
-    expect(badgeOf('opening')).toBe('有限收录')
-    expect(badgeOf('marriage')).toBe('有限收录')
-    expect(badgeOf('engagement')).toBe('有限收录')
-    expect(badgeOf('proposal')).toBe('有限收录')
+    // 可查询的六个事项都已改判 supported，chip 上不再有「有限收录」标记；
+    // 未开放的仍只说能否使用。
+    expect(badgeOf('travel')).toBe('')
+    expect(badgeOf('relocation')).toBe('')
+    expect(badgeOf('opening')).toBe('')
+    expect(badgeOf('marriage')).toBe('')
+    expect(badgeOf('engagement')).toBe('')
+    expect(badgeOf('proposal')).toBe('')
     expect(badgeOf('moving-in')).toBe('敬请期待')
     expect(badgeOf('funeral')).toBe('暂不支持')
 

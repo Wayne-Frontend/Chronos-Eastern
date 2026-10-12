@@ -38,15 +38,19 @@ const TITLE_LOCATOR = '卷十一「开市」'
  *   （建、除、满、平、定、执恰为前五辰）。同帧又载其「其日忌经营种莳纳财交易开市」，
  *   与卷十一把「小耗」列入开市忌项一致。故按建除表达，不另立月神表。
  *
+ * completeness 为 complete（2026-10-12 改判）：条目已收全，卷十的裁决例外（解除、定忌、
+ * 转致、整日诸事皆忌）亦逐条落实；仍如实标注的边界有天德四仲月不判值日与巳日、亥日这类
+ * 用事自带的日支忌（原书未给裁决依据，按常例处理），见审计 §6.1.1。
+
  * 边界：交节当天整日按新月计算（卷四「每月交节则叠两值日」的并存之说本版本未采用）。
  */
 export const OPENING_RULE_PACK: RulePack = {
   id: 'xjbf-opening',
-  version: '1.0.0',
+  version: '1.1.0',
   eventType: 'opening',
   traditionId: TRADITION,
   status: 'verified',
-  completeness: 'partial',
+  completeness: 'complete',
   conflictGroup: CONFLICT_GROUP,
   coverage:
     '开市条目宜项 6 条中收录 6 条（天愿、民日、满日、成日、开日、五富），忌项 19 条中收录 19 条（月破、大耗、平日、收日、闭日、劫煞、灾煞、月煞、月刑、月害、月厌、大时、天吏、小耗、四耗、四废、四穷、五墓、九空）。其中「大耗」与「月破」同为破日、「小耗」即执日，二者已归并到对应规则，不重复计日。',

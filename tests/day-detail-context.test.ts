@@ -38,6 +38,7 @@ interface RuleSectionShape {
   eventName: string
   detailsExpanded: boolean
   coverageNoticeText: string
+  coverageText: string
   rulePackText: string
   rules: readonly { id: string; statusText: string; limitations: readonly string[] }[]
 }
@@ -94,8 +95,10 @@ describe('日期详情页的事项上下文', () => {
     expect(view.ruleSections.map((section) => section.eventName)).toEqual(['出行', '开业', '搬家'])
 
     for (const section of view.ruleSections) {
-      // 详情页规则区是三处披露里的第三处，多事项时每个事项各带一份。
-      expect(section.coverageNoticeText, section.eventTypeId).not.toBe('')
+      // 详情页规则区是三处披露里的第三处；2026-10-12 六个包改判 complete 后披露语为空，
+      // 但各条 limitations（适用边界）仍与出处同屏，由下面的用例守住。
+      expect(section.coverageNoticeText, section.eventTypeId).toBe('')
+      expect(section.coverageText, section.eventTypeId).toBe('')
     }
   })
 

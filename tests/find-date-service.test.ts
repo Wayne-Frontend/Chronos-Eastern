@@ -207,8 +207,8 @@ describe('findDates 筛选结果', () => {
 
     expect(result.ok && result.value.rulePack).toMatchObject({
       id: 'xjbf-travel',
-      version: '1.17.2',
-      completeness: 'partial',
+      version: '1.18.0',
+      completeness: 'complete',
     })
     expect(result.ok && result.value.rulePack.coverage.length).toBeGreaterThan(0)
   })

@@ -86,7 +86,7 @@
 | 结果保证（"最佳吉日""必成"） | 禁止星级、百分比、吉凶分 | 规则不计算吉凶分、不按命中条数排序，结果只按日期升序 |
 | 个性化命理（八字、生肖、姓名推结果） | 不收集、不提供 | 无相关输入项；`getEightChar` 等命理 API 禁止进入业务路径 |
 | 第三方库宜忌混入 | 宜忌只能来自自校勘的 `verified` 规则包 | 库内 `getDayYi` / `getDayJi` / 吉神凶煞 / 黄黑道 / 法定节假日 / 节日数据全部禁止，业务路径零命中 |
-| 事项越权开放 | `reviewing` / `unsupported` 必须置灰且不可触发查询 | 可查询事项为 `travel`、`relocation`、`opening`、`marriage`、`engagement`、`proposal`（均 `limited`；后两项 2026-10-12 提审后新增）；`moving-in` 为 `reviewing`、`funeral` 为 `unsupported`。门禁只在 `data/event-types.ts` 的 `canQueryEventType()` 一处 |
+| 事项越权开放 | `reviewing` / `unsupported` 必须置灰且不可触发查询 | 可查询事项为 `travel`、`relocation`、`opening`、`marriage`、`engagement`、`proposal`（均 `supported`；后两项 2026-10-12 提审后新增，同日六项一并由 `limited` 改判）；`moving-in` 为 `reviewing`、`funeral` 为 `unsupported`。门禁只在 `data/event-types.ts` 的 `canQueryEventType()` 一处 |
 | 把部分收录说成完整结论 | `partial` 事项需在事项入口、结果列表上方、详情页规则区三处显示覆盖范围 | **三处均已落地**，见 6.2；由 `tests/event-types.test.ts`「覆盖范围披露」一组用例守住 |
 | 冲突日期凭空消失 | 冲突必须逐日列出并可查双方依据 | `findDates` 返回 `conflictDates` 而不只是计数；冲突日返回 `unresolved`（对应卷十常例"两者皆不注"） |
 | 来源误导 | 不把库内宜忌称为《协纪辨方书》 | 详情页每个宜忌标签可展开到 `verified` 规则与来源定位；来源登记见 `docs/sources-ledger.md` |
@@ -98,8 +98,8 @@
 
 | 要求位置 | 代码落点 | 实测结果 |
 | --- | --- | --- |
-| 事项入口 chip 标记 | `find-date.ts` 用 `getStatusBadgeText(entry.status)` 生成 `badgeText`，`find-date.wxml` 渲染 `event-chip__badge` | ✅ 可查询的六个事项都显示「有限收录」，与古籍用语同行显示 |
-| 事项入口选中提示 | `find-date.ts` 选中时把 `entry.statusNote` 写进 `scopeNoteText`，`find-date.wxml` 渲染 `scope-note` | ✅ 六个事项各说自己的收录边界 |
+| 事项入口 chip 标记 | `find-date.ts` 用 `getStatusBadgeText(entry.status)` 生成 `badgeText`，`find-date.wxml` 渲染 `event-chip__badge` | ✅ 六个事项 2026-10-12 改判 `supported` 后不再显示标记；标记逻辑仍在，将来出现 `limited` 事项会自动生效 |
+| 事项入口选中提示 | `find-date.ts` 选中时把 `entry.statusNote` 写进 `scopeNoteText`，`find-date.wxml` 渲染 `scope-note` | ✅ 六个事项各说自己的收录边界（`supported` 后改述为收录范围与边界，文案仍有） |
 | 结果列表上方 | `applyOutcome()` 取 `rulePack.completeness`，partial 时在汇总卡里显示披露 | ✅ 用统一的 `PARTIAL_COVERAGE_NOTICE`，不再只有"计算失败／没有找到"两类 |
 | 详情页规则区 | `day-detail.ts` 每个事项的 `RuleSectionViewModel` 带披露语与收录范围，与逐条依据同屏 | ✅ partial 时显示 `PARTIAL_COVERAGE_NOTICE` ＋ 该包的 `coverage` 全文 |
 
