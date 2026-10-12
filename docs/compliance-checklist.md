@@ -63,7 +63,7 @@
 
 **要求**：核验日期、页面截图与最终选择一并记入本表。公开类目页会随政策变化，本表不把类目快照当永久规则。不得用"信息查询"等宽泛类目规避审核。
 
-**提审时的一个现实问题** [技术建议]：V1.0 开放"出行、搬家、开业、婚嫁"四个事项，其余 2 个事项（入宅、安葬）在找日子页置灰。审核员看到的是一部分选项不可用，但四个可用项的查询链路是完整的。审核说明里必须主动解释这是"V1.0 只收口已完成校勘的四个事项，其余资料整理中"，并说明置灰项**确实不可触发查询**，避免被判定为半成品或功能不实。
+**提审时的一个现实问题** [技术建议]：V1.0 开放"出行、搬家、开业、婚嫁"四个事项，其余 2 个事项（入宅、安葬）在找日子页置灰。**2026-10-12 追加**：提审后又开放「订婚」「提亲」两项（均 `limited`），下次提审时此段与第 11 节的说明都需按当时的六个事项重写。审核员看到的是一部分选项不可用，但四个可用项的查询链路是完整的。审核说明里必须主动解释这是"V1.0 只收口已完成校勘的四个事项，其余资料整理中"，并说明置灰项**确实不可触发查询**，避免被判定为半成品或功能不实。
 
 ## 5. 隐私说明（草稿） [技术建议]
 
@@ -86,7 +86,7 @@
 | 结果保证（"最佳吉日""必成"） | 禁止星级、百分比、吉凶分 | 规则不计算吉凶分、不按命中条数排序，结果只按日期升序 |
 | 个性化命理（八字、生肖、姓名推结果） | 不收集、不提供 | 无相关输入项；`getEightChar` 等命理 API 禁止进入业务路径 |
 | 第三方库宜忌混入 | 宜忌只能来自自校勘的 `verified` 规则包 | 库内 `getDayYi` / `getDayJi` / 吉神凶煞 / 黄黑道 / 法定节假日 / 节日数据全部禁止，业务路径零命中 |
-| 事项越权开放 | `reviewing` / `unsupported` 必须置灰且不可触发查询 | 可查询四事项为 `travel`、`relocation`、`opening`、`marriage`（均 `limited`）；`moving-in` 为 `reviewing`、`funeral` 为 `unsupported`。门禁只在 `data/event-types.ts` 的 `canQueryEventType()` 一处 |
+| 事项越权开放 | `reviewing` / `unsupported` 必须置灰且不可触发查询 | 可查询事项为 `travel`、`relocation`、`opening`、`marriage`、`engagement`、`proposal`（均 `limited`；后两项 2026-10-12 提审后新增）；`moving-in` 为 `reviewing`、`funeral` 为 `unsupported`。门禁只在 `data/event-types.ts` 的 `canQueryEventType()` 一处 |
 | 把部分收录说成完整结论 | `partial` 事项需在事项入口、结果列表上方、详情页规则区三处显示覆盖范围 | **三处均已落地**，见 6.2；由 `tests/event-types.test.ts`「覆盖范围披露」一组用例守住 |
 | 冲突日期凭空消失 | 冲突必须逐日列出并可查双方依据 | `findDates` 返回 `conflictDates` 而不只是计数；冲突日返回 `unresolved`（对应卷十常例"两者皆不注"） |
 | 来源误导 | 不把库内宜忌称为《协纪辨方书》 | 详情页每个宜忌标签可展开到 `verified` 规则与来源定位；来源登记见 `docs/sources-ledger.md` |
@@ -98,14 +98,14 @@
 
 | 要求位置 | 代码落点 | 实测结果 |
 | --- | --- | --- |
-| 事项入口 chip 标记 | `find-date.ts` 用 `getStatusBadgeText(entry.status)` 生成 `badgeText`，`find-date.wxml` 渲染 `event-chip__badge` | ✅ 可查询的四个事项都显示「有限收录」，与古籍用语同行显示 |
-| 事项入口选中提示 | `find-date.ts` 选中时把 `entry.statusNote` 写进 `scopeNoteText`，`find-date.wxml` 渲染 `scope-note` | ✅ 四个事项各说自己的收录边界 |
+| 事项入口 chip 标记 | `find-date.ts` 用 `getStatusBadgeText(entry.status)` 生成 `badgeText`，`find-date.wxml` 渲染 `event-chip__badge` | ✅ 可查询的六个事项都显示「有限收录」，与古籍用语同行显示 |
+| 事项入口选中提示 | `find-date.ts` 选中时把 `entry.statusNote` 写进 `scopeNoteText`，`find-date.wxml` 渲染 `scope-note` | ✅ 六个事项各说自己的收录边界 |
 | 结果列表上方 | `applyOutcome()` 取 `rulePack.completeness`，partial 时在汇总卡里显示披露 | ✅ 用统一的 `PARTIAL_COVERAGE_NOTICE`，不再只有"计算失败／没有找到"两类 |
 | 详情页规则区 | `day-detail.ts` 每个事项的 `RuleSectionViewModel` 带披露语与收录范围，与逐条依据同屏 | ✅ partial 时显示 `PARTIAL_COVERAGE_NOTICE` ＋ 该包的 `coverage` 全文 |
 
 **统一出口**：`data/rules/manifest.ts` 的 `describeCoverage(completeness, coverage)` 是唯一入口，partial 与 complete 的分支集中在一处，不再有"某个页面多一句免责话"的可能。原先零引用的 `PARTIAL_COVERAGE_NOTICE` 与 `travel.statusNote` 都已接入。
 
-**测试守则**：`tests/event-types.test.ts` 的「覆盖范围披露」一组用例覆盖三件事——partial 一律给出统一披露语、四个可查询事项都拿得到披露语、三处落点在页面视图模型与 wxml 绑定上都在。页面模块用 `vi.stubGlobal` 接住全局 `Page()`／`Component()` 后取回视图模型断言。
+**测试守则**：`tests/event-types.test.ts` 的「覆盖范围披露」一组用例覆盖三件事——partial 一律给出统一披露语、每个可查询事项都拿得到披露语、三处落点在页面视图模型与 wxml 绑定上都在。页面模块用 `vi.stubGlobal` 接住全局 `Page()`／`Component()` 后取回视图模型断言。
 
 **仍未做**：真机与开发者工具里的视觉回归（新增的 chip 短标记与两处色块会改变版面）。归入 D 类待办。
 
@@ -196,6 +196,8 @@
 ## 11. 审核说明（草稿） [技术建议]
 
 以下文案是本次提交审核说明的仓库草稿；后台最终实际填写内容没有留档，不能假定与草稿逐字一致。
+
+> **2026-10-12 追加**：本节是 `v1.0.0` 提审时的快照（当时开放四个事项），**不改写历史**。提审后已新增「订婚」（卷十一「结婚姻」）、「提亲」（卷十一「纳采问名」）两个事项，下一次提审的说明必须按当时的事项表重新生成，不能直接复用本节。
 
 > **产品性质**：本小程序是一款传统历法与民俗文化查询工具，提供公历、农历、二十四节气、干支与节日的对应查询，以及基于已校勘古籍规则的传统日期参考。
 >
