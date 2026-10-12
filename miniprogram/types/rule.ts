@@ -63,3 +63,31 @@ export interface RulePack {
   coverage: string
   rules: readonly RuleDefinition[]
 }
+
+/**
+ * 卷十「宜忌」给出的裁决例外：宜忌并见时，原书对「与德神同日的忌神」另有取舍。
+ * 只编码原书**明言不忌**的条款；「止忌某某餘皆不忌」「如常例」「諸事皆忌」「猶忌」
+ * 「從某煞論」等形态尚未编码，未编码即按常例（`unresolved`）处理。见审计 §6.1。
+ */
+export interface AdjudicationClause {
+  /** 受裁决的忌神煞条目名，必须与该规则 name 一致。 */
+  shensha: string
+  /**
+   * 触发月份（节令月支）。条款以月组表述时，先按该神煞在各月的实际值日逐月展开、
+   * 与规则包的表核对后再录入（如九空条「寅申月值滿日」即寅月、申月两值）。
+   */
+  monthBranches: readonly string[]
+  /** 需同日并临的神煞，任一命中即满足；空数组表示条款不要求德神。 */
+  requiresAny: readonly string[]
+  /**
+   * 条款生效后**仍然维持忌**的用事（原书「止忌某某，餘皆不忌」的清单）。
+   * 存本项目的 eventType id，编码时由原文用事名逐项折算；空数组表示对该事项也解除。
+   * 例如卷十劫煞条的清单是「安撫邊境、選將訓兵、出師、求醫療病」，与已开放事项无一相关，
+   * 故为空；将来若开出「安葬」等事项，必须回头重核这些清单。
+   */
+  residualEventTypes: readonly string[]
+  /** 条款结论。目前只收录 lift＝原书明言「併則不忌」或「止忌…餘皆不忌」。 */
+  outcome: 'lift'
+  /** 来源定位：卷次、条目与帧号。 */
+  locator: string
+}
