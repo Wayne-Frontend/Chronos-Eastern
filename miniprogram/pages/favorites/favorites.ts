@@ -1,6 +1,7 @@
 import { listFavorites, type FavoriteItem } from '../../services/favorite-service'
 import { getTodayDateKey, parseDateKey } from '../../utils/date-key'
 import { formatWeekday } from '../../utils/format'
+import { getGregorianWeekday } from '../../utils/util'
 
 interface FavoriteCard {
   dateKey: string
@@ -14,6 +15,7 @@ interface FavoritesViewModel {
   past: FavoriteCard[]
   showPast: boolean
   noticeText: string
+  canRetry: boolean
 }
 
 Component({
@@ -48,12 +50,22 @@ function buildView(showPast: boolean): FavoritesViewModel {
   const stored = listFavorites()
 
   if (!stored.ok) {
+    const reason = stored.context.reason
+    // 损坏数据和未知 schema 都不会被服务层覆盖；此时反复重试无效，必须提示用户保留原值。
+    const noticeText =
+      reason === 'corrupt'
+        ? `${stored.message}。原数据已保留，请勿清理小程序缓存；本版本无法自动修复。`
+        : reason === 'unsupported-schema'
+          ? `${stored.message}。原数据已保留，请更新到最新版本后再试，期间请勿清理缓存。`
+          : `${stored.message}，请稍后重试。`
+
     return {
       status: 'error',
       upcoming: [],
       past: [],
       showPast,
-      noticeText: stored.message,
+      noticeText,
+      canRetry: reason === 'storage-api-error',
     }
   }
 
@@ -73,7 +85,7 @@ function buildView(showPast: boolean): FavoritesViewModel {
     }
   }
 
-  return { status: 'ok', upcoming, past, showPast, noticeText: '' }
+  return { status: 'ok', upcoming, past, showPast, noticeText: '', canRetry: false }
 }
 
 function toCard(item: FavoriteItem): FavoriteCard {
@@ -88,6 +100,6 @@ function toCard(item: FavoriteItem): FavoriteCard {
   return {
     dateKey: item.dateKey,
     dateText: `${year}年${month}月${day}日`,
-    weekdayText: formatWeekday(new Date(Date.UTC(year, month - 1, day)).getUTCDay()),
+    weekdayText: formatWeekday(getGregorianWeekday(year, month, day)),
   }
 }

@@ -16,6 +16,7 @@ interface FavoritesPage {
       past: FavoriteCard[]
       showPast: boolean
       noticeText: string
+      canRetry: boolean
     }
   }
   refresh: () => void
@@ -140,6 +141,19 @@ describe('收藏列表', () => {
 
     expect(page.data.view.status).toBe('error')
     expect(page.data.view.noticeText).toContain('读取失败')
+    expect(page.data.view.canRetry).toBe(true)
     expect(page.data.view.upcoming).toHaveLength(0)
+  })
+
+  it('收藏数据损坏时保留数据并提示不要清理缓存', () => {
+    storageValue = '{invalid json'
+    const page = loadPage()
+
+    page.onShow()
+
+    expect(page.data.view.status).toBe('error')
+    expect(page.data.view.canRetry).toBe(false)
+    expect(page.data.view.noticeText).toContain('请勿清理小程序缓存')
+    expect(storageValue).toBe('{invalid json')
   })
 })

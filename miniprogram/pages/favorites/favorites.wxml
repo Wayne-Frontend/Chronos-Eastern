@@ -9,7 +9,7 @@
 
     <view wx:if="{{view.status === 'error'}}" class="section-card favorites-notice">
       <text>{{view.noticeText}}</text>
-      <button class="secondary-button favorites-retry" bindtap="refresh" hover-class="button-pressed">重试</button>
+      <button wx:if="{{view.canRetry}}" class="secondary-button favorites-retry" bindtap="refresh" hover-class="button-pressed">重试</button>
     </view>
 
     <block wx:else>
