@@ -45,7 +45,8 @@ interface ResultCard {
   lunarText: string
   tagText: string
   moreText: string
-  isFavorite: boolean
+  /** null 表示收藏读取失败，不能当作「未收藏」。 */
+  isFavorite: boolean | null
 }
 
 interface FindDateViewModel {
@@ -62,6 +63,7 @@ interface FindDateViewModel {
   noticeTone: 'error' | 'info'
   expiredNotice: string
   progressText: string
+  favoriteNotice: string
   conditionText: string
   /** 汇总卡中的核心数字，单独成层级，避免与解释文字挤在同一段里。 */
   resultCount: number
@@ -98,6 +100,12 @@ function describeRangeNotice(rangeIssue: string, option: EventTypeEntry | undefi
   return option && !canQueryEventType(option) ? option.statusNote : ''
 }
 
+/** 页面只查询今天及以后；服务仍允许历史日期查询。 */
+function describePageRangeIssue(startDate: string, endDate: string, maxRangeDays: number): string {
+  const issue = describeRangeIssue(startDate, endDate, maxRangeDays)
+  return issue || (startDate < getTodayDateKey() ? '开始日期不能早于今天，请重新选择日期范围' : '')
+}
+
 /** 查询令牌：只采纳最新一次查询的结果（方案 3.6）。 */
 let queryToken = 0
 
@@ -107,6 +115,7 @@ Component({
   },
   pageLifetimes: {
     show() {
+      this.refreshDateBoundary()
       this.refreshFavoriteMarks()
     },
   },
@@ -126,13 +135,41 @@ Component({
         noticeText: '',
         noticeTone: 'error',
         progressText: '',
+        favoriteNotice: '',
         expiredNotice: '',
         scopeNoteText: '',
         coverageNoticeText: '',
         ...patch,
       })
     },
+    refreshDateBoundary() {
+      const today = getTodayDateKey()
+      const view = this.data.view
+      if (today === view.pickerStart) {
+        return
+      }
+
+      this.setView({ pickerStart: today })
+      if (view.startDate >= today) {
+        return
+      }
+
+      // 保留用户选定的范围并提示修正，旧结果和跨天前启动的查询不得再覆盖页面。
+      ++queryToken
+      const option = EVENT_TYPES.find((entry) => entry.id === view.selectedEventId)
+      this.resetResults({
+        canQuery: false,
+        noticeText: describePageRangeIssue(
+          view.startDate,
+          view.endDate,
+          option?.maxRangeDays ?? view.maxRangeDays,
+        ),
+        expiredNotice: '日期已更新，请重新选择今天及以后的日期范围',
+        scopeNoteText: option && canQueryEventType(option) ? option.statusNote : '',
+      })
+    },
     onSelectEvent(event: WechatMiniprogram.TouchEvent) {
+      this.refreshDateBoundary()
       const view = this.data.view
 
       if (view.status === 'running') {
@@ -159,7 +196,7 @@ Component({
         return
       }
 
-      const rangeIssue = describeRangeIssue(view.startDate, view.endDate, option.maxRangeDays)
+      const rangeIssue = describePageRangeIssue(view.startDate, view.endDate, option.maxRangeDays)
 
       this.resetResults({
         selectedEventId: option.id,
@@ -177,18 +214,19 @@ Component({
       this.applyRange(this.data.view.startDate, String(event.detail.value))
     },
     applyRange(startDate: string, endDate: string) {
+      this.refreshDateBoundary()
       const view = this.data.view
 
       if (view.status === 'running') {
         return
       }
 
-      const hadResults = view.results.length > 0 || view.status === 'ok' || view.status === 'empty'
+      const hadResults = view.conditionText !== '' || view.conflictCards.length > 0
       const option = EVENT_TYPES.find((entry) => entry.id === view.selectedEventId)
       // 事项本身不可查询时，改日期不能让按钮重新可用（否则点击后 onQuery 会静默返回）；
       // 同时保留该事项的整理说明，不因为改了日期就把原因抹掉。
       const queryable = option !== undefined && canQueryEventType(option)
-      const rangeIssue = describeRangeIssue(
+      const rangeIssue = describePageRangeIssue(
         startDate,
         endDate,
         option?.maxRangeDays ?? view.maxRangeDays,
@@ -206,6 +244,7 @@ Component({
       })
     },
     async onQuery() {
+      this.refreshDateBoundary()
       const view = this.data.view
       const option = EVENT_TYPES.find((entry) => entry.id === view.selectedEventId)
 
@@ -216,14 +255,9 @@ Component({
       const token = ++queryToken
       const total = (countDaysBetween(view.startDate, view.endDate) ?? 0) + 1
 
-      this.setView({
+      this.resetResults({
         status: 'running',
-        noticeText: '',
-        expiredNotice: '',
-        results: [],
-        resultCount: 0,
-        checkedDays: 0,
-        summaryText: '',
+        scopeNoteText: view.scopeNoteText,
         progressText: `正在核对 0/${total} 日`,
       })
 
@@ -238,6 +272,7 @@ Component({
         },
       )
 
+      this.refreshDateBoundary()
       if (token !== queryToken) {
         return
       }
@@ -248,8 +283,9 @@ Component({
       const option = EVENT_TYPES.find((entry) => entry.id === eventTypeId)
 
       if (!outcome.ok) {
-        this.setView({
+        this.resetResults({
           status: 'blocked',
+          scopeNoteText: option?.statusNote ?? '',
           noticeText:
             outcome.code === 'RULE_PACK_MISSING'
               ? '该事项暂时无法查询，请稍后再试'
@@ -262,15 +298,16 @@ Component({
 
       const value: FindDateOutcome = outcome.value
       const favorites = listFavorites()
-      const favoriteKeys = new Set<string>(
-        favorites.ok ? favorites.value.map((item) => item.dateKey) : [],
-      )
+      const favoriteKeys = favorites.ok
+        ? new Set<string>(favorites.value.map((item) => item.dateKey))
+        : null
       const results = value.results.map((item) => toCard(item, favoriteKeys))
       const partial = value.status === 'partial'
 
       this.setView({
         status: partial ? 'partial' : results.length > 0 ? 'ok' : 'empty',
         results,
+        favoriteNotice: favorites.ok ? '' : describeFavoriteFailure(favorites.message),
         conflictCards: value.conflictDates.map(toConflictCard),
         progressText: '',
         resultCount: value.summary.passedDays,
@@ -312,12 +349,16 @@ Component({
       }
 
       const favorites = listFavorites()
-      const favoriteKeys = new Set<string>(
-        favorites.ok ? favorites.value.map((item) => item.dateKey) : [],
-      )
+      const favoriteKeys = favorites.ok
+        ? new Set<string>(favorites.value.map((item) => item.dateKey))
+        : null
 
       this.setView({
-        results: results.map((item) => ({ ...item, isFavorite: favoriteKeys.has(item.dateKey) })),
+        favoriteNotice: favorites.ok ? '' : describeFavoriteFailure(favorites.message),
+        results: results.map((item) => ({
+          ...item,
+          isFavorite: favoriteKeys?.has(item.dateKey) ?? null,
+        })),
       })
     },
   },
@@ -358,6 +399,7 @@ function buildInitialView(): FindDateViewModel {
     noticeTone: 'error',
     expiredNotice: '',
     progressText: '',
+    favoriteNotice: '',
     conditionText: '',
     resultCount: 0,
     checkedDays: 0,
@@ -370,7 +412,10 @@ function buildInitialView(): FindDateViewModel {
   }
 }
 
-function toCard(item: FindDateOutcome['results'][number], favoriteKeys: Set<string>): ResultCard {
+function toCard(
+  item: FindDateOutcome['results'][number],
+  favoriteKeys: Set<string> | null,
+): ResultCard {
   const parsed = parseDateKey(item.dateKey)
   const dateText = parsed.ok ? `${parsed.value.month}月${parsed.value.day}日` : item.dateKey
   return {
@@ -380,8 +425,12 @@ function toCard(item: FindDateOutcome['results'][number], favoriteKeys: Set<stri
     lunarText: item.lunarText,
     tagText: item.tagText,
     moreText: '查看当天参考 ›',
-    isFavorite: favoriteKeys.has(item.dateKey),
+    isFavorite: favoriteKeys?.has(item.dateKey) ?? null,
   }
+}
+
+function describeFavoriteFailure(message: string): string {
+  return `收藏状态暂不可用：${message}。候选日期不受影响，可从日历的收藏入口查看详情。`
 }
 
 function toConflictCard(dateKey: string): ConflictCard {
