@@ -5,3 +5,4 @@ dist/
 *.log
 project.private.config.json
 .DS_Store
+/docs/qa/

@@ -4,10 +4,12 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## 项目概览
 
-「岁月良辰」（package name `chronos-eastern`）是微信原生小程序：公历/农历/节气查询 + 基于已校勘古籍规则的「找日子」。V1.0 **无后端、无登录、无云开发**，全部本地计算，收藏走 `wx.setStorage`。
+「岁月良辰」（package name `chronos-eastern`）是微信原生小程序：公历/农历/节气查询 + 基于已校勘古籍规则的「找日子」。V1.0 **无后端、无登录、无云开发**，业务计算在本机完成，收藏由 service 封装 `wx.getStorageSync` / `wx.setStorageSync`。
+
+当前功能、规则版本和发布资料入口为 `README.md`、`docs/release-checklist.md`。2026-10-17 最近门禁为 22 个测试文件、389 项测试通过，模拟器覆盖与待验证项统一记录在发布检查单。真机本轮由用户明确跳过，后续自行整体验证；后台审核结果、备案号、类目与隐私表单没有新增核验证据，不得从历史提审记录推断当前值。
 
 - WXML + SCSS + TypeScript；TS/Sass 由微信开发者工具内置编译插件处理（`project.config.json` → `useCompilerPlugins`），无 CLI 构建产物
-- Skyline + glass-easel 渲染，`navigationStyle: custom`，每个页面顶部自己渲染 `<navigation-bar>`
+- glass-easel 组件框架，配置含 Skyline 选项；实际渲染模式以运行环境为准。`navigationStyle: custom`，每个页面顶部自己渲染 `<navigation-bar>`
 - 唯一运行时依赖：`lunar-javascript`，**精确固定 `1.7.7`**（不用 `^`/`~`）
 
 两份文档定义了本项目的硬边界，动手前先读：
@@ -33,8 +35,8 @@ npm run format       # prettier --write
 ## 分层与调用规则
 
 ```text
-pages / components  →  services（calendar-service 已建，其余待建）  →  adapters/lunar-adapter  →  lunar-javascript
-                                     ↘  data/rules（待建）+ rule-engine（待建）
+pages / components  →  services  →  adapters/lunar-adapter  →  lunar-javascript
+                         ↘  data/rules + rule-engine + rule-adjudication
 ```
 
 方案 5.1 的硬性约束（评审 diff 时按此判断）：
@@ -82,7 +84,7 @@ pages / components  →  services（calendar-service 已建，其余待建）  �
 
 ## 测试
 
-- `vitest`，无配置文件，测试在 `tests/`（node 环境），当前覆盖 `date-key`、`format`、`ganzhi`、`lunar-adapter`、`calendar-service`、`festival-service`、`favorite-service`、`rule-facts`、`rule-engine`、`rule-adjudication`、`rule-explanation-service`、`rule-presentation`、`find-date-service`、`find-date-page`、`find-date-unknown`、`event-types`、`upcoming-festival-service`、`solar-terms`、`day-detail-context` 与 `about-page`（截至 2026-10-12 共 21 个测试文件、356 项；以后以 `npm run check` 的最新输出为准）；测 Storage 相关代码用 `vi.stubGlobal('wx', ...)` 注入假存储，测 partial 等异常分支用 `vi.mock` 改造 `calendar-service`
+- `vitest`，无配置文件，测试在 `tests/`（node 环境），当前覆盖 `date-key`、`format`、`ganzhi`、`lunar-adapter`、`calendar-service`、`festival-service`、`favorite-service`、`rule-facts`、`rule-engine`、`rule-adjudication`、`rule-explanation-service`、`rule-presentation`、`find-date-service`、`find-date-page`、`find-date-unknown`、`event-types`、`upcoming-festival-service`、`solar-terms`、`day-detail-context`、`about-page`、`favorites-page` 与 `navigation-bar`（截至 2026-10-17 共 22 个测试文件、389 项；以后以 `npm run check` 的最新输出为准）；测 Storage 相关代码用 `vi.stubGlobal('wx', ...)` 注入假存储，测 partial 等异常分支用 `vi.mock` 改造 `calendar-service`
 - 权威样本夹具：`tests/fixtures/calendar-authority.ts`（公农历，HKO）与 `tests/fixtures/solar-terms-authority.ts`（2017–2026 紫金山含交节时刻、2027–2030 HKO），每条样本都带 `source`。新增样本必须能定位到权威来源（紫金山天文台 / GB/T 33661 优先，HKO 为交叉源），**不得用两个同源网络黄历互证，也不得拿库自身输出当期望值**
 - 现有测试已覆盖：闰月首日、春节边界、1901/2100 范围边界、双年干支口径、立春/惊蛰当日按日换年换月、节气名称与时刻、连续 10 年 24 节气逐日扫描（紫金山主源，交节时刻分钟级一致）、跨宿主时区（`TZ` 三值）一致、"今天"按 UTC+8 换日、库星期与公历推算交叉核对、非法日期不外泄库异常、世纪闰年 2100、service 层统一错误码
 - 2051、2083、2084、2085 的近午夜风险日期已逐例核对，2057-09-28 的一日差已记录；尚未补齐的是交节时刻秒级精度（公开权威资料只到分钟）与 1901–1948 历史区间官方颁行历表一致性——扩展夹具时优先从这里取
