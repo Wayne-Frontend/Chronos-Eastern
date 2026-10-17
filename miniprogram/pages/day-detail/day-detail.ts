@@ -97,6 +97,7 @@ interface DayDetailViewModel {
 
 Page({
   data: {
+    canGoBack: false,
     view: {
       status: 'invalid',
       isOverview: false,
@@ -125,6 +126,8 @@ Page({
       : EVENT_TYPES.filter(canQueryEventType).map((entry) => entry.id)
 
     this.setData({
+      // 分享直达可能是页面栈首项，以实际页面栈决定入口，不依赖可被手改的 from 参数。
+      canGoBack: getCurrentPages().length > 1,
       view: buildDayDetailViewModel(options.date ?? '', eventTypeIds, isOverview),
     })
   },

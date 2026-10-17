@@ -1,4 +1,4 @@
-<navigation-bar title="日期详情" color="#24211E" background="#F7F3EA"></navigation-bar>
+<navigation-bar title="日期详情" back="{{canGoBack}}" home-button="{{!canGoBack}}" color="#24211E" background="#F7F3EA"></navigation-bar>
 
 <scroll-view class="detail-scroll" scroll-y enhanced show-scrollbar="{{false}}">
 <view class="page-shell page-content detail-page">

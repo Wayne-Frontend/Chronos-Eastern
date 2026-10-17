@@ -46,6 +46,21 @@
   opacity: 0.5;
 }
 
+.weui-navigation-bar__btn_home_wrapper {
+  display: flex;
+  min-width: 44px;
+  height: 44px;
+  align-items: center;
+  justify-content: center;
+}
+
+.weui-navigation-bar__btn_home {
+  color: inherit;
+  font-size: 14px;
+  line-height: 24px;
+  white-space: nowrap;
+}
+
 .weui-navigation-bar__btn_goback {
   font-size: 12px;
   width: 12px;

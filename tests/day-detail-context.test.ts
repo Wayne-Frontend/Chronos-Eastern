@@ -19,6 +19,8 @@ vi.stubGlobal('Component', (options: unknown) => {
 })
 
 const navigation: string[] = []
+let pageStackDepth = 2
+vi.stubGlobal('getCurrentPages', () => Array.from({ length: pageStackDepth }, () => ({})))
 
 vi.stubGlobal('wx', {
   navigateTo: (options: { url: string }) => {
@@ -235,6 +237,41 @@ describe('日期详情页的事项上下文', () => {
 })
 
 describe('日期详情分享', () => {
+  function loadNavigation(options: Record<string, string>, depth: number) {
+    const page = pageDefinitions[0] as { onLoad: (options: Record<string, string>) => void }
+    const setData = vi.fn()
+    pageStackDepth = depth
+    try {
+      page.onLoad.call({ setData }, options)
+    } finally {
+      pageStackDepth = 2
+    }
+    return setData.mock.calls[0]![0] as {
+      canGoBack: boolean
+      view: { status: string; dateKey: string }
+    }
+  }
+
+  it('分享冷启动直达详情时展示首页入口，并保留所分享的日期', () => {
+    const data = loadNavigation({ date: '2026-10-15' }, 1)
+    expect(data.canGoBack).toBe(false)
+    expect(data.view).toMatchObject({ status: 'ok', dateKey: '2026-10-15' })
+    expect(detailTemplate).toContain('back="{{canGoBack}}"')
+    expect(detailTemplate).toContain('home-button="{{!canGoBack}}"')
+  })
+
+  it('普通进入或热启动存在上一页时保留返回入口，不依赖来源参数', () => {
+    expect(loadNavigation({ date: '2026-10-15', from: 'calendar' }, 2).canGoBack).toBe(true)
+    expect(loadNavigation({ date: '2026-10-15' }, 3).canGoBack).toBe(true)
+    expect(loadNavigation({ date: '2026-10-15', from: 'calendar' }, 1).canGoBack).toBe(false)
+  })
+
+  it.each(['invalid-date', '2101-01-01'])('分享日期为 %s 时错误页同样提供首页出口', (date) => {
+    const data = loadNavigation({ date }, 1)
+    expect(data.canGoBack).toBe(false)
+    expect(data.view.status).not.toBe('ok')
+  })
+
   it('只分享公开日期，不携带事项、收藏或页面来源', () => {
     const page = pageDefinitions[0] as {
       onShareAppMessage: (this: { data: { view: ReturnType<typeof loadDetail> } }) => {

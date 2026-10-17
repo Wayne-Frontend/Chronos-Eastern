@@ -97,9 +97,15 @@ Component({
     back() {
       const data = this.data
       if (data.delta) {
-        wx.navigateBack({
-          delta: data.delta,
-        })
+        // 点击时再次检查页面栈；返回失败也提供首页出口。
+        if (getCurrentPages().length > data.delta) {
+          wx.navigateBack({
+            delta: data.delta,
+            fail: () => this.home(),
+          })
+        } else {
+          this.home()
+        }
       }
       this.triggerEvent('back', { delta: data.delta }, {})
     },
