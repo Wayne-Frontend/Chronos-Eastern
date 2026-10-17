@@ -39,6 +39,14 @@ function ruleOf(name: string) {
  * 残余忌项清单按事项判断、未覆盖的情形一律维持常例——最后一件是这套机制偏保守的底线。
  */
 describe('卷十裁决条款', () => {
+  it('条款查找遵守实际匹配条件，转致时返回最终生效的解除条款', () => {
+    // 辰月四耗同时属于两个可解除月组，应返回先命中的天德月德支路。
+    const chen = findApplicableClause('四耗', factsOf('2026-04-08'), 'opening')
+    expect(chen?.requiresAny).toEqual(['天德', '月德'])
+    expect(findApplicableClause('满日', factsOf('2026-08-03'), 'engagement')?.shensha).toBe('灾煞')
+    expect(findApplicableClause('月厌', factsOf('2026-02-17'), 'travel')).toBeNull()
+  })
+
   it('德神当值判定取自正典月表：卯月的月德在甲日，四仲月的天德不存在', () => {
     const jiaDay = factsOf('2026-03-11')
 

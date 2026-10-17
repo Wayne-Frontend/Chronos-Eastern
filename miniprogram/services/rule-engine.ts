@@ -1,6 +1,6 @@
 import type { DateInfo } from '../types/calendar'
-import type { RuleCondition, RuleDefinition, RulePack } from '../types/rule'
-import { applyAdjudication, isDayWideExcluded } from './rule-adjudication'
+import type { AdjudicationEvidence, RuleCondition, RuleDefinition, RulePack } from '../types/rule'
+import { applyAdjudication, getDayWideExclusionEvidence } from './rule-adjudication'
 import { splitGanzhi, type GanzhiParts } from '../utils/ganzhi'
 import {
   getJianChu,
@@ -45,6 +45,7 @@ export type DayStatus = 'pass' | 'excluded' | 'unresolved' | 'not_matched' | 'un
 
 export interface DayEvaluation {
   status: DayStatus
+  adjudications: readonly AdjudicationEvidence[]
   matchedRuleIds: readonly string[]
   excludeRuleIds: readonly string[]
   /** 因缺输入无法判定、从而阻止该日进入结果的规则。 */
@@ -177,12 +178,13 @@ export function evaluateDay(pack: RulePack, facts: DateFacts): DayEvaluation {
     }
   }
 
-  const base = { matchedRuleIds, excludeRuleIds, unknownRuleIds }
+  const base = { matchedRuleIds, excludeRuleIds, unknownRuleIds, adjudications: [] }
 
   // 卷十《月厭》条下的陰陽大會、小會、陰位等日是「日」自身的属性，原书一律作「諸事皆忌」，
   // 并注明「與月德併仍諸事皆忌」——故先于缺输入与宜忌并见两条分支判定：吉神与缺输入都不能翻。
-  if (isDayWideExcluded(facts)) {
-    return { status: 'excluded', ...base, adjudicatedRuleIds: [] }
+  const dayWideEvidence = getDayWideExclusionEvidence(facts)
+  if (dayWideEvidence) {
+    return { status: 'excluded', ...base, adjudicatedRuleIds: [], adjudications: [dayWideEvidence] }
   }
 
   if (unknownRuleIds.length > 0) {
@@ -191,7 +193,7 @@ export function evaluateDay(pack: RulePack, facts: DateFacts): DayEvaluation {
 
   if (matchedRuleIds.length > 0 && excludeRuleIds.length > 0) {
     // 宜忌并见：按卷十的例外条款裁决，再决定是「解除」还是维持常例。
-    // 条款只做解除、不做加忌；未编码的神煞原样保留，整日仍按常例不出结论。
+    // 未编码的神煞原样保留，按常例不出结论；生效条款随结果返回供页面解释。
     const adjudication = applyAdjudication(pack, facts, excludeRuleIds)
 
     // 原书明言「诸事皆忌／虽与德合并犹忌」的：该日定为忌，不因同日有宜项而改判。
@@ -200,6 +202,7 @@ export function evaluateDay(pack: RulePack, facts: DateFacts): DayEvaluation {
         status: 'excluded',
         ...base,
         adjudicatedRuleIds: [],
+        adjudications: adjudication.evidence,
       }
     }
 
@@ -208,6 +211,7 @@ export function evaluateDay(pack: RulePack, facts: DateFacts): DayEvaluation {
         status: 'pass',
         ...base,
         adjudicatedRuleIds: adjudication.liftedRuleIds,
+        adjudications: adjudication.evidence,
       }
     }
 
@@ -215,6 +219,7 @@ export function evaluateDay(pack: RulePack, facts: DateFacts): DayEvaluation {
       status: 'unresolved',
       ...base,
       adjudicatedRuleIds: adjudication.liftedRuleIds,
+      adjudications: adjudication.evidence,
     }
   }
 

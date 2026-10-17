@@ -78,6 +78,13 @@ export const SOURCES: readonly SourceEntry[] = [
     kind: 'classic-scan',
   },
   {
+    id: 'src-xjbf-vol10-scan',
+    title: '钦定协纪辨方书·卷十（影印本，与卷九合装，宜忌裁决与铺注条例）',
+    publisher: 'Wikimedia Commons · CADAL 浙江大学图书馆藏本',
+    url: 'https://commons.wikimedia.org/wiki/File:CADAL06056510_欽定協紀辨方書·卷九~卷十.djvu',
+    kind: 'classic-scan',
+  },
+  {
     id: 'src-xjbf-vol11-scan',
     title: '钦定协纪辨方书·卷十一（影印本，用事：行幸遣使·出行同、嫁娶、般移·移徙同、开市等）',
     publisher: 'Wikimedia Commons · CADAL 浙江大学图书馆藏本',

@@ -100,3 +100,20 @@ export interface AdjudicationClause {
   /** 来源定位：卷次、条目与帧号。 */
   locator: string
 }
+
+/** 与求值同时产生的裁决轨迹；解释层不得另行推断生效条款。 */
+export interface AdjudicationEvidence {
+  kind: 'day-wide' | 'clause'
+  outcome: 'lift' | 'exclude' | 'normal'
+  ruleId: string | null
+  name: string
+  monthBranch: string
+  dayPillar: string
+  sourceIds: readonly string[]
+  steps: readonly {
+    shensha: string
+    outcome: AdjudicationClause['outcome']
+    presentShensha: readonly string[]
+    locator: string
+  }[]
+}

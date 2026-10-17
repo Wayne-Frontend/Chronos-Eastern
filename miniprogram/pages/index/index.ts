@@ -159,14 +159,12 @@ function buildAlmanacSection(dateKey: string): {
     }
 
     eventTypeIds.push(value.eventType)
-    addAlmanacItem(
-      groups,
-      结论类别,
-      value.eventName,
-      value.matchedRules
+    addAlmanacItem(groups, 结论类别, value.eventName, [
+      ...value.matchedRules
         .filter((rule) => 结论类别 === 'caution' || rule.effect === 结论类别)
         .map((rule) => rule.name),
-    )
+      ...value.adjudications.filter((item) => item.kind === 'day-wide').map((item) => item.name),
+    ])
   }
 
   const rowMeta: Record<HomeAlmanacRow['id'], Pick<HomeAlmanacRow, 'badge' | 'badgeClass'>> = {

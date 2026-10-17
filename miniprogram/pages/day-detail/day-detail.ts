@@ -61,6 +61,12 @@ interface RuleSectionViewModel {
   suggestion: string
   /** 规则包版本用于详情页追溯，与逐条规则编号共同构成依据元信息。 */
   rulePackText: string
+  adjudications: readonly {
+    id: string
+    summary: string
+    locator: string
+    sourceText: string
+  }[]
   rules: readonly RuleDisplayItem[]
   detailsExpanded: boolean
   noticeText: string
@@ -325,6 +331,7 @@ function buildRuleSection(
       description: '相关信息读取失败，请稍后重新进入。',
       suggestion: '',
       rulePackText: '',
+      adjudications: [],
       rules: [],
       detailsExpanded: !isOverview,
       noticeText: '',
@@ -347,6 +354,12 @@ function buildRuleSection(
     description: copy.summary,
     suggestion: copy.suggestion,
     rulePackText: `${value.rulePack.id}@${value.rulePack.version}`,
+    adjudications: value.adjudications.map((item) => ({
+      id: item.id,
+      summary: item.summary,
+      locator: item.steps.map((step) => step.locator).join('；'),
+      sourceText: item.sources.map((source) => `${source.title}（${source.publisher}）`).join('；'),
+    })),
     rules: [
       ...value.matchedRules.map((rule) => toRuleDisplayItem(rule, value.eventName, false)),
       ...value.unknownRules.map((rule) => toRuleDisplayItem(rule, value.eventName, true)),
@@ -370,10 +383,8 @@ function toRuleDisplayItem(
     badgeText: isUnknown ? '—' : rule.effect === 'include' ? '宜' : '忌',
     effectClass: isUnknown ? 'unknown' : rule.effect,
     title: copy.title,
-    // 被卷十例外解除的忌项：徽标仍是「忌」（它确实是忌条目），但必须说明本日为何不计较。
-    summary: rule.adjudicated
-      ? '依《协纪辨方书》卷十的例外，本条与当日吉神同临，对其不再作忌。'
-      : copy.summary,
+    // 使用与求值同源的条件和转致轨迹，不能把所有解除都归因于「吉神同临」。
+    summary: rule.adjudicationSummary || copy.summary,
     sourceExpanded: false,
     explanation: rule.explanation,
     locator: rule.locator,

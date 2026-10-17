@@ -1,6 +1,6 @@
 import { ADJUDICATION_CLAUSES, DAY_WIDE_EXCLUSION_PILLARS } from '../data/rules/adjudication'
 import { MONTH_GOD_TABLES } from '../data/rules/month-gods'
-import type { AdjudicationClause, RulePack } from '../types/rule'
+import type { AdjudicationClause, AdjudicationEvidence, RulePack } from '../types/rule'
 import { resolveMonthIndexed, resolveMonthIndexedSet } from './rule-facts'
 import type { DateFacts } from './rule-engine'
 
@@ -119,8 +119,38 @@ export function isDayWideExcluded(facts: DateFacts): boolean {
   return (DAY_WIDE_EXCLUSION_PILLARS[monthBranch] ?? []).includes(dayPillar)
 }
 
+export function getDayWideExclusionEvidence(facts: DateFacts): AdjudicationEvidence | null {
+  if (!isDayWideExcluded(facts)) {
+    return null
+  }
+
+  return {
+    kind: 'day-wide',
+    outcome: 'exclude',
+    ruleId: null,
+    name: '整日排除',
+    monthBranch: facts.ganzhi.monthJieQi!.branch,
+    dayPillar: facts.dayPillar!,
+    sourceIds: ['src-xjbf-vol10-scan'],
+    steps: [
+      {
+        shensha: '月厌',
+        outcome: 'exclude',
+        presentShensha: [],
+        locator: '卷十《月厭》整日「諸事皆忌」日柱清单（影印本第 172–173 帧）',
+      },
+    ],
+  }
+}
+
 /** 单个忌神煞当日的结论：解除、定为忌、或按常例（两不注）。 */
 export type ShenshaOutcome = 'lift' | 'exclude' | 'normal'
+
+interface ShenshaResolution {
+  outcome: ShenshaOutcome
+  clauses: readonly AdjudicationClause[]
+  steps: AdjudicationEvidence['steps']
+}
 
 /**
  * 求某忌神煞当日的结论。按条款表顺序取第一条命中的支路（月份命中、所需神煞满足），
@@ -133,10 +163,20 @@ export function resolveShenshaOutcome(
   eventType: string,
   seen: ReadonlySet<string> = new Set<string>(),
 ): ShenshaOutcome {
+  return resolveShensha(shensha, facts, eventType, seen).outcome
+}
+
+/** 判定和轨迹共用同一次匹配，保留转致链及实际满足的并临条件。 */
+function resolveShensha(
+  shensha: string,
+  facts: DateFacts,
+  eventType: string,
+  seen: ReadonlySet<string> = new Set<string>(),
+): ShenshaResolution {
   const monthBranch = facts.ganzhi.monthJieQi?.branch ?? null
 
   if (monthBranch === null || seen.has(shensha)) {
-    return 'normal'
+    return { outcome: 'normal', clauses: [], steps: [] }
   }
 
   const visited = new Set([...seen, shensha])
@@ -146,29 +186,41 @@ export function resolveShenshaOutcome(
       continue
     }
 
-    const satisfied =
-      clause.requiresAny.length === 0 ||
-      clause.requiresAny.some((name) => isShenshaPresent(name, facts) === true)
+    const presentShensha = clause.requiresAny.filter(
+      (name) => isShenshaPresent(name, facts) === true,
+    )
+    const satisfied = clause.requiresAny.length === 0 || presentShensha.length > 0
 
     if (!satisfied) {
       continue
     }
 
+    const step = { shensha, outcome: clause.outcome, presentShensha, locator: clause.locator }
+
     if (clause.outcome === 'delegate') {
-      return clause.delegateShensha
-        ? resolveShenshaOutcome(clause.delegateShensha, facts, eventType, visited)
-        : 'normal'
+      const next = clause.delegateShensha
+        ? resolveShensha(clause.delegateShensha, facts, eventType, visited)
+        : { outcome: 'normal' as const, clauses: [], steps: [] }
+      return {
+        outcome: next.outcome,
+        clauses: [clause, ...next.clauses],
+        steps: [step, ...next.steps],
+      }
     }
 
     if (clause.outcome === 'lift') {
       // 「止忌某某，餘皆不忌」：清单含本事项时，该忌项仍然维持。
-      return clause.residualEventTypes.includes(eventType) ? 'normal' : 'lift'
+      return {
+        outcome: clause.residualEventTypes.includes(eventType) ? 'normal' : 'lift',
+        clauses: [clause],
+        steps: [step],
+      }
     }
 
-    return clause.outcome
+    return { outcome: clause.outcome, clauses: [clause], steps: [step] }
   }
 
-  return 'normal'
+  return { outcome: 'normal', clauses: [], steps: [] }
 }
 
 /** 取该忌神煞当日对该事项生效的解除条款；结论不是解除时返回 null。 */
@@ -177,21 +229,8 @@ export function findApplicableClause(
   facts: DateFacts,
   eventType: string,
 ): AdjudicationClause | null {
-  if (resolveShenshaOutcome(shensha, facts, eventType) !== 'lift') {
-    return null
-  }
-
-  const monthBranch = facts.ganzhi.monthJieQi?.branch ?? null
-
-  return (
-    ADJUDICATION_CLAUSES.find(
-      (clause) =>
-        clause.shensha === shensha &&
-        clause.outcome === 'lift' &&
-        monthBranch !== null &&
-        clause.monthBranches.includes(monthBranch),
-    ) ?? null
-  )
+  const result = resolveShensha(shensha, facts, eventType)
+  return result.outcome === 'lift' ? (result.clauses[result.clauses.length - 1] ?? null) : null
 }
 
 export interface AdjudicationOutcome {
@@ -203,6 +242,7 @@ export interface AdjudicationOutcome {
   remainingExcludeRuleIds: readonly string[]
   /** 生效并改变结论的条款，供解释与测试。 */
   appliedClauses: readonly AdjudicationClause[]
+  evidence: readonly AdjudicationEvidence[]
 }
 
 /**
@@ -218,24 +258,36 @@ export function applyAdjudication(
   const excludedRuleIds: string[] = []
   const remainingExcludeRuleIds: string[] = []
   const appliedClauses: AdjudicationClause[] = []
+  const evidence: AdjudicationEvidence[] = []
 
   for (const ruleId of excludeRuleIds) {
     const rule = pack.rules.find((item) => item.id === ruleId)
-    const outcome = rule ? resolveShenshaOutcome(rule.name, facts, pack.eventType) : 'normal'
+    const resolution = rule ? resolveShensha(rule.name, facts, pack.eventType) : null
+    const outcome = resolution?.outcome ?? 'normal'
+
+    if (rule && resolution && resolution.steps.length > 0) {
+      evidence.push({
+        kind: 'clause',
+        outcome,
+        ruleId,
+        name: rule.name,
+        monthBranch: facts.ganzhi.monthJieQi!.branch,
+        dayPillar: facts.dayPillar ?? '',
+        sourceIds: ['src-xjbf-vol10-scan'],
+        steps: resolution.steps,
+      })
+    }
 
     if (outcome === 'lift') {
       liftedRuleIds.push(ruleId)
-      const clause = rule ? findApplicableClause(rule.name, facts, pack.eventType) : null
-
-      if (clause) {
-        appliedClauses.push(clause)
-      }
+      appliedClauses.push(...(resolution?.clauses ?? []))
     } else if (outcome === 'exclude') {
       excludedRuleIds.push(ruleId)
+      appliedClauses.push(...(resolution?.clauses ?? []))
     } else {
       remainingExcludeRuleIds.push(ruleId)
     }
   }
 
-  return { liftedRuleIds, excludedRuleIds, remainingExcludeRuleIds, appliedClauses }
+  return { liftedRuleIds, excludedRuleIds, remainingExcludeRuleIds, appliedClauses, evidence }
 }

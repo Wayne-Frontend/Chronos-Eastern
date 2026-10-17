@@ -59,6 +59,12 @@
     <text class="detail-rules__eyebrow">{{section.eventName}}参考</text>
     <text class="detail-rules__title">{{section.title}}</text>
     <text class="detail-rules__description">{{section.description}}</text>
+    <view wx:for="{{section.adjudications}}" wx:key="id" class="detail-rule__source">
+      <text class="detail-rule__source-label">本日判定依据</text>
+      <text class="detail-rule__summary">{{item.summary}}</text>
+      <text class="detail-rule__meta">{{item.locator}}</text>
+      <text class="detail-rule__meta">来源：{{item.sourceText}}</text>
+    </view>
     <text wx:if="{{section.suggestion}}" class="detail-rules__suggestion">{{section.suggestion}}</text>
     <text wx:if="{{section.noticeText}}" class="detail-rules__notice">{{section.noticeText}}</text>
 

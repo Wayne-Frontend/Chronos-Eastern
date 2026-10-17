@@ -1,4 +1,5 @@
 import { describe, expect, it, vi } from 'vitest'
+import detailTemplate from '../miniprogram/pages/day-detail/day-detail.wxml?raw'
 
 /**
  * 详情页与首页在「一次讲几个事项」上必须对齐。
@@ -40,6 +41,7 @@ interface RuleSectionShape {
   coverageNoticeText: string
   coverageText: string
   rulePackText: string
+  adjudications: readonly { id: string; summary: string; locator: string; sourceText: string }[]
   rules: readonly { id: string; statusText: string; limitations: readonly string[] }[]
 }
 
@@ -83,6 +85,31 @@ function loadDetail(options: Record<string, string>): {
 }
 
 describe('日期详情页的事项上下文', () => {
+  it('判定原因与出处绑定在依据折叠区之前，概览入口也可直接阅读', () => {
+    const visibleTemplate = detailTemplate.split('<block wx:if="{{section.detailsExpanded}}">')[0]!
+    expect(visibleTemplate).toContain('wx:for="{{section.adjudications}}"')
+    expect(visibleTemplate).toContain('{{item.summary}}')
+    expect(visibleTemplate).toContain('{{item.locator}}')
+    expect(visibleTemplate).toContain('{{item.sourceText}}')
+  })
+
+  it('整日排除的原因和卷十出处进入未展开的概览卡', () => {
+    const section = loadDetail({ date: '2026-10-27' }).ruleSections[0]!
+    expect(section.detailsExpanded).toBe(false)
+    expect(section.adjudications[0]?.summary).toContain('戌月甲戌日')
+    expect(section.adjudications[0]?.summary).toContain('仍按原书列为忌')
+    expect(section.adjudications[0]?.locator).toContain('172–173 帧')
+    expect(section.adjudications[0]?.sourceText).toContain('卷十')
+  })
+
+  it('聚焦事项的转致解释保留两处条款定位', () => {
+    const section = loadDetail({ date: '2026-08-03', eventType: 'engagement' }).ruleSections[0]!
+    const decision = section.adjudications.find((item) => item.summary.includes('满日 → 灾煞'))!
+    expect(decision.locator).toContain('149–150 帧')
+    expect(decision.locator).toContain('158 帧')
+    expect(decision.sourceText).toContain('卷十')
+  })
+
   it('eventTypes 里几个事项就出几张卡，且每个事项都带上覆盖范围', () => {
     const view = loadDetail({ date: '2026-10-02', eventTypes: 'travel,opening,relocation' })
 

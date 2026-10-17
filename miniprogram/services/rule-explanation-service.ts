@@ -3,7 +3,12 @@ import { findVerifiedRulePack } from '../data/rules/manifest'
 import { findSource, type SourceEntry } from '../data/sources'
 import type { DateKey } from '../types/calendar'
 import type { AppFailure, AppResult } from '../types/result'
-import type { RuleEffect, RulePackCompleteness, RuleStatus } from '../types/rule'
+import type {
+  AdjudicationEvidence,
+  RuleEffect,
+  RulePackCompleteness,
+  RuleStatus,
+} from '../types/rule'
 import { getDateInfo, type CalendarServiceErrorCode } from './calendar-service'
 import { buildDateFacts, evaluateDay, type DayStatus } from './rule-engine'
 
@@ -25,6 +30,7 @@ export interface RuleExplanationItem {
    * 页面必须说明，不得让用户看到「宜」却不知道那条忌为何不算数。
    */
   adjudicated: boolean
+  adjudicationSummary: string
   explanation: string
   locator: string
   limitations: readonly string[]
@@ -38,6 +44,7 @@ export interface DateRuleExplanation {
   status: DayStatus
   matchedRules: readonly RuleExplanationItem[]
   unknownRules: readonly RuleExplanationItem[]
+  adjudications: readonly AdjudicationExplanation[]
   rulePack: {
     id: string
     version: string
@@ -45,6 +52,12 @@ export interface DateRuleExplanation {
     completeness: RulePackCompleteness
     coverage: string
   }
+}
+
+export interface AdjudicationExplanation extends AdjudicationEvidence {
+  id: string
+  summary: string
+  sources: readonly SourceEntry[]
 }
 
 /**
@@ -77,12 +90,21 @@ export function getDateRuleExplanation(
   const matchedRuleIds = new Set([...evaluation.matchedRuleIds, ...evaluation.excludeRuleIds])
   const unknownRuleIds = new Set(evaluation.unknownRuleIds)
   const adjudicatedRuleIds = new Set(evaluation.adjudicatedRuleIds)
+  const adjudications = evaluation.adjudications.map((evidence): AdjudicationExplanation => ({
+    ...evidence,
+    id: evidence.ruleId ?? `day-wide-${evidence.monthBranch}-${evidence.dayPillar}`,
+    summary: describeAdjudication(evidence),
+    sources: evidence.sourceIds
+      .map((sourceId) => findSource(sourceId))
+      .filter((source): source is SourceEntry => source !== null),
+  }))
   const toExplanation = (rule: (typeof pack.rules)[number]): RuleExplanationItem => ({
     id: rule.id,
     name: rule.name,
     effect: rule.effect,
     status: rule.status,
     adjudicated: adjudicatedRuleIds.has(rule.id),
+    adjudicationSummary: adjudications.find((item) => item.ruleId === rule.id)?.summary ?? '',
     explanation: rule.explanation,
     locator: rule.locator,
     limitations: rule.limitations,
@@ -100,6 +122,7 @@ export function getDateRuleExplanation(
       status: evaluation.status,
       matchedRules: pack.rules.filter((rule) => matchedRuleIds.has(rule.id)).map(toExplanation),
       unknownRules: pack.rules.filter((rule) => unknownRuleIds.has(rule.id)).map(toExplanation),
+      adjudications,
       rulePack: {
         id: pack.id,
         version: pack.version,
@@ -108,6 +131,24 @@ export function getDateRuleExplanation(
       },
     },
   }
+}
+
+function describeAdjudication(evidence: AdjudicationEvidence): string {
+  const dateCondition = `本日为${evidence.monthBranch}月${evidence.dayPillar}日`
+  if (evidence.kind === 'day-wide') {
+    return `${dateCondition}，落在卷十《月厌》的整日排除清单；即使命中宜项，仍按原书列为忌。`
+  }
+
+  const path = evidence.steps.map((step) => step.shensha).join(' → ')
+  const present = [...new Set(evidence.steps.flatMap((step) => step.presentShensha))]
+  const condition = present.length > 0 ? `，并临${present.join('、')}` : ''
+  const result =
+    evidence.outcome === 'lift'
+      ? '依原书条款，本事项的这条忌项解除；当日结论仍结合其他条款判断。'
+      : evidence.outcome === 'exclude'
+        ? '依原书条款仍列为忌，同日宜项不能改变这一结论。'
+        : '本事项的这条忌项未获解除，宜忌并见时仍按常例处理。'
+  return `${dateCondition}${condition}，按${path}条款处理。${result}`
 }
 
 function failure(
