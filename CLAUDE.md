@@ -6,7 +6,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 「岁月良辰」（package name `chronos-eastern`）是微信原生小程序：公历/农历/节气查询 + 基于已校勘古籍规则的「找日子」。V1.0 **无后端、无登录、无云开发**，业务计算在本机完成，收藏由 service 封装 `wx.getStorageSync` / `wx.setStorageSync`。
 
-当前功能、规则版本和发布资料入口为 `README.md`、`docs/release-checklist.md`。2026-10-17 最近门禁为 22 个测试文件、389 项测试通过，模拟器覆盖与待验证项统一记录在发布检查单。真机本轮由用户明确跳过，后续自行整体验证；后台审核结果、备案号、类目与隐私表单没有新增核验证据，不得从历史提审记录推断当前值。
+当前功能、规则版本和发布资料入口为 `README.md`、`docs/release-checklist.md`。2026-10-19 最近门禁为 23 个测试文件、400 项测试通过，模拟器覆盖与待验证项统一记录在发布检查单。本轮体验改动尚未在微信开发者工具或真机复验；后台审核结果、备案号、类目与隐私表单没有新增核验证据，不得从历史提审记录推断当前值。
 
 - WXML + SCSS + TypeScript；TS/Sass 由微信开发者工具内置编译插件处理（`project.config.json` → `useCompilerPlugins`），无 CLI 构建产物
 - glass-easel 组件框架，配置含 Skyline 选项；实际渲染模式以运行环境为准。`navigationStyle: custom`，每个页面顶部自己渲染 `<navigation-bar>`
@@ -65,6 +65,7 @@ pages / components  →  services  →  adapters/lunar-adapter  →  lunar-javas
 - **类型声明**：`typings/lunar-javascript/index.d.ts` 是手写的最小声明，只暴露白名单方法。要用新的库 API，必须同时改这里 + 更新评估文档白名单
 - 改库版本时要同步 `adapterVersion: 'lunar-javascript@1.7.7'`、`typings/`、评估文档，并重跑全部权威夹具
 - 收藏 storage key 约定为 `syliangchen:favorites:v1`，schema 带 `schemaVersion`；读取失败或版本不识别时**保留原值、不清空**
+- 首次查询完整版说明的确认标记使用独立键 `syliangchen:disclaimer:v1`，由 `disclaimer-consent-service` 封装；读写失败不阻断本次确认后的查询，后续再次提示
 
 `tsconfig.json` 覆盖 `miniprogram/**` + `typings/**`（含 wx 类型，用的就是仓库里 `typings/types/wx` 这份，不是 npm 包的；该副本是 2021 年版，缺少基础库 2.20.1 之后的接口，新用到的 wx API 先补进 `typings/wx-supplement.d.ts`，整份 typings 升级后该文件整体删除）；`tsconfig.test.json` 只 include `tests/**` 与 `miniprogram/{adapters,services,types,utils}`——测试若要引用其他目录（如未来的 `data/`），需先把它加进 `tsconfig.test.json`。
 
