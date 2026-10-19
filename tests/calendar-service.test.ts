@@ -1,5 +1,7 @@
-import { describe, expect, it } from 'vitest'
+import { describe, expect, it, vi } from 'vitest'
 
+import * as lunarAdapter from '../miniprogram/adapters/lunar-adapter'
+import gridTemplate from '../miniprogram/components/calendar-grid/calendar-grid.wxml?raw'
 import {
   getDateInfo,
   getMonthGrid,
@@ -71,6 +73,43 @@ describe('getDateInfo', () => {
   })
 
   describe('getMonthGrid', () => {
+    it('月历格的读屏说明包含完整日期与状态', () => {
+      expect(gridTemplate).toContain('公历 {{cell.dateKey}}')
+      expect(gridTemplate).toContain("cell.isToday ? '，今天'")
+      expect(gridTemplate).toContain("cell.isFavorite ? '，已收藏'")
+      expect(gridTemplate).toContain('aria-selected="{{cell.dateKey === selectedDateKey}}"')
+    })
+
+    it('范围内格子或末格次日计算失败时返回可定位的月历错误', () => {
+      const original = lunarAdapter.getLunarDateFacts
+      for (const failed of [
+        { month: 10, day: 8, dateKey: '2026-10-08' },
+        { month: 11, day: 9, dateKey: '2026-11-09' },
+      ]) {
+        const compute = vi.spyOn(lunarAdapter, 'getLunarDateFacts').mockImplementation((input) =>
+          input.year === 2026 && input.month === failed.month && input.day === failed.day
+            ? {
+                ok: false,
+                code: 'CALENDAR_COMPUTE_FAILED',
+                message: '历法信息计算失败',
+                retryable: false,
+                context: { input },
+              }
+            : original(input),
+        )
+
+        try {
+          expect(getMonthGrid(2026, 10, '2026-10-09')).toMatchObject({
+            ok: false,
+            code: 'CALENDAR_COMPUTE_FAILED',
+            context: { dateKey: failed.dateKey },
+          })
+        } finally {
+          compute.mockRestore()
+        }
+      }
+    })
+
     function getGrid(
       year: number,
       month: number,

@@ -14,7 +14,8 @@
         bindtap="onCellTap"
         hover-class="cell--pressed"
         aria-role="button"
-        aria-label="公历 {{cell.day}} 日 {{cell.labelText}}"
+        aria-label="公历 {{cell.dateKey}}{{cell.labelText ? '，' + cell.labelText : '，无历法标签'}}{{cell.isToday ? '，今天' : ''}}{{cell.dateKey === selectedDateKey ? '，已选中' : ''}}{{cell.isFavorite ? '，已收藏' : ''}}"
+        aria-selected="{{cell.dateKey === selectedDateKey}}"
       >
         <view class="cell__day-wrap">
           <text class="cell__day">{{cell.day}}</text>

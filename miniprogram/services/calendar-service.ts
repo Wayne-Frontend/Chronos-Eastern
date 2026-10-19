@@ -109,6 +109,12 @@ export function getMonthGrid(
     const dateKey = formatDateKey({ year: cellYear, month: cellMonth, day: cellDay })
     const info = getDateInfo(dateKey)
 
+    // 只有产品范围外的补位日允许缺少标签；范围内任何一格（含末格次日）失败，
+    // 都可能使农历或除夕标签失真，必须让整个月进入可重试的错误状态。
+    if (!info.ok && info.code !== 'CALENDAR_OUT_OF_RANGE') {
+      return getDateInfoFailure(info.code, `月历日期 ${dateKey} 计算失败：${info.message}`, dateKey)
+    }
+
     dates.push({
       dateKey,
       day: cellDay,
