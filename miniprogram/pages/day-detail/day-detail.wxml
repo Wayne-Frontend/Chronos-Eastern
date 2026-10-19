@@ -31,9 +31,9 @@
       </view>
       <view wx:if="{{view.festivalItems.length === 0}}" class="detail-row detail-row--muted">
         <text class="detail-row__label">节日</text>
-        <text class="detail-row__value">无已收录节日</text>
+        <text class="detail-row__value">暂无已收录节日</text>
       </view>
-      <text class="detail-caption">年、月干支在交节当天整日按新值计算。</text>
+      <text class="detail-caption">交节当天，年、月干支按新值显示，不按交节时刻分段。</text>
     </view>
   </view>
 
@@ -60,7 +60,7 @@
     <text class="detail-rules__title">{{section.title}}</text>
     <text class="detail-rules__description">{{section.description}}</text>
     <view wx:for="{{section.adjudications}}" wx:key="id" class="detail-rule__source">
-      <text class="detail-rule__source-label">本日判定依据</text>
+      <text class="detail-rule__source-label">这一天的判定依据</text>
       <text class="detail-rule__summary">{{item.summary}}</text>
       <text class="detail-rule__meta">{{item.locator}}</text>
       <text class="detail-rule__meta">来源：{{item.sourceText}}</text>
@@ -71,8 +71,8 @@
         class="detail-rule__copy-link"
         data-source-id="{{source.id}}"
         bindtap="copySourceLink"
-        aria-label="复制 {{source.title}} 的来源链接"
-      >复制 {{source.title}} 的链接</button>
+        aria-label="复制{{source.title}}链接"
+      >复制{{source.title}}链接</button>
     </view>
     <text wx:if="{{section.suggestion}}" class="detail-rules__suggestion">{{section.suggestion}}</text>
     <text wx:if="{{section.noticeText}}" class="detail-rules__notice">{{section.noticeText}}</text>
@@ -94,7 +94,6 @@
     <block wx:if="{{section.detailsExpanded}}">
       <view wx:if="{{section.rulePackText}}" class="detail-rules__meta-row">
         <text>{{section.rulePackText}}</text>
-        <text>规则均已校勘</text>
       </view>
       <text wx:if="{{section.coverageText}}" class="detail-rules__coverage-text">
         {{section.coverageText}}
@@ -147,8 +146,8 @@
             class="detail-rule__copy-link"
             data-source-id="{{source.id}}"
             bindtap="copySourceLink"
-            aria-label="复制 {{source.title}} 的来源链接"
-          >复制 {{source.title}} 的链接</button>
+            aria-label="复制{{source.title}}链接"
+          >复制{{source.title}}链接</button>
           <block wx:if="{{item.limitations.length > 0}}">
             <text class="detail-rule__source-label">适用范围与限制</text>
             <text

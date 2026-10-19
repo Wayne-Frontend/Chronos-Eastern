@@ -2,7 +2,7 @@
 
 <scroll-view class="find-date-scroll" scroll-y enhanced show-scrollbar="{{false}}">
 <view class="page-shell page-content find-date-page">
-  <text class="page-hint">选择事项和日期范围，看看哪些日子更适合作为参考</text>
+  <text class="page-hint">选择事项和日期范围，查找符合已收录传统规则的备选日期</text>
 
   <view class="section-card block">
     <text class="block__title">选择事项</text>
@@ -121,9 +121,9 @@
   </view>
 
   <view wx:if="{{view.conflictCards.length > 0}}" class="conflict-card">
-    <text class="conflict-card__title">{{view.conflictCards.length}} 天的传统说法不一致</text>
+    <text class="conflict-card__title">{{view.conflictCards.length}} 天宜忌并见</text>
     <text class="conflict-card__hint">
-      这些日期没有明确方向，因此没有放进候选结果。点开可以查看具体原因。
+      这些日期同时有宜、忌依据，现有规则未能裁定，因此未列入候选。点开可查看双方依据。
     </text>
     <view class="conflict-list">
       <view
@@ -134,7 +134,7 @@
         bindtap="onOpenDetail"
         hover-class="conflict-item--pressed"
         aria-role="button"
-        aria-label="查看 {{item.dateKey}} 说法不一致的原因"
+        aria-label="查看 {{item.dateKey}} 宜忌并见的依据"
       >
         <text class="conflict-item__date">{{item.dateText}}</text>
         <text class="conflict-item__weekday">{{item.weekdayText}}</text>

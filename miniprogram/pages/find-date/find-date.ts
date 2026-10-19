@@ -79,7 +79,7 @@ interface FindDateViewModel {
   /** 结果列表上方的覆盖范围披露（合规要求的第二处），非 partial 时为空。 */
   coverageNoticeText: string
   results: ResultCard[]
-  /** 因传统说法不一致而未列入的日期；无冲突时为空。 */
+  /** 因宜忌并见且未获裁决而未列入的日期；无冲突时为空。 */
   conflictCards: ConflictCard[]
   nonCandidateGroups: NonCandidateGroup[]
   showNonCandidate: boolean
@@ -353,13 +353,13 @@ Component({
         : null
       const results = value.results.map((item) => toCard(item, favoriteKeys))
       const nonCandidateGroups: NonCandidateGroup[] = [
-        { id: 'excluded', title: '有不利说法', cards: value.excludedDates.map(toConflictCard) },
+        { id: 'excluded', title: '有传统忌项', cards: value.excludedDates.map(toConflictCard) },
         {
           id: 'not-matched',
-          title: '没有明确说法',
+          title: '未找到相关说法',
           cards: value.notMatchedDates.map(toConflictCard),
         },
-        { id: 'unknown', title: '信息不足', cards: value.unknownDates.map(toConflictCard) },
+        { id: 'unknown', title: '暂无法判断', cards: value.unknownDates.map(toConflictCard) },
       ]
 
       this.setView({
@@ -384,7 +384,7 @@ Component({
           results.length === 0
             ? // 方案 2.4 状态处理要求：无结果必须说明这不是现实安排上的不可用，
               // 否则「规则没推荐」容易被读成「这天不吉利」。措辞与详情页的无匹配结论一致。
-              '这段时间内没有找到符合已收录规则的候选日期，可以扩大日期范围再试；这不代表这些日子在现实安排上不可用。'
+              '这段时间没有找到备选日期。可扩大日期范围；这不代表这些日子不能安排。'
             : '',
       })
     },
@@ -432,7 +432,8 @@ function buildInitialView(): FindDateViewModel {
 
   return {
     status: 'idle',
-    eventOptions: EVENT_TYPES.map((entry) => {
+    // 暂停展示未开放事项；状态与服务层门禁仍保留，旧参数也不能绕过规则包校验。
+    eventOptions: EVENT_TYPES.filter(canQueryEventType).map((entry) => {
       const queryable = canQueryEventType(entry)
 
       return {
@@ -520,20 +521,20 @@ function buildSummaryText(value: FindDateOutcome): string {
 
   // 有明确排除：规则给出了方向，只是方向是「不推荐」。
   if (value.summary.excludedDays > 0) {
-    parts.push(`${value.summary.excludedDays} 天有不利说法`)
+    parts.push(`${value.summary.excludedDays} 天有传统忌项`)
   }
 
   // 无匹配：规则都没有表态，不等于被否定。
   if (value.summary.notMatchedDays > 0) {
-    parts.push(`${value.summary.notMatchedDays} 天没有明确说法`)
+    parts.push(`${value.summary.notMatchedDays} 天未找到相关说法`)
   }
 
   if (value.summary.conflictDays > 0) {
-    parts.push(`${value.summary.conflictDays} 天说法不一致，未列入候选`)
+    parts.push(`${value.summary.conflictDays} 天宜忌并见，未列入候选`)
   }
 
   if (value.summary.unknownDays > 0) {
-    parts.push(`${value.summary.unknownDays} 天信息不足，暂无法判断`)
+    parts.push(`${value.summary.unknownDays} 天因信息不足暂无法判断`)
   }
 
   if (value.summary.errorDays > 0) {
@@ -548,7 +549,7 @@ function confirmFullDisclaimer(): Promise<boolean> {
     wx.showModal({
       title: '使用说明',
       content: FULL_DISCLAIMER_PARAGRAPHS.join('\n\n'),
-      confirmText: '已了解',
+      confirmText: '继续查询',
       cancelText: '取消',
       success: (result) => resolve(result.confirm),
       fail: () => resolve(false),

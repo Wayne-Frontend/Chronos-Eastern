@@ -47,7 +47,7 @@ describe('canQueryEventType', () => {
     expect(canQueryEventType(null)).toBe(false)
   })
 
-  it('可查询的六个事项逐个点名，其余（入宅、安葬）全部置灰', () => {
+  it('可查询的六个事项逐个点名，入宅与安葬保留内部禁用状态', () => {
     const queryable = EVENT_TYPES.filter((entry) => canQueryEventType(entry)).map(
       (entry) => entry.id,
     )
@@ -125,8 +125,8 @@ describe('事项状态与规则包完整性的一致性', () => {
   it('出行说明与 32/32 覆盖一致：不再自称有限，仍如实标注天德边界', () => {
     const travel = findEventType('travel')
 
-    expect(travel?.statusNote).toContain('出行条目宜忌已全部录入')
-    expect(travel?.statusNote).toContain('天德')
+    expect(travel?.statusNote).toContain('卷十一的出行条目')
+    expect(travel?.statusNote).toContain('适用限制见日期详情')
     expect(travel?.statusNote).not.toContain('有限')
     expect(travel?.statusNote).not.toContain('其余条款尚在校勘')
   })
@@ -181,16 +181,23 @@ describe('覆盖范围披露', () => {
     const options = definitions[0]?.data?.view?.eventOptions ?? []
     const badgeOf = (id: string) => options.find((option) => option.id === id)?.badgeText
 
-    // 可查询的六个事项都已改判 supported，chip 上不再有「有限收录」标记；
-    // 未开放的仍只说能否使用。
+    // 页面只呈现已开放的六项；内部仍保留未开放事项及查询门禁。
+    expect(options.map((option) => option.id)).toEqual([
+      'travel',
+      'relocation',
+      'opening',
+      'marriage',
+      'engagement',
+      'proposal',
+    ])
     expect(badgeOf('travel')).toBe('')
     expect(badgeOf('relocation')).toBe('')
     expect(badgeOf('opening')).toBe('')
     expect(badgeOf('marriage')).toBe('')
     expect(badgeOf('engagement')).toBe('')
     expect(badgeOf('proposal')).toBe('')
-    expect(badgeOf('moving-in')).toBe('敬请期待')
-    expect(badgeOf('funeral')).toBe('暂不支持')
+    expect(badgeOf('moving-in')).toBeUndefined()
+    expect(badgeOf('funeral')).toBeUndefined()
 
     expect(findDateWxml).toContain('view.scopeNoteText')
   })

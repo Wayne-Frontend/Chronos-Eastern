@@ -68,7 +68,7 @@
 
 **要求**：核验日期、页面截图与最终选择一并记入本表。公开类目页会随政策变化，本表不把类目快照当永久规则。不得用"信息查询"等宽泛类目规避审核。
 
-**当前事项说明**：开放出行、搬家、开业、婚嫁、订婚、提亲六项（均为 `supported`）；入宅为 `reviewing`、安葬为 `unsupported`，两项入口不可查询。下一次提交使用 [当前审核说明草稿](release-checklist.md#审核功能说明草稿)，第 11 节四事项文字只作为历史记录。
+**当前事项说明**：页面只展示出行、搬家、开业、婚嫁、订婚、提亲六项（均为 `supported`）；入宅为 `reviewing`、安葬为 `unsupported`，两项不展示且不可查询。下一次提交使用 [当前审核说明草稿](release-checklist.md#审核功能说明草稿)，第 11 节四事项文字只作为历史记录。
 
 ## 5. 隐私说明（草稿） [技术建议]
 
@@ -92,7 +92,7 @@
 | 结果保证（"最佳吉日""必成"） | 禁止星级、百分比、吉凶分 | 规则不计算吉凶分、不按命中条数排序，结果只按日期升序 |
 | 个性化命理（八字、生肖、姓名推结果） | 不收集、不提供 | 无相关输入项；`getEightChar` 等命理 API 禁止进入业务路径 |
 | 第三方库宜忌混入 | 宜忌只能来自自校勘的 `verified` 规则包 | 库内 `getDayYi` / `getDayJi` / 吉神凶煞 / 黄黑道 / 法定节假日 / 节日数据全部禁止，业务路径零命中 |
-| 事项越权开放 | `reviewing` / `unsupported` 必须置灰且不可触发查询 | 可查询事项为 `travel`、`relocation`、`opening`、`marriage`、`engagement`、`proposal`（均 `supported`；后两项 2026-10-12 提审后新增，同日六项一并由 `limited` 改判）；`moving-in` 为 `reviewing`、`funeral` 为 `unsupported`。门禁只在 `data/event-types.ts` 的 `canQueryEventType()` 一处 |
+| 事项越权开放 | `reviewing` / `unsupported` 不展示且不可触发查询 | 可查询事项为 `travel`、`relocation`、`opening`、`marriage`、`engagement`、`proposal`（均 `supported`；后两项 2026-10-12 提审后新增，同日六项一并由 `limited` 改判）；`moving-in` 为 `reviewing`、`funeral` 为 `unsupported`。页面过滤未开放事项，服务门禁仍使用 `data/event-types.ts` 的 `canQueryEventType()` |
 | 把部分收录说成完整结论 | `partial` 事项需在事项入口、结果列表上方、详情页规则区三处显示覆盖范围 | **三处均已落地**，见 6.2；由 `tests/event-types.test.ts`「覆盖范围披露」一组用例守住 |
 | 冲突日期凭空消失 | 冲突必须逐日列出并可查双方依据 | `findDates` 返回 `conflictDates` 而不只是计数；冲突日返回 `unresolved`（对应卷十常例"两者皆不注"） |
 | 来源误导 | 不把库内宜忌称为《协纪辨方书》 | 详情页每个宜忌标签可展开到 `verified` 规则与来源定位；来源登记见 `docs/sources-ledger.md` |

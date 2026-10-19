@@ -103,6 +103,7 @@ describe('日期详情页的事项上下文', () => {
     const section = loadDetail({ date: '2026-10-27' }).ruleSections[0]!
     expect(section.adjudications[0]?.sourceLinks.length).toBeGreaterThan(0)
     expect(section.rules[0]?.sourceLinks.length).toBeGreaterThan(0)
+    expect(section.rules[0]?.sourceLinks[0]?.title.length).toBeLessThan(12)
     expect(detailTemplate.match(/bindtap="copySourceLink"/g)).toHaveLength(2)
 
     const copy = pageDefinitions[0]!.copySourceLink as (event: {
@@ -262,15 +263,15 @@ describe('日期详情页的事项上下文', () => {
     }
   })
 
-  it('规则包版本和逐条校勘状态都进入视图模型，页面能够直接展示追溯信息', () => {
+  it('资料版本和逐条核对状态都进入视图模型，页面能够直接展示追溯信息', () => {
     const section = loadDetail({ date: '2026-10-02', eventTypes: 'travel' }).ruleSections[0]
 
-    expect(section?.rulePackText).toMatch(/@/)
+    expect(section?.rulePackText).toMatch(/^资料版本：/)
     expect(section?.rules.length).toBeGreaterThan(0)
 
     for (const rule of section?.rules ?? []) {
       expect(rule.id).not.toBe('')
-      expect(rule.statusText).toBe('已校勘')
+      expect(rule.statusText).toBe('已核对')
     }
   })
 })

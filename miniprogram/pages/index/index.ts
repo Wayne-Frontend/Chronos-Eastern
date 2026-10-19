@@ -196,9 +196,7 @@ function buildAlmanacSection(dateKey: string): {
     eventTypeIds,
     hasFailure,
     // 收录范围按事项表动态生成：将来开放新事项时这句话自动跟着变，不需要改文案。
-    scopeText: `本区块只含已收录的 ${queryableEvents.length} 类事项（${queryableEvents
-      .map((entry) => entry.displayName)
-      .join('、')}）；其余事项不作判断。`,
+    scopeText: `仅展示已开放的 ${queryableEvents.length} 类事项；其他事项不作判断。`,
   }
 }
 

@@ -46,8 +46,7 @@ export const EVENT_TYPES: readonly EventTypeEntry[] = [
     status: 'supported',
     rulePackId: 'xjbf-travel',
     maxRangeDays: 90,
-    statusNote:
-      '出行条目宜忌已全部录入；天德在四仲月按底本不判值日。宜忌并见时按《协纪辨方书》卷十的例外逐条裁决。',
+    statusNote: '参考《协纪辨方书》卷十一的出行条目；具体依据与适用限制见日期详情。',
     disclaimer: '仅按已收录传统规则提供文化参考，不涉及现实交通与安全判断。',
   },
   {
@@ -58,8 +57,7 @@ export const EVENT_TYPES: readonly EventTypeEntry[] = [
     status: 'supported',
     rulePackId: 'xjbf-relocation',
     maxRangeDays: 90,
-    statusNote:
-      '般移条目宜忌已全部录入；天德、天德合在四仲月按底本不判值日。宜忌并见时按《协纪辨方书》卷十的例外逐条裁决。',
+    statusNote: '本项对应卷十一「般移（移徙同）」，用于搬运迁居，不包含入宅等其他事项。',
     disclaimer: '仅按已收录传统规则提供文化参考，不涉及现实搬迁安排与居住决策。',
   },
   {
@@ -80,7 +78,7 @@ export const EVENT_TYPES: readonly EventTypeEntry[] = [
     status: 'supported',
     rulePackId: 'xjbf-opening',
     maxRangeDays: 90,
-    statusNote: '开市条目宜忌已全部录入；宜忌并见时按《协纪辨方书》卷十的例外逐条裁决。',
+    statusNote: '本项对应《协纪辨方书》卷十一「开市」；具体依据与适用限制见日期详情。',
     disclaimer: '仅按已收录传统规则提供文化参考，不涉及现实经营决策与投资判断。',
   },
   {
@@ -93,8 +91,7 @@ export const EVENT_TYPES: readonly EventTypeEntry[] = [
     status: 'supported',
     rulePackId: 'xjbf-marriage',
     maxRangeDays: 90,
-    statusNote:
-      '嫁娶条目宜忌已全部录入；原书另有分列的「结婚姻」「纳采问名」两条，宜忌不同，已各自单独成事项，不并入本条。',
+    statusNote: '本项对应卷十一「嫁娶」；订婚和提亲对应原书其他条目，请分别查询。',
     disclaimer: '仅按已收录传统规则提供文化参考，不涉及现实婚姻与家庭决策。',
   },
   {
@@ -106,8 +103,7 @@ export const EVENT_TYPES: readonly EventTypeEntry[] = [
     status: 'supported',
     rulePackId: 'xjbf-engagement',
     maxRangeDays: 90,
-    statusNote:
-      '结婚姻条目宜忌已全部录入；比「纳采问名」多「六合」「五合」两条宜项。天德、天德合在四仲月按底本不判值日。同卷另有分列的「嫁娶」「纳采问名」两条，宜忌不同，不并入本条。',
+    statusNote: '本项对应卷十一「结婚姻」；婚嫁和提亲对应原书其他条目，请分别查询。',
     disclaimer: '仅按已收录传统规则提供文化参考，不涉及现实婚姻与家庭决策。',
   },
   {
@@ -119,8 +115,7 @@ export const EVENT_TYPES: readonly EventTypeEntry[] = [
     status: 'supported',
     rulePackId: 'xjbf-proposal',
     maxRangeDays: 90,
-    statusNote:
-      '纳采问名条目宜忌已全部录入；与「结婚姻」相比宜项只少「六合」「五合」两条（日支与月建相合之日、寅卯日），忌项相同，两条目在原书分列、不互相顶替；天德、天德合在四仲月按底本不判值日。',
+    statusNote: '本项对应卷十一「纳采问名」；婚嫁和订婚对应原书其他条目，请分别查询。',
     disclaimer: '仅按已收录传统规则提供文化参考，不涉及现实婚恋与家庭关系判断。',
   },
   {

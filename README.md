@@ -7,7 +7,7 @@
 - 首页今日信息、42 格月历与日期详情；历法范围为 1901—2100 年，日期按 UTC+8 处理。
 - 找日子开放出行、搬家、开业、婚嫁、订婚、提亲六事项，查询今天起 1—90 天；按日期升序展示候选，冲突及其他未入选日期可分类查看依据。首次查询展示完整版使用说明。
 - 每个事项保留来源、适用边界和规则版本；卷十裁决原因及出处在详情中展示。`supported` / `complete` 表示当前事项条目收全，不表示复现全部传统体系，也不预测现实结果。
-- 本地收藏列表、详情收藏、只含公开日期的中性分享。入宅整理中、安葬不提供，均不可查询。
+- 本地收藏列表、详情收藏、只含公开日期的中性分享。找日子页面只展示上述六个已开放事项。
 - 六个页面、四个 Tab；关于页含来源说明和免责声明。
 
 当前工作区的发布资料、规则版本和待验证项以 [发布检查单](docs/release-checklist.md) 为准。
@@ -47,4 +47,4 @@ npm run format:check
 | `tests` | 单元及页面状态回归测试 |
 | `docs` | 产品方案、来源、规则审计及发布检查 |
 
-业务与校勘约束见 [CLAUDE.md](CLAUDE.md)，历法 API 白名单见 [历法库评估](docs/calendar-library-evaluation.md)，影印来源见 [来源台账](docs/sources-ledger.md)。第三方 MIT 声明位于 [THIRD_PARTY_NOTICES.md](miniprogram/vendor/THIRD_PARTY_NOTICES.md)，发布时保留。
+业务与校勘约束见 [CLAUDE.md](CLAUDE.md)，六事项待核内容及入宅、安葬准入路径见 [规则缺口清单](docs/rule-gap-inventory.md)，历法 API 白名单见 [历法库评估](docs/calendar-library-evaluation.md)，影印来源见 [来源台账](docs/sources-ledger.md)。第三方 MIT 声明位于 [THIRD_PARTY_NOTICES.md](miniprogram/vendor/THIRD_PARTY_NOTICES.md)，发布时保留。

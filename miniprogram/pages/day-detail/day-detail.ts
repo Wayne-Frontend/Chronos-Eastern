@@ -276,7 +276,7 @@ function buildSuccessViewModel(
     })),
     todaySolarTermText: info.solarTerm
       ? `${info.solarTerm.name} · 交节时刻 ${formatSolarTermTime(info.solarTerm.instant)}`
-      : '今日无节气',
+      : '当日无节气',
     nextSolarTermText: info.nextSolarTerm
       ? `${info.nextSolarTerm.name} · ${formatSolarTermDate(info.nextSolarTerm.localDate)} ${formatSolarTermTime(
           info.nextSolarTerm.instant,
@@ -377,13 +377,13 @@ function buildRuleSection(
     title: copy.title,
     description: copy.summary,
     suggestion: copy.suggestion,
-    rulePackText: `${value.rulePack.id}@${value.rulePack.version}`,
+    rulePackText: `资料版本：${value.rulePack.version}`,
     adjudications: value.adjudications.map((item) => ({
       id: item.id,
       summary: item.summary,
       locator: item.steps.map((step) => step.locator).join('；'),
       sourceText: item.sources.map((source) => `${source.title}（${source.publisher}）`).join('；'),
-      sourceLinks: item.sources.map((source) => ({ id: source.id, title: source.title })),
+      sourceLinks: item.sources.map(toSourceLink),
     })),
     rules: [
       ...value.matchedRules.map((rule) => toRuleDisplayItem(rule, value.eventName, false)),
@@ -414,18 +414,29 @@ function toRuleDisplayItem(
     explanation: rule.explanation,
     locator: rule.locator,
     sourceText: rule.sources.map((source) => `${source.title}（${source.publisher}）`).join('；'),
-    sourceLinks: rule.sources.map((source) => ({ id: source.id, title: source.title })),
+    sourceLinks: rule.sources.map(toSourceLink),
     // 当前只有 verified 规则会进入解释服务；仍保留分支，避免未来状态扩展时页面误称已校勘。
-    statusText: rule.status === 'verified' ? '已校勘' : '待复核',
+    statusText: rule.status === 'verified' ? '已核对' : '待复核',
     // 各条自带的适用边界（如某神煞在某几个月不判值日）必须与出处同屏，
     // 否则用户会把「本版本收录的这一条」当成完整结论；文案本身已是面向用户的措辞。
     limitations: rule.limitations,
   }
 }
 
+/** 链接按钮只写来源类型；完整书名与出版信息已在相邻的出处文字中保留。 */
+function toSourceLink(source: { id: string; title: string }): SourceLink {
+  const title = source.title.includes('影印本')
+    ? '影印本'
+    : source.title.includes('转录')
+      ? '转录文本'
+      : source.title
+
+  return { id: source.id, title }
+}
+
 function buildFailureNotice(code: CalendarServiceErrorCode): string {
   if (code === 'INVALID_DATE') {
-    return '日期参数无效，请从首页或日历进入日期详情'
+    return '无法打开这个日期，请从首页或日历重新选择'
   }
 
   if (code === 'CALENDAR_OUT_OF_RANGE') {

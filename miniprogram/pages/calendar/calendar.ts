@@ -147,7 +147,7 @@ function buildView(
       ...base,
       status: 'error',
       cells: [],
-      noticeText: `月历生成失败：${grid.message}`,
+      noticeText: '这个月的日期暂时无法显示，请重试',
     }
   }
 

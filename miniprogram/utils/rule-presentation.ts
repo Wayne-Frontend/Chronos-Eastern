@@ -26,50 +26,49 @@ export function describeDateOutcome(status: DayStatus, eventName: string): DateO
         badge: '宜',
         badgeClass: 'include',
         title: `宜 · ${eventName}`,
-        summary: `传统择日中，今天有适合${eventName}的说法。`,
-        suggestion: '如果时间和现实条件合适，可以把今天列入备选。',
+        summary: `按已收录的传统规则，这一天可列为${eventName}备选。`,
+        suggestion: '',
       }
     case 'excluded':
       return {
         badge: '忌',
         badgeClass: 'exclude',
         title: `忌 · ${eventName}`,
-        summary: `传统择日中，今天有不利于${eventName}的说法。`,
-        suggestion: '如果时间允许，可以优先看看其他日期；普通日常安排不必因此改变。',
+        summary: `按已收录的传统规则，这一天有${eventName}忌项。`,
+        suggestion: '如果时间允许，可以看看其他日期。',
       }
     case 'unresolved':
       return {
         badge: '慎',
         badgeClass: 'caution',
-        title: `宜忌不定 · ${eventName}`,
-        // 卷十常例有德神等适用边界，卷十一自带的巳日忌也不在其裁决射程内；这里只介绍背景，不归因本日。
-        summary:
-          '本日宜、忌依据同时出现，暂不作明确推荐。《协纪辨方书》卷十记有无德神裁决时两者均不作明确注记的常例，但本日是否适用及相关例外仍需核对。',
-        suggestion: '可以看看其他日期，或根据自己的实际安排决定。',
+        title: `宜忌并见 · ${eventName}`,
+        // 卷十常例有德神等适用边界，不能把未裁决的冲突一概归因于某一原书条款。
+        summary: '这一天同时有宜、忌依据，现有规则未能裁定，暂不列入候选。',
+        suggestion: '可查看下方双方依据，再结合实际安排决定。',
       }
     case 'unknown':
       return {
         badge: '—',
         badgeClass: 'none',
         title: `未定 · ${eventName}`,
-        summary: '现有信息不足，暂时无法给出清晰的传统择日参考。',
-        suggestion: '请以现实安排和实际条件为准。',
+        summary: '判断所需信息不足，暂时无法给出明确的传统择日参考。',
+        suggestion: '',
       }
     case 'not_matched':
       return {
         badge: '—',
         badgeClass: 'none',
-        title: `未匹配已收录规则 · ${eventName}`,
-        summary: `这一天未匹配到本版本已收录的${eventName}规则；不代表宜或忌。`,
-        suggestion: '请结合现实安排和实际条件决定。',
+        title: `暂无明确说法 · ${eventName}`,
+        summary: `已收录规则中，未找到这一天关于${eventName}的明确宜忌；不代表宜或忌。`,
+        suggestion: '',
       }
     default:
       return {
         badge: '—',
         badgeClass: 'none',
         title: `未定 · ${eventName}`,
-        summary: `传统择日中，没有找到足够明确的${eventName}倾向。`,
-        suggestion: '这不代表今天不能安排，请结合实际情况决定。',
+        summary: `现有信息不足，暂时无法判断这一天的${eventName}宜忌。`,
+        suggestion: '',
       }
   }
 }
@@ -110,18 +109,18 @@ export function describeRuleReason(
 ): RuleReasonCopy {
   if (isUnknown) {
     return {
-      title: `“${name}”暂时无法确认`,
+      title: `「${name}」暂时无法确认`,
       summary: '这项传统说法缺少足够信息，因此没有用来得出本次结论。',
     }
   }
 
   return effect === 'include'
     ? {
-        title: `今天符合“${name}”的传统说法`,
-        summary: `这种说法通常把今天视为适合${eventName}的日期。`,
+        title: `命中「${name}」`,
+        summary: `原书将其列为${eventName}宜项。`,
       }
     : {
-        title: `今天遇到“${name}”的传统说法`,
-        summary: `这种说法通常不会优先选择今天安排${eventName}。`,
+        title: `命中「${name}」`,
+        summary: `原书将其列为${eventName}忌项。`,
       }
 }
