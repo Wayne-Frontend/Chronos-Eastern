@@ -350,6 +350,19 @@ page {
   margin-top: 0;
 }
 
+.detail-rule__copy-link {
+  display: block;
+  width: 100%;
+  padding: 10rpx 0;
+  margin: 8rpx 0 0;
+  color: var(--color-info-text);
+  font-size: 23rpx;
+  line-height: 1.5;
+  text-align: left;
+  overflow-wrap: anywhere;
+  background: transparent;
+}
+
 .detail-rules__culture-note {
   display: block;
   padding-top: 24rpx;

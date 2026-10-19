@@ -5,6 +5,7 @@ import {
   type CalendarServiceErrorCode,
 } from '../../services/calendar-service'
 import { FESTIVAL_CATEGORY_LABELS } from '../../data/festivals'
+import { findSource } from '../../data/sources'
 import { canQueryEventType, EVENT_TYPES } from '../../data/event-types'
 import { describeCoverage } from '../../data/rules/manifest'
 import { addFavorite, isFavorite, removeFavorite } from '../../services/favorite-service'
@@ -45,10 +46,16 @@ interface RuleDisplayItem {
   explanation: string
   locator: string
   sourceText: string
+  sourceLinks: readonly SourceLink[]
   /** 面向用户的校勘状态，不直接暴露内部状态字面量。 */
   statusText: string
   /** 该条的适用边界；面向用户的措辞，与出处同屏显示。 */
   limitations: readonly string[]
+}
+
+interface SourceLink {
+  id: string
+  title: string
 }
 
 interface RuleSectionViewModel {
@@ -66,6 +73,7 @@ interface RuleSectionViewModel {
     summary: string
     locator: string
     sourceText: string
+    sourceLinks: readonly SourceLink[]
   }[]
   rules: readonly RuleDisplayItem[]
   detailsExpanded: boolean
@@ -195,6 +203,19 @@ Page({
     }
 
     this.setData({ [`view.ruleSections[${index}].detailsExpanded`]: !section.detailsExpanded })
+  },
+  copySourceLink(event: WechatMiniprogram.TouchEvent) {
+    const source = findSource(String(event.currentTarget.dataset.sourceId ?? ''))
+    if (!source) {
+      wx.showToast({ title: '来源链接不可用', icon: 'none' })
+      return
+    }
+
+    wx.setClipboardData({
+      data: source.url,
+      success: () => wx.showToast({ title: '来源链接已复制', icon: 'none' }),
+      fail: () => wx.showToast({ title: '复制失败，请重试', icon: 'none' }),
+    })
   },
 })
 
@@ -362,6 +383,7 @@ function buildRuleSection(
       summary: item.summary,
       locator: item.steps.map((step) => step.locator).join('；'),
       sourceText: item.sources.map((source) => `${source.title}（${source.publisher}）`).join('；'),
+      sourceLinks: item.sources.map((source) => ({ id: source.id, title: source.title })),
     })),
     rules: [
       ...value.matchedRules.map((rule) => toRuleDisplayItem(rule, value.eventName, false)),
@@ -392,6 +414,7 @@ function toRuleDisplayItem(
     explanation: rule.explanation,
     locator: rule.locator,
     sourceText: rule.sources.map((source) => `${source.title}（${source.publisher}）`).join('；'),
+    sourceLinks: rule.sources.map((source) => ({ id: source.id, title: source.title })),
     // 当前只有 verified 规则会进入解释服务；仍保留分支，避免未来状态扩展时页面误称已校勘。
     statusText: rule.status === 'verified' ? '已校勘' : '待复核',
     // 各条自带的适用边界（如某神煞在某几个月不判值日）必须与出处同屏，

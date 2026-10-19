@@ -28,6 +28,7 @@ vi.stubGlobal('wx', {
   },
   redirectTo: () => undefined,
   showToast: () => undefined,
+  setClipboardData: () => undefined,
   setStorage: () => undefined,
   getStorageSync: () => '',
   setStorageSync: () => undefined,
@@ -43,8 +44,19 @@ interface RuleSectionShape {
   coverageNoticeText: string
   coverageText: string
   rulePackText: string
-  adjudications: readonly { id: string; summary: string; locator: string; sourceText: string }[]
-  rules: readonly { id: string; statusText: string; limitations: readonly string[] }[]
+  adjudications: readonly {
+    id: string
+    summary: string
+    locator: string
+    sourceText: string
+    sourceLinks: readonly { id: string; title: string }[]
+  }[]
+  rules: readonly {
+    id: string
+    statusText: string
+    limitations: readonly string[]
+    sourceLinks: readonly { id: string; title: string }[]
+  }[]
 }
 
 function loadDetail(options: Record<string, string>): {
@@ -87,6 +99,33 @@ function loadDetail(options: Record<string, string>): {
 }
 
 describe('日期详情页的事项上下文', () => {
+  it('规则与裁决出处提供可复制的已登记链接，复制成败均有反馈', () => {
+    const section = loadDetail({ date: '2026-10-27' }).ruleSections[0]!
+    expect(section.adjudications[0]?.sourceLinks.length).toBeGreaterThan(0)
+    expect(section.rules[0]?.sourceLinks.length).toBeGreaterThan(0)
+    expect(detailTemplate.match(/bindtap="copySourceLink"/g)).toHaveLength(2)
+
+    const copy = pageDefinitions[0]!.copySourceLink as (event: {
+      currentTarget: { dataset: { sourceId: string } }
+    }) => void
+    const clipboard = vi.spyOn(wx, 'setClipboardData')
+    const toast = vi.spyOn(wx, 'showToast')
+    try {
+      copy({ currentTarget: { dataset: { sourceId: section.rules[0]!.sourceLinks[0]!.id } } })
+      expect(clipboard).toHaveBeenCalledWith(
+        expect.objectContaining({ data: expect.stringMatching(/^https:\/\//) }),
+      )
+      const options = clipboard.mock.calls[0]![0]
+      ;(options.success as (() => void) | undefined)?.()
+      expect(toast).toHaveBeenCalledWith({ title: '来源链接已复制', icon: 'none' })
+      ;(options.fail as (() => void) | undefined)?.()
+      expect(toast).toHaveBeenCalledWith({ title: '复制失败，请重试', icon: 'none' })
+    } finally {
+      clipboard.mockRestore()
+      toast.mockRestore()
+    }
+  })
+
   it('判定原因与出处绑定在依据折叠区之前，概览入口也可直接阅读', () => {
     const visibleTemplate = detailTemplate.split('<block wx:if="{{section.detailsExpanded}}">')[0]!
     expect(visibleTemplate).toContain('wx:for="{{section.adjudications}}"')

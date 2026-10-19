@@ -64,6 +64,15 @@
       <text class="detail-rule__summary">{{item.summary}}</text>
       <text class="detail-rule__meta">{{item.locator}}</text>
       <text class="detail-rule__meta">来源：{{item.sourceText}}</text>
+      <button
+        wx:for="{{item.sourceLinks}}"
+        wx:for-item="source"
+        wx:key="id"
+        class="detail-rule__copy-link"
+        data-source-id="{{source.id}}"
+        bindtap="copySourceLink"
+        aria-label="复制 {{source.title}} 的来源链接"
+      >复制 {{source.title}} 的链接</button>
     </view>
     <text wx:if="{{section.suggestion}}" class="detail-rules__suggestion">{{section.suggestion}}</text>
     <text wx:if="{{section.noticeText}}" class="detail-rules__notice">{{section.noticeText}}</text>
@@ -131,6 +140,15 @@
           <text class="detail-rule__source-label">原文出处</text>
           <text class="detail-rule__meta">{{item.locator}}</text>
           <text wx:if="{{item.sourceText}}" class="detail-rule__meta">来源：{{item.sourceText}}</text>
+          <button
+            wx:for="{{item.sourceLinks}}"
+            wx:for-item="source"
+            wx:key="id"
+            class="detail-rule__copy-link"
+            data-source-id="{{source.id}}"
+            bindtap="copySourceLink"
+            aria-label="复制 {{source.title}} 的来源链接"
+          >复制 {{source.title}} 的链接</button>
           <block wx:if="{{item.limitations.length > 0}}">
             <text class="detail-rule__source-label">适用范围与限制</text>
             <text
