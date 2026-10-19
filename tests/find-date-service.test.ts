@@ -155,6 +155,16 @@ describe('findDates 筛选结果', () => {
         summary.errorDays,
     ).toBe(summary.checkedDays)
     expect(summary.passedDays).toBe(result.value.results.length)
+    expect(result.value.excludedDates).toHaveLength(summary.excludedDays)
+    expect(result.value.notMatchedDates).toHaveLength(summary.notMatchedDays)
+    expect(result.value.unknownDates).toHaveLength(summary.unknownDays)
+    for (const dates of [
+      result.value.excludedDates,
+      result.value.notMatchedDates,
+      result.value.unknownDates,
+    ]) {
+      expect([...dates].sort()).toEqual(dates)
+    }
   })
 
   it('纳入与排除同级命中的日子记入冲突计数、不进入结果', async () => {

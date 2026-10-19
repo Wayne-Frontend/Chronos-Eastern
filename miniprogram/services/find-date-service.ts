@@ -53,6 +53,10 @@ export interface FindDateOutcome {
    * 边界：只给日期，不替用户裁决谁先谁后；详情页会列出双方依据。
    */
   conflictDates: readonly DateKey[]
+  /** 按日期升序返回三类未入选日期，供用户逐日查看原因；与汇总计数一一对应。 */
+  excludedDates: readonly DateKey[]
+  notMatchedDates: readonly DateKey[]
+  unknownDates: readonly DateKey[]
   rulePack: {
     id: string
     version: string
@@ -151,6 +155,9 @@ export async function findDates(
 
   const results: FindDateResultItem[] = []
   const conflictDates: DateKey[] = []
+  const excludedDates: DateKey[] = []
+  const notMatchedDates: DateKey[] = []
+  const unknownDates: DateKey[] = []
   const summary: FindDateSummary = {
     checkedDays,
     passedDays: 0,
@@ -176,6 +183,7 @@ export async function findDates(
           break
         case 'excluded':
           summary.excludedDays += 1
+          excludedDates.push(info.dateKey)
           break
         case 'unresolved':
           summary.conflictDays += 1
@@ -183,9 +191,11 @@ export async function findDates(
           break
         case 'unknown':
           summary.unknownDays += 1
+          unknownDates.push(info.dateKey)
           break
         default:
           summary.notMatchedDays += 1
+          notMatchedDates.push(info.dateKey)
       }
     }
 
@@ -204,6 +214,9 @@ export async function findDates(
       results,
       summary,
       conflictDates,
+      excludedDates,
+      notMatchedDates,
+      unknownDates,
       rulePack: {
         id: pack.id,
         version: pack.version,

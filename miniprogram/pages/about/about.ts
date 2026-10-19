@@ -1,3 +1,5 @@
+import { FULL_DISCLAIMER_PARAGRAPHS } from '../../data/disclaimer'
+
 interface AboutSource {
   readonly number: string
   readonly category: string
@@ -90,6 +92,7 @@ Component({
     // 首项默认展开，先让用户看见页面的内容深度；其余条目按需展开，避免资料页变成长墙。
     calendarSources: toSourceViewModels(CALENDAR_SOURCES, true),
     cultureSources: toSourceViewModels(CULTURE_SOURCES, false),
+    disclaimerParagraphs: FULL_DISCLAIMER_PARAGRAPHS,
   },
   methods: {
     toggleSource(event: WechatMiniprogram.TouchEvent) {

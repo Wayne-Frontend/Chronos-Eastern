@@ -1,6 +1,7 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import * as findDateService from '../miniprogram/services/find-date-service'
 import * as favoriteService from '../miniprogram/services/favorite-service'
+import { DISCLAIMER_ACCEPTANCE_KEY } from '../miniprogram/services/disclaimer-consent-service'
 import findDateTemplate from '../miniprogram/pages/find-date/find-date.wxml?raw'
 
 const TODAY_TIMESTAMP = Date.parse('2026-10-17T12:00:00+08:00')
@@ -14,23 +15,44 @@ vi.spyOn(Date, 'now').mockReturnValue(TODAY_TIMESTAMP)
  */
 
 const componentDefinitions: Record<string, unknown>[] = []
+const navigation: string[] = []
+let disclaimerAccepted = true
+let disclaimerWriteFails = false
+let modalDecision = false
+let modalCalls = 0
 
 vi.stubGlobal('Component', (options: unknown) => {
   componentDefinitions.push(options as Record<string, unknown>)
 })
 
 vi.stubGlobal('wx', {
-  navigateTo: () => undefined,
+  navigateTo: (options: { url: string }) => {
+    navigation.push(options.url)
+  },
   switchTab: () => undefined,
   showToast: () => undefined,
-  getStorageSync: () => '',
-  setStorageSync: () => undefined,
+  showModal: (options: { success?: (result: { confirm: boolean; cancel: boolean }) => void }) => {
+    modalCalls += 1
+    options.success?.({ confirm: modalDecision, cancel: !modalDecision })
+  },
+  getStorageSync: (key: string) =>
+    key === DISCLAIMER_ACCEPTANCE_KEY && disclaimerAccepted ? 'accepted' : '',
+  setStorageSync: (key: string) => {
+    if (key === DISCLAIMER_ACCEPTANCE_KEY) {
+      if (disclaimerWriteFails) throw new Error('storage unavailable')
+      disclaimerAccepted = true
+    }
+  },
 })
 
 await import('../miniprogram/pages/find-date/find-date')
 
 beforeEach(() => {
   vi.spyOn(Date, 'now').mockReturnValue(TODAY_TIMESTAMP)
+  disclaimerAccepted = true
+  disclaimerWriteFails = false
+  modalDecision = false
+  modalCalls = 0
 })
 afterEach(() => vi.restoreAllMocks())
 
@@ -53,6 +75,8 @@ interface FindDateView {
   checkedDays: number
   results: { dateKey: string; isFavorite: boolean | null }[]
   conflictCards: { dateKey: string }[]
+  nonCandidateGroups: { id: string; cards: { dateKey: string }[] }[]
+  showNonCandidate: boolean
 }
 
 interface FindDatePage {
@@ -62,6 +86,8 @@ interface FindDatePage {
   onQuery: () => Promise<void>
   refreshDateBoundary: () => void
   refreshFavoriteMarks: () => void
+  toggleNonCandidate: () => void
+  onOpenDetail: (event: { currentTarget: { dataset: { dateKey: string } } }) => void
   applyOutcome: (
     eventTypeId: string,
     outcome: Awaited<ReturnType<typeof findDateService.findDates>>,
@@ -89,6 +115,9 @@ function completedOutcome(): Awaited<ReturnType<typeof findDateService.findDates
         { dateKey: '2026-11-01', weekdayText: '星期日', lunarText: '九月廿三', tagText: '' },
       ],
       conflictDates: ['2026-11-02'],
+      excludedDates: [],
+      notMatchedDates: [],
+      unknownDates: [],
       summary: {
         checkedDays: 2,
         passedDays: 1,
@@ -104,6 +133,98 @@ function completedOutcome(): Awaited<ReturnType<typeof findDateService.findDates
 }
 
 describe('找日子查询状态恢复', () => {
+  it('首次查询取消不执行，确认后继续并在当前设备记住', async () => {
+    const page = loadPage()
+    selectTravel(page)
+    disclaimerAccepted = false
+    const findDates = vi.spyOn(findDateService, 'findDates').mockResolvedValue(completedOutcome())
+
+    await page.onQuery()
+    expect(findDates).not.toHaveBeenCalled()
+    expect(page.data.view.status).toBe('idle')
+    expect(modalCalls).toBe(1)
+
+    modalDecision = true
+    await page.onQuery()
+    expect(findDates).toHaveBeenCalledTimes(1)
+    expect(disclaimerAccepted).toBe(true)
+    await page.onQuery()
+    expect(modalCalls).toBe(2)
+  })
+
+  it('首次说明存储失败仍可查询，下次继续提示', async () => {
+    const page = loadPage()
+    selectTravel(page)
+    disclaimerAccepted = false
+    disclaimerWriteFails = true
+    modalDecision = true
+    const findDates = vi.spyOn(findDateService, 'findDates').mockResolvedValue(completedOutcome())
+
+    await page.onQuery()
+    await page.onQuery()
+    expect(findDates).toHaveBeenCalledTimes(2)
+    expect(modalCalls).toBe(2)
+    expect(disclaimerAccepted).toBe(false)
+  })
+
+  it('完整查询的三类未入选日期默认折叠，点击沿用单日详情', () => {
+    const page = loadPage()
+    selectTravel(page)
+    const outcome = completedOutcome()
+    if (!outcome.ok) throw new Error('fixture')
+    outcome.value.excludedDates = ['2026-11-03']
+    outcome.value.notMatchedDates = ['2026-11-04']
+    outcome.value.unknownDates = ['2026-11-05']
+    page.applyOutcome('travel', outcome)
+
+    expect(page.data.view.nonCandidateGroups.map((group) => group.cards[0]?.dateKey)).toEqual([
+      '2026-11-03',
+      '2026-11-04',
+      '2026-11-05',
+    ])
+    expect(page.data.view.showNonCandidate).toBe(false)
+    page.toggleNonCandidate()
+    expect(page.data.view.showNonCandidate).toBe(true)
+    const before = navigation.length
+    page.onOpenDetail({ currentTarget: { dataset: { dateKey: '2026-11-03' } } })
+    expect(navigation.slice(before)).toEqual([
+      '/pages/day-detail/day-detail?date=2026-11-03&eventType=travel&from=find-date',
+    ])
+    expect(findDateTemplate).toContain('wx:for="{{view.nonCandidateGroups}}"')
+  })
+
+  it('查询运行时事项和日期选择控件明确不可用', () => {
+    expect(findDateTemplate).toContain(
+      'aria-disabled="{{item.disabled || view.status === \'running\'}}"',
+    )
+    expect(findDateTemplate.match(/disabled="{{view.status === 'running'}}"/g)).toHaveLength(2)
+    expect(findDateTemplate).toContain('查询完成后可修改事项和日期')
+  })
+
+  it('部分日期失败时只显示失败提示，不泄漏不可查看的候选和冲突数量', () => {
+    const page = loadPage()
+    selectTravel(page)
+    const outcome = completedOutcome()
+    if (!outcome.ok) throw new Error('fixture')
+    outcome.value.status = 'partial'
+    outcome.value.summary.errorDays = 1
+    outcome.value.excludedDates = ['2026-11-03']
+
+    page.applyOutcome('travel', outcome)
+
+    expect(page.data.view).toMatchObject({
+      status: 'partial',
+      results: [],
+      conflictCards: [],
+      nonCandidateGroups: [],
+      resultCount: 0,
+      checkedDays: 0,
+      conditionText: '',
+    })
+    expect(page.data.view.noticeText).toContain('1 天')
+    expect(findDateTemplate).toContain("view.status === 'partial' ? '重新查询'")
+  })
+
   it('重新查询立即清空旧冲突、汇总和结果；失败后也不残留', async () => {
     const page = loadPage()
     selectTravel(page)

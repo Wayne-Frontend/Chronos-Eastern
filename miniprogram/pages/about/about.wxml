@@ -116,8 +116,7 @@
         <view class="disclaimer-card__mark">!</view>
         <text class="disclaimer-card__title">免责声明</text>
       </view>
-      <text class="disclaimer-card__text">本应用提供的是历法信息与传统文化参考，不构成对吉凶、结果或命运的预测和保证，也不能替代交通安全、医疗健康、法律、财务、工程施工及其他专业意见。</text>
-      <text class="disclaimer-card__text">传统说法受文献版本、地域习俗和具体情境影响。请结合天气、身体状况、法规要求、家人意见及现实条件独立判断；遇到重要事项，应优先遵循专业机构和主管部门的意见。</text>
+      <text wx:for="{{disclaimerParagraphs}}" wx:key="*this" class="disclaimer-card__text">{{item}}</text>
     </view>
 
     <view class="about-footer">

@@ -205,6 +205,10 @@ page {
   text-align: center;
 }
 
+.event-chip--busy {
+  opacity: 0.6;
+}
+
 .expired-text {
   display: block;
   margin-top: 16rpx;
@@ -377,6 +381,22 @@ page {
   color: var(--color-ink-muted);
   font-size: 24rpx;
   line-height: 1.6;
+}
+
+.non-candidate-toggle {
+  width: 100%;
+  padding: 0 0 12rpx;
+  margin: 0;
+  color: var(--color-info-text);
+  font-size: 28rpx;
+  font-weight: 600;
+  line-height: 1.5;
+  text-align: left;
+  background: transparent;
+}
+
+.non-candidate-group + .non-candidate-group {
+  margin-top: 24rpx;
 }
 
 .conflict-list {

@@ -5,6 +5,11 @@ import {
   type EventTypeEntry,
 } from '../../data/event-types'
 import { describeCoverage } from '../../data/rules/manifest'
+import { FULL_DISCLAIMER_PARAGRAPHS } from '../../data/disclaimer'
+import {
+  readDisclaimerAcceptance,
+  saveDisclaimerAcceptance,
+} from '../../services/disclaimer-consent-service'
 import {
   describeRangeIssue,
   findDates,
@@ -21,7 +26,7 @@ import { formatWeekday } from '../../utils/format'
 import { describeClassicalTerms } from '../../utils/rule-presentation'
 import { getGregorianWeekday } from '../../utils/util'
 
-type PageStatus = 'idle' | 'running' | 'ok' | 'empty' | 'partial' | 'blocked'
+type PageStatus = 'idle' | 'consent' | 'running' | 'ok' | 'empty' | 'partial' | 'blocked'
 
 interface EventOption {
   id: string
@@ -76,7 +81,15 @@ interface FindDateViewModel {
   results: ResultCard[]
   /** 因传统说法不一致而未列入的日期；无冲突时为空。 */
   conflictCards: ConflictCard[]
+  nonCandidateGroups: NonCandidateGroup[]
+  showNonCandidate: boolean
   disclaimerText: string
+}
+
+interface NonCandidateGroup {
+  id: 'excluded' | 'not-matched' | 'unknown'
+  title: string
+  cards: ConflictCard[]
 }
 
 interface ConflictCard {
@@ -128,6 +141,8 @@ Component({
         status: 'idle',
         results: [],
         conflictCards: [],
+        nonCandidateGroups: [],
+        showNonCandidate: false,
         resultCount: 0,
         checkedDays: 0,
         summaryText: '',
@@ -245,11 +260,33 @@ Component({
     },
     async onQuery() {
       this.refreshDateBoundary()
-      const view = this.data.view
-      const option = EVENT_TYPES.find((entry) => entry.id === view.selectedEventId)
+      let view = this.data.view
+      let option = EVENT_TYPES.find((entry) => entry.id === view.selectedEventId)
 
-      if (!option || !canQueryEventType(option) || !view.canQuery || view.status === 'running') {
+      if (
+        !option ||
+        !canQueryEventType(option) ||
+        !view.canQuery ||
+        view.status === 'running' ||
+        view.status === 'consent'
+      ) {
         return
+      }
+
+      const acceptance = readDisclaimerAcceptance()
+      if (!acceptance.ok || !acceptance.value) {
+        // 弹窗期间用独立状态阻止重复点击；取消后保留原条件与已有结果。
+        const previousStatus = view.status
+        this.setView({ status: 'consent' })
+        const confirmed = await confirmFullDisclaimer()
+        this.setView({ status: previousStatus })
+        if (!confirmed) return
+        // 未知或不可读的存储值不覆盖；本次确认仍允许继续，下一次重新提示。
+        if (acceptance.ok) saveDisclaimerAcceptance()
+        this.refreshDateBoundary()
+        view = this.data.view
+        option = EVENT_TYPES.find((entry) => entry.id === view.selectedEventId)
+        if (!option || !canQueryEventType(option) || !view.canQuery) return
       }
 
       const token = ++queryToken
@@ -297,18 +334,41 @@ Component({
       }
 
       const value: FindDateOutcome = outcome.value
+      if (value.status === 'partial') {
+        // 任一日期计算失败时，本轮不形成可推荐的清单；只显示失败数和重试入口。
+        // 服务层仍保留逐日统计供诊断，页面不能泄漏看似正式的候选数量或冲突列表。
+        this.resetResults({
+          status: 'partial',
+          scopeNoteText: option?.statusNote ?? '',
+          noticeText: `${value.summary.errorDays} 天的历法信息计算失败，本次结果不完整，请重新查询`,
+          noticeTone: 'error',
+          disclaimerText: option?.disclaimer ?? '',
+        })
+        return
+      }
+
       const favorites = listFavorites()
       const favoriteKeys = favorites.ok
         ? new Set<string>(favorites.value.map((item) => item.dateKey))
         : null
       const results = value.results.map((item) => toCard(item, favoriteKeys))
-      const partial = value.status === 'partial'
+      const nonCandidateGroups: NonCandidateGroup[] = [
+        { id: 'excluded', title: '有不利说法', cards: value.excludedDates.map(toConflictCard) },
+        {
+          id: 'not-matched',
+          title: '没有明确说法',
+          cards: value.notMatchedDates.map(toConflictCard),
+        },
+        { id: 'unknown', title: '信息不足', cards: value.unknownDates.map(toConflictCard) },
+      ]
 
       this.setView({
-        status: partial ? 'partial' : results.length > 0 ? 'ok' : 'empty',
+        status: results.length > 0 ? 'ok' : 'empty',
         results,
         favoriteNotice: favorites.ok ? '' : describeFavoriteFailure(favorites.message),
         conflictCards: value.conflictDates.map(toConflictCard),
+        nonCandidateGroups: nonCandidateGroups.filter((group) => group.cards.length > 0),
+        showNonCandidate: false,
         progressText: '',
         resultCount: value.summary.passedDays,
         checkedDays: value.summary.checkedDays,
@@ -319,10 +379,9 @@ Component({
         disclaimerText: option?.disclaimer ?? '',
         // 语气跟提示本身的语义走：计算失败才是 error，查无结果是正常结论。
         // 之前这里不设值，语气会残留自用户点按顺序，同一句话时红时灰。
-        noticeTone: partial ? 'error' : 'info',
-        noticeText: partial
-          ? '部分日期计算失败，本次结果不完整，请重试'
-          : results.length === 0
+        noticeTone: 'info',
+        noticeText:
+          results.length === 0
             ? // 方案 2.4 状态处理要求：无结果必须说明这不是现实安排上的不可用，
               // 否则「规则没推荐」容易被读成「这天不吉利」。措辞与详情页的无匹配结论一致。
               '这段时间内没有找到符合已收录规则的候选日期，可以扩大日期范围再试；这不代表这些日子在现实安排上不可用。'
@@ -340,6 +399,9 @@ Component({
       wx.navigateTo({
         url: `/pages/day-detail/day-detail?date=${dateKey}&eventType=${eventType}&from=find-date`,
       })
+    },
+    toggleNonCandidate() {
+      this.setView({ showNonCandidate: !this.data.view.showNonCandidate })
     },
     refreshFavoriteMarks() {
       const results = this.data.view.results
@@ -408,6 +470,8 @@ function buildInitialView(): FindDateViewModel {
     coverageNoticeText: '',
     results: [],
     conflictCards: [],
+    nonCandidateGroups: [],
+    showNonCandidate: false,
     disclaimerText: '',
   }
 }
@@ -477,4 +541,17 @@ function buildSummaryText(value: FindDateOutcome): string {
   }
 
   return parts.join('；')
+}
+
+function confirmFullDisclaimer(): Promise<boolean> {
+  return new Promise((resolve) => {
+    wx.showModal({
+      title: '使用说明',
+      content: FULL_DISCLAIMER_PARAGRAPHS.join('\n\n'),
+      confirmText: '已了解',
+      cancelText: '取消',
+      success: (result) => resolve(result.confirm),
+      fail: () => resolve(false),
+    })
+  })
 }

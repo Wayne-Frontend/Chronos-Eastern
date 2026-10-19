@@ -10,10 +10,11 @@
       <view
         wx:for="{{view.eventOptions}}"
         wx:key="id"
-        class="event-chip {{item.id === view.selectedEventId ? 'event-chip--active' : ''}} {{item.disabled ? 'event-chip--disabled' : ''}}"
+        class="event-chip {{item.id === view.selectedEventId ? 'event-chip--active' : ''}} {{item.disabled ? 'event-chip--disabled' : ''}} {{view.status === 'running' ? 'event-chip--busy' : ''}}"
         data-id="{{item.id}}"
         bindtap="onSelectEvent"
         aria-role="button"
+        aria-disabled="{{item.disabled || view.status === 'running'}}"
         aria-label="{{item.displayName}}{{item.disabled ? '（' + item.statusNote + '）' : ''}}"
       >
         <view class="event-chip__line">
@@ -35,6 +36,7 @@
         value="{{view.startDate}}"
         start="{{view.pickerStart}}"
         end="2100-12-31"
+        disabled="{{view.status === 'running'}}"
         bindchange="onStartChange"
       >
         <view class="range-field" aria-role="button" aria-label="选择开始日期">
@@ -48,6 +50,7 @@
         value="{{view.endDate}}"
         start="{{view.pickerStart}}"
         end="2100-12-31"
+        disabled="{{view.status === 'running'}}"
         bindchange="onEndChange"
       >
         <view class="range-field" aria-role="button" aria-label="选择结束日期">
@@ -62,13 +65,14 @@
     <button
       class="primary-button query-button"
       style="width: 100%;"
-      disabled="{{!view.canQuery || view.status === 'running'}}"
+      disabled="{{!view.canQuery || view.status === 'running' || view.status === 'consent'}}"
       bindtap="onQuery"
       hover-class="button-pressed"
     >
-      开始查找
+      {{view.status === 'partial' ? '重新查询' : '开始查找'}}
     </button>
     <text wx:if="{{view.progressText}}" class="progress-text">{{view.progressText}}</text>
+    <text wx:if="{{view.status === 'running'}}" class="progress-text">查询完成后可修改事项和日期</text>
     <text wx:if="{{view.expiredNotice}}" class="expired-text">{{view.expiredNotice}}</text>
   </view>
 
@@ -136,6 +140,36 @@
         <text class="conflict-item__weekday">{{item.weekdayText}}</text>
       </view>
     </view>
+  </view>
+
+  <view wx:if="{{view.nonCandidateGroups.length > 0}}" class="conflict-card">
+    <button
+      class="non-candidate-toggle"
+      bindtap="toggleNonCandidate"
+      aria-expanded="{{view.showNonCandidate}}"
+    >{{view.showNonCandidate ? '收起未入选日期' : '查看未入选日期'}}</button>
+    <text class="conflict-card__hint">这些日期未列入候选；可按分类查看当天的传统说法。</text>
+    <block wx:if="{{view.showNonCandidate}}">
+      <view wx:for="{{view.nonCandidateGroups}}" wx:for-item="group" wx:key="id" class="non-candidate-group">
+        <text class="conflict-card__title">{{group.title}} · {{group.cards.length}} 天</text>
+        <view class="conflict-list">
+          <view
+            wx:for="{{group.cards}}"
+            wx:for-item="card"
+            wx:key="dateKey"
+            class="conflict-item"
+            data-date-key="{{card.dateKey}}"
+            bindtap="onOpenDetail"
+            hover-class="conflict-item--pressed"
+            aria-role="button"
+            aria-label="查看 {{card.dateKey}} {{group.title}}的原因"
+          >
+            <text class="conflict-item__date">{{card.dateText}}</text>
+            <text class="conflict-item__weekday">{{card.weekdayText}}</text>
+          </view>
+        </view>
+      </view>
+    </block>
   </view>
 
   <text wx:if="{{view.disclaimerText}}" class="disclaimer-text">{{view.disclaimerText}}</text>
